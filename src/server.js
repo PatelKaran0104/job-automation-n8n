@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { applyPatch } from "./mergePatch.js";
 import { buildCoverLetterHtml } from "./mergeCoverLetter.js";
 import { buildResumeHtml } from "./buildResumeHtml.js";
+import { validatePatch } from "./validatePatch.js";
 
 const OUTPUT_DIR = resolve("output");
 mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -57,7 +58,20 @@ app.get("/context", (_req, res) => {
 // Body: { patch: {...}, company: "SAP SE" }
 app.post("/generate-resume", async (req, res) => {
   const { patch, company } = req.body;
-  const mergedResume = applyPatch(patch || req.body);
+  const rawPatch = patch || req.body;
+
+  const validation = validatePatch(rawPatch);
+  if (validation.warnings.length > 0) {
+    console.warn("[/generate-resume] Patch warnings:", validation.warnings);
+  }
+  if (!validation.valid) {
+    console.error("[/generate-resume] Invalid patch:", validation.errors);
+    return res
+      .status(422)
+      .json({ success: false, error: "Invalid patch", details: validation.errors });
+  }
+
+  const mergedResume = applyPatch(rawPatch);
   const slug = toSlug(company || "company");
   const outPath = resolve(OUTPUT_DIR, `resume-${slug}.pdf`);
 
