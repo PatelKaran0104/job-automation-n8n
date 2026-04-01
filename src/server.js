@@ -1,6 +1,6 @@
 import express from "express";
 import { chromium } from "playwright";
-import { mkdirSync, readFileSync } from "fs";
+import { mkdirSync, readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { applyPatch } from "./mergePatch.js";
 import { buildCoverLetterHtml } from "./mergeCoverLetter.js";
@@ -74,6 +74,9 @@ app.post("/generate-resume", async (req, res) => {
       printBackground: true,
       margin: { top: "15mm", right: "18mm", bottom: "15mm", left: "18mm" },
     });
+    if (!existsSync(outPath)) {
+      throw new Error(`PDF was not written to disk: ${outPath}`);
+    }
     res.json({ success: true, file: outPath });
   } catch (err) {
     console.error("Resume generation error:", err.message);
@@ -103,6 +106,9 @@ app.post("/generate-coverletter", async (req, res) => {
       printBackground: true,
       margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
+    if (!existsSync(outPath)) {
+      throw new Error(`PDF was not written to disk: ${outPath}`);
+    }
     res.json({ success: true, file: outPath });
   } catch (err) {
     console.error("Cover letter generation error:", err.message);
