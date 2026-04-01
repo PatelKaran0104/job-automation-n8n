@@ -4,10 +4,10 @@ import { readFileSync } from "fs";
 const baseResume = JSON.parse(
   readFileSync(new URL("../data/resume.json", import.meta.url))
 );
-const _data = baseResume.data.resumes[0];
+const resumeData = baseResume.data.resumes[0];
 
-const VALID_WORK_IDS = new Set(_data.content.work.entries.map((e) => e.id));
-const VALID_SKILL_IDS = new Set(_data.content.skill.entries.map((e) => e.id));
+const VALID_WORK_IDS = new Set(resumeData.content.work.entries.map((e) => e.id));
+const VALID_SKILL_IDS = new Set(resumeData.content.skill.entries.map((e) => e.id));
 
 /**
  * Validates an AI-generated patch before applyPatch() is called.
@@ -32,6 +32,17 @@ export function validatePatch(patch) {
     return { valid: false, errors, warnings };
   }
 
+  // Type checks for work and skills — before content-presence check
+  if (patch.work !== undefined && !Array.isArray(patch.work)) {
+    errors.push("patch.work must be an array if present");
+  }
+  if (patch.skills !== undefined && !Array.isArray(patch.skills)) {
+    errors.push("patch.skills must be an array if present");
+  }
+  if (errors.length > 0) {
+    return { valid: false, errors, warnings };
+  }
+
   const hasTitle =
     typeof patch.jobTitle === "string" && patch.jobTitle.trim().length > 0;
   const hasProfile =
@@ -46,9 +57,7 @@ export function validatePatch(patch) {
     return { valid: false, errors, warnings };
   }
 
-  if (patch.work !== undefined && !Array.isArray(patch.work)) {
-    errors.push("patch.work must be an array if present");
-  } else if (hasWork) {
+  if (hasWork) {
     for (const item of patch.work) {
       if (!item || typeof item !== "object") {
         warnings.push("work array contains non-object item (skipped)");
@@ -69,9 +78,7 @@ export function validatePatch(patch) {
     }
   }
 
-  if (patch.skills !== undefined && !Array.isArray(patch.skills)) {
-    errors.push("patch.skills must be an array if present");
-  } else if (hasSkills) {
+  if (hasSkills) {
     for (const item of patch.skills) {
       if (!item || typeof item !== "object") {
         warnings.push("skills array contains non-object item (skipped)");
