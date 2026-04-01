@@ -28,7 +28,7 @@ const patch = {
 const response = await fetch("http://localhost:3000/generate-resume", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(patch),
+  body: JSON.stringify({ patch, company: "Test Company" }),
 });
 
 const result = await response.json();
