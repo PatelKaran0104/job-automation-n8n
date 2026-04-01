@@ -1,0 +1,1348 @@
+{
+  "name": "Job Application Automator v6 (Throttled + Retry)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "7743c868-4a85-49bc-8062-b4824dd8748c",
+      "name": "Schedule Trigger (Daily 8am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2512,
+        3896
+      ],
+      "notes": "Runs automatically Monday–Friday at 8am. Disable this node if you only want manual runs."
+    },
+    {
+      "parameters": {},
+      "id": "1724fd9d-5dcc-44db-acb4-0717f8e8b192",
+      "name": "Run Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        3704
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a71b4911-993d-48f0-88cb-dc1c791c0ab7",
+              "name": "linkedInUrl",
+              "value": "https://www.linkedin.com/jobs/search/?keywords=Salesforce%20Developer%20OR%20Software%20Developer%20OR%20Werkstudent%20Softwareentwicklung%20OR%20Junior%20Developer%20OR%20Backend%20Developer&location=Germany&geoId=101282230&f_JT=F%2CP%2CC%2CI&f_E=1%2C2%2C3%2C4&f_TPR=r2592000&f_WT=1%2C3%2C2&position=1&pageNum=0",
+              "type": "string"
+            },
+            {
+              "id": "c24756b1-085f-4ce5-b682-5ea871b2fcc6",
+              "name": "indeedUrl",
+              "value": "http://de.indeed.com/jobs?q=salesforce+developer&l=Deutschland&sc=0kf%3Aattr%285QWDV%7CCF3CP%7CT9BXE%252COR%29attr%28DSQF7%7CPAXZC%252COR%29%3B&from=searchOnDesktopSerp&vjk=461f86220eea0387",
+              "type": "string"
+            },
+            {
+              "id": "1262f41a-c33b-4582-97a0-43c50e8a6b4f",
+              "name": "stepstoneUrl",
+              "value": "https://www.stepstone.de/jobs/salesforce-developer",
+              "type": "string"
+            },
+            {
+              "id": "ed066004-74a2-4b0e-861c-8f9f90cd67d0",
+              "name": "XingUrl",
+              "value": "https://www.xing.com/jobs/search?id=4921caec981101172481e48214f3f948&sort=date&employmentType=PART_TIME.58889d*INTERN.dc571c*FULL_TIME.ef2fe9&careerLevel=1.795d28*3.2ebf16",
+              "type": "string"
+            },
+            {
+              "id": "3a643fdf-caa2-4581-916c-2ca7a6130f35",
+              "name": "jobCount",
+              "value": 50,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "72b20f8e-c04e-400c-aa76-99920a25ea6c",
+      "name": "1. Job Search URLs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2736,
+        3800
+      ],
+      "notes": "Update these URLs to change what jobs are scraped. LinkedIn URL covers: Salesforce, Software Dev, Werkstudent, Junior, Backend roles in Germany. Add more OR terms to broaden further."
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/hKByXkMQaC5Qt9UMN/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"count\": {{ $json.jobCount }},\n  \"scrapeCompany\": true,\n  \"urls\": [\"{{ $json.linkedInUrl }}\"]\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        3488
+      ],
+      "id": "6823a455-d72f-4859-9cf0-94bd54464542",
+      "name": "Run an Actor and get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "notes": "LinkedIn scraper — count increased to 50 for broader coverage."
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/TrtlecxAsNRbKl1na/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"country\": \"de\",\n  \"limit\": {{ $json.jobCount }},\n  \"location\": \"Germany\",\n  \"title\": \"Salesforce Developer OR Software Developer OR Werkstudent Entwickler OR Junior Developer OR Backend Developer\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        3680
+      ],
+      "id": "aeb60cc4-5114-48d6-a784-b6939f438707",
+      "name": "Run an Actor and get dataset1",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "notes": "Indeed scraper — broadened to cover Salesforce, Software Dev, Werkstudent, Junior, Backend roles."
+    },
+    {
+      "parameters": {},
+      "id": "1c879566-641b-4600-b244-e059e590cd19",
+      "name": "2c. Wait for All Scrapers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        3184,
+        3800
+      ],
+      "notes": "Waits for both Apify scrapers to finish before normalizing."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// NORMALIZE & DEDUP — Config-based adapter for any job board\n// To add a new board: add an entry to BOARD_CONFIG, wire the\n// Apify node to this Code node, done. Nothing else changes.\n// ═══════════════════════════════════════════════════════════════\n\nconst BOARD_CONFIG = {\n  'Run an Actor and get dataset': {\n    source: 'LinkedIn',\n    fields: {\n      id:          'id',\n      title:       ['title', 'jobTitle'],\n      company:     ['companyName', 'company'],\n      location:    'location',\n      description: ['descriptionText', 'description'],\n      url:         ['link', 'url'],\n      applyUrl:    ['applyUrl', 'link'],\n      postedAt:    'postedAt',\n      salary:      'salary',\n      remote:      'workRemoteAllowed',\n      seniority:   ['seniorityLevel', 'seniority'],\n      country:     'country',\n    }\n  },\n  'Run an Actor and get dataset1': {\n    source: 'Indeed',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     'employer.name',\n      location:    'location.city',\n      description: 'description.text',\n      url:         ['url', 'jobUrl'],\n      applyUrl:    ['url', 'jobUrl'],\n      postedAt:    'datePublished',\n      salary:      null,\n      remote:      null,\n      seniority:   null,\n      country:     'location.countryCode',\n    }\n  },\n  'Run an Actor and get dataset2': {\n    source: 'StepStone',\n    fields: {\n      id:          'id',\n      title:       'title',\n      company:     'company_details.company_name',\n      location:    'workplace_details.job_location',\n      description: 'content_details.full_description',\n      url:         'source.url',\n      applyUrl:    'detail_page.applying_details.applying_url',\n      postedAt:    'posting_details.published_at',\n      salary:      'compensation_details.detail_salary',\n      remote:      'workplace_details.work_arrangement',\n      seniority:   null,\n      country:     null,  // StepStone.de is DACH-only — skip code filter\n    }\n  },\n  'Run an Actor and get dataset3': {\n    source: 'Glassdoor',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     'company.companyName',\n      location:    'location_city',\n      description: 'description_text',\n      url:         'jobUrl',\n      applyUrl:    'applyUrl',\n      postedAt:    'datePublished',\n      salary:      null,  // flat baseSalary_min/max handled in extractSalary\n      remote:      'remoteWorkTypes',\n      seniority:   null,\n      country:     null,  // location_country is \"Germany\" not a code; Glassdoor.de is DACH-only\n    }\n  },\n  'Run an Actor and get dataset4': {\n    source: 'Xing',\n    fields: {\n      id:          'job_id',\n      title:       'title',\n      company:     'company',\n      location:    'location',\n      description: 'description_text',\n      url:         'url',\n      applyUrl:    'apply_url',\n      postedAt:    'date_posted',\n      salary:      'salary',\n      remote:      'remote',\n      seniority:   null,\n      country:     'location_country_code',\n    }\n  },\n};\n\nconst ALLOWED_COUNTRIES = new Set(['DE', 'AT', 'CH', 'NL', 'BE', '']);\n\nfunction getNestedValue(obj, path) {\n  if (!path) return undefined;\n  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);\n}\n\nfunction resolveField(obj, mapping) {\n  if (mapping === null || mapping === undefined) return '';\n  if (Array.isArray(mapping)) {\n    for (const path of mapping) {\n      const val = getNestedValue(obj, path);\n      if (val !== undefined && val !== null && val !== '') return val;\n    }\n    return '';\n  }\n  return getNestedValue(obj, mapping) || '';\n}\n\nfunction extractSalary(obj, config) {\n  const raw = resolveField(obj, config.fields.salary);\n  // Already a string (Xing, LinkedIn)\n  if (raw && typeof raw === 'string' && raw.length > 0) return raw;\n  // StepStone: { min, max, currency, period }\n  if (raw && typeof raw === 'object' && raw.min) {\n    const { min, max, currency, currencyIso, period } = raw;\n    return `${currency || currencyIso || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  // LinkedIn: baseSalary nested object\n  if (obj.baseSalary && obj.baseSalary.min) {\n    const { min, max, currencyCode, unitOfWork } = obj.baseSalary;\n    return `${currencyCode || ''} ${min}-${max}/${unitOfWork || ''}`.trim();\n  }\n  // Glassdoor: flat baseSalary_min / baseSalary_max fields\n  if (obj.baseSalary_min) {\n    const { baseSalary_min: min, baseSalary_max: max, salary_currency: cur, salary_period: period } = obj;\n    return `${cur || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  return '';\n}\n\nconst jobs = [];\n\nfor (const [nodeName, config] of Object.entries(BOARD_CONFIG)) {\n  let items;\n  try {\n    items = $(nodeName).all();\n  } catch (e) {\n    continue;\n  }\n  if (!items || items.length === 0) continue;\n\n  for (const item of items) {\n    const d = item.json;\n    if (!d || typeof d !== 'object') continue;\n\n    const desc = String(resolveField(d, config.fields.description));\n    if (desc.length < 50) continue;\n\n    const country = String(resolveField(d, config.fields.country) || '').toUpperCase();\n    if (country && !ALLOWED_COUNTRIES.has(country)) continue;\n\n    jobs.push({\n      source:      config.source,\n      id:          String(resolveField(d, config.fields.id)),\n      title:       String(resolveField(d, config.fields.title)),\n      company:     String(resolveField(d, config.fields.company)),\n      location:    String(resolveField(d, config.fields.location)),\n      description: desc,\n      url:         String(resolveField(d, config.fields.url)),\n      applyUrl:    String(resolveField(d, config.fields.applyUrl)),\n      postedAt:    String(resolveField(d, config.fields.postedAt)),\n      salary:      extractSalary(d, config),\n      remote:      Boolean(resolveField(d, config.fields.remote)),\n      seniority:   String(resolveField(d, config.fields.seniority)),\n    });\n  }\n}\n\nconst seen = new Set();\nconst unique = [];\nfor (const job of jobs) {\n  const key = job.applyUrl || `${job.company}::${job.title}`;\n  if (seen.has(key)) continue;\n  seen.add(key);\n  unique.push(job);\n}\n\nif (unique.length === 0) {\n  return [{ json: { error: 'No valid jobs after normalize + dedup. Check Apify outputs and country filter.', rawCount: jobs.length } }];\n}\n\nreturn unique.map(j => ({ json: j }));"
+      },
+      "id": "eb846797-9e0f-4e00-a152-e72da01f4b2d",
+      "name": "3. Normalize & Merge Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        3800
+      ],
+      "notes": "Normalizes LinkedIn + Indeed output into a standard shape. Deduplicates by URL. Filters to DACH + Benelux countries."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "deceac2f-6808-4080-93f2-69602ba5f340",
+      "name": "6a. Read Applied Jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3184,
+        3992
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nPzI2flvEGQXgKIg",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Runs in parallel with scrapers from node 1. Execute Once = single Sheets API call."
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nif (rows.length === 0) {\n  return [{ json: { _emptySheet: true } }];\n}\nreturn rows;"
+      },
+      "id": "32eefeee-5236-4ff3-b151-7da719e51ded",
+      "name": "6a.1. Ensure Not Empty",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        3992
+      ],
+      "notes": "Passes a placeholder when sheet is empty so the Sync Merge always fires on first run."
+    },
+    {
+      "parameters": {},
+      "id": "a19e23fe-db2f-468e-8712-f8bf88a2031c",
+      "name": "6c. Sync Jobs + Sheet",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        3632,
+        3896
+      ],
+      "notes": "Waits for node 3 (jobs) and 6a.1 (sheet) before running dedup. Prevents empty-sheet blocking."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all scraped jobs from normalize step\nconst jobs = $('3. Normalize & Merge Jobs').all();\n\n// Build set of already-seen job URLs from Sheets\nconst seenUrls = new Set();\ntry {\n  const sheetRows = $('6a. Read Applied Jobs').all();\n  for (const row of sheetRows) {\n    const url = (row.json['Job URL'] || '').trim();\n    if (url) seenUrls.add(url);\n  }\n} catch (e) {\n  // Sheet is empty on first run — that's fine\n}\n\n// Filter to only new jobs not yet in Sheets\nconst newJobs = jobs.filter(job => {\n  const url = (job.json.url || job.json.applyUrl || '').trim();\n  return url && !seenUrls.has(url);\n});\n\nif (newJobs.length === 0) {\n  return [{ json: { skipped: true, message: 'No new jobs — all already logged in Sheets', totalScraped: jobs.length } }];\n}\n\nconsole.log(`New jobs to process: ${newJobs.length} / ${jobs.length} scraped`);\nreturn newJobs;"
+      },
+      "id": "4f38a99f-5ef1-4ebf-9dfa-ac1e8cc1596a",
+      "name": "6b. Filter Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3856,
+        3896
+      ],
+      "notes": "Removes jobs already in your Google Sheet. Prevents duplicate applications across runs."
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3000/context",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "41b5b549-50b6-4e76-8e13-68e83f8a7182",
+      "name": "4. GET Resume Context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        3896
+      ],
+      "notes": "Fetches base resume as clean text from your local server. Uses host.docker.internal to reach localhost:3000 from inside Docker."
+    },
+    {
+      "parameters": {
+        "jsCode": "const resumeContext = $('4. GET Resume Context').first().json;\nconst jobs = $('6b. Filter Duplicates').all();\n\nreturn jobs.map(job => ({\n  json: {\n    ...job.json,\n    resume: resumeContext\n  }\n}));"
+      },
+      "id": "2e82697a-f354-4fe2-944a-c4c2aced4039",
+      "name": "5. Attach Resume to Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        3896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Smart Adaptive Throttle — respects Groq/OpenAI TPM limits\n// Uses workflow static data to track rate limit state across items\n\nconst MIN_DELAY_MS = 7000;    // 7s base — safe for ~8 calls/min on Groq free tier\nconst BURST_DELAY_MS = 20000; // 20s after a 429 was recently flagged\nconst COOLDOWN_WINDOW = 60000; // 1 min cooldown window\n\nconst staticData = $getWorkflowStaticData('global');\nconst now = Date.now();\n\n// Check if downstream flagged a rate limit recently\nconst lastRateLimit = staticData.lastRateLimitAt || 0;\nconst inCooldown = (now - lastRateLimit) < COOLDOWN_WINDOW;\nconst delay = inCooldown ? BURST_DELAY_MS : MIN_DELAY_MS;\n\n// Ensure minimum spacing between calls\nconst lastCallAt = staticData.lastApiCallAt || 0;\nconst elapsed = now - lastCallAt;\nconst waitTime = Math.max(0, delay - elapsed);\n\nif (waitTime > 0) {\n  await new Promise(r => setTimeout(r, waitTime));\n}\n\nstaticData.lastApiCallAt = Date.now();\nreturn $input.all();"
+      },
+      "id": "463a5447-c5dc-440f-b7c0-e56b5b2e2a8d",
+      "name": "6. Smart Throttle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4528,
+        3896
+      ],
+      "notes": "Adaptive throttle: 7s base, 20s during cooldown. Uses static data to persist rate limit state across items in a single execution."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 7a. Build Match Prompt — prepare Groq API request body\nconst item = $input.first().json;\nconst apiKey = $env.GROQ_API_KEY;\n\nif (!apiKey) throw new Error('GROQ_API_KEY not set in environment variables!');\n\nconst systemPrompt = `Job-match filter. MSc student Germany, broad search. LENIENT.\nmatch:true if ANY: 40%+ skill overlap, internship/Werkstudent (always true), junior/entry, transferable skills.\nmatch:false ONLY if: 5+ yrs niche with zero candidate exposure, completely unrelated field (accounting/law/medicine), explicitly senior 8+ yrs.\nReturn ONLY JSON: {\"match\":bool,\"confidence\":0-100,\"reason\":\"one line\",\"jobType\":\"internship|werkstudent|full-time|contract|unknown\"}`;\n\nconst skills = (item.resume?.currentSkills || []).map(s => s.skill).join(', ');\nconst userMsg = `Candidate: MSc Global Software Dev, Hochschule Fulda Germany. Title: ${item.resume?.currentJobTitle || ''}. Skills: ${skills}.\n\nJob: ${item.title} at ${item.company} (${item.location}), seniority: ${item.seniority || 'unspecified'}.\nJD (800 chars): ${(item.description || '').slice(0, 800)}`;\n\nreturn [{\n  json: {\n    ...item,\n    _groqApiKey: apiKey,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "63a4bc65-adf7-4b13-99bd-3de09007fd6f",
+      "name": "7a. Build Match Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4752,
+        3896
+      ],
+      "notes": "Builds Groq API request body. Outputs _groqApiKey + _groqBody for HTTP Request node."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json._groqBody) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "828752ed-f739-45ef-9870-bcf3a2d52188",
+      "name": "7b. Groq API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "position": [
+        4976,
+        3896
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "0h06hfXG29GT9ek8",
+          "name": "Groq account"
+        }
+      },
+      "notes": "Calls Groq API. n8n native retry: 3x, 10s wait. No sandbox fetch issues."
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiResponse = $input.first().json;\nconst jobData = $('5. Attach Resume to Jobs').item;\n\ntry {\n  const content = aiResponse.choices[0].message.content;\n  const result = JSON.parse(content);\n  \n  return [{\n    json: {\n      ...jobData.json,\n      matchResult: result\n    }\n  }];\n} catch (err) {\n  return [{\n    json: {\n      ...jobData.json,\n      matchResult: { match: true, confidence: 50, reason: 'AI parse error - defaulting to match: ' + err.message, jobType: 'unknown' }\n    }\n  }];\n}"
+      },
+      "id": "8dd2e0ef-be4c-47ed-a050-5d39f9b16639",
+      "name": "8. Parse Match Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5200,
+        3896
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "match-check",
+              "leftValue": "={{ $json.matchResult.match }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a2175c9b-2746-4c9b-9662-eb23dd92bd84",
+      "name": "9. Is Match?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5424,
+        3896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 10a. Build Tailor Prompt — prepare OpenAI API request body\nconst item = $input.first().json;\nconst staticData = $getWorkflowStaticData('global');\nconst apiKey = $env.OPENAI_API_KEY;\n\nif (!apiKey) throw new Error('OPENAI_API_KEY not set in environment variables!');\n\n// Ensure minimum spacing between OpenAI calls\nconst PRE_CALL_DELAY_MS = 6000;\nconst lastCall = staticData.lastOpenAICallAt || 0;\nconst elapsed = Date.now() - lastCall;\nif (elapsed < PRE_CALL_DELAY_MS) {\n  await new Promise(r => setTimeout(r, PRE_CALL_DELAY_MS - elapsed));\n}\nstaticData.lastOpenAICallAt = Date.now();\n\nconst systemPrompt = `Resume and cover letter writer for Germany job applications. Return ONE JSON object.\n\nRESUME PATCH (only changed sections):\n- Keep entry IDs exactly as given\n- Rephrase existing bullets with JD keywords, no hallucination\n- Profile: 3-4 sentences, mention MSc student Germany, role-specific\n- Bullets: <ul><li><p>text</p></li></ul> | Paragraphs: <p>text</p>\n\nCOVER LETTER (3 paragraphs, 180-220 words, plain text):\n- P1: Name role+company, mention MSc Global Software Dev Hochschule Fulda, hook with most relevant experience\n- P2: 2-3 concrete matching skills/achievements\n- P3: Availability (internship/Werkstudent/full-time as fits) + call to action\n- No cliches, no salutation, no date\n\nReturn ONLY:\n{\n  \"patch\": {\n    \"jobTitle\": \"omit if unchanged\",\n    \"profile\": \"<p>...</p> or omit\",\n    \"work\": [{\"id\":\"existing-id\",\"description\":\"<ul><li><p>...</p></li></ul>\"}],\n    \"skills\": [{\"id\":\"existing-id\",\"infoHtml\":\"<p>...</p>\"}]\n  },\n  \"coverLetter\": \"p1\\n\\np2\\n\\np3\"\n}`;\n\nconst userMsg = `RESUME:\nTitle: ${item.resume?.currentJobTitle || ''}\nProfile: ${item.resume?.currentProfile || ''}\nWork: ${JSON.stringify(item.resume?.currentWork || [])}\nSkills: ${JSON.stringify(item.resume?.currentSkills || [])}\n\nJOB: ${item.title} | ${item.company} | ${item.location} | Type: ${item.matchResult?.jobType || 'unknown'}\nJD: ${item.description || ''}`;\n\nreturn [{\n  json: {\n    ...item,\n    _openAIApiKey: apiKey,\n    _openAIBody: {\n      model: 'gpt-4o-mini',\n      temperature: 0.3,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "1dc9f589-b3b0-44bf-aead-f738917a1f74",
+      "name": "10a. Build Tailor Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5648,
+        3800
+      ],
+      "notes": "Builds OpenAI request body with throttle. Outputs _openAIApiKey + _openAIBody for HTTP Request node."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json._openAIBody) }}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "cef4c653-e5ec-4644-b678-12c4ac28c567",
+      "name": "10b. OpenAI API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "position": [
+        5872,
+        3800
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wwjiHkXU7KZB6LWb",
+          "name": "OpenAi account"
+        }
+      },
+      "notes": "Calls OpenAI API. n8n native retry: 3x, 12s wait. No sandbox fetch issues."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Single combined AI call returns both patch and coverLetter\nconst aiResponse = $input.first().json;\nconst jobData = $('9. Is Match?').first().json;\n\nlet patch = {};\nlet coverLetter = '';\n\ntry {\n  if (!aiResponse?.choices?.[0]?.message?.content) {\n    throw new Error('No choices in AI response — possible rate limit or API error');\n  }\n  const result = JSON.parse(aiResponse.choices[0].message.content);\n  patch = result.patch || {};\n  coverLetter = result.coverLetter || '';\n} catch (err) {\n  patch = { _error: 'AI parse failed: ' + err.message };\n  coverLetter = '';\n}\n\nconst parts = (coverLetter || '').split(/\\n\\n+/);\n\nreturn [{\n  json: {\n    patch,\n    coverLetter,\n    paragraph1: parts[0] || '',\n    paragraph2: parts[1] || '',\n    paragraph3: parts[2] || '',\n    job: {\n      source:          jobData.source || '',\n      title:           jobData.title || '',\n      company:         jobData.company || '',\n      location:        jobData.location || '',\n      url:             jobData.url || '',\n      applyUrl:        jobData.applyUrl || '',\n      postedAt:        jobData.postedAt || '',\n      salary:          jobData.salary || '',\n      jobType:         jobData.matchResult?.jobType || 'unknown',\n      matchConfidence: jobData.matchResult?.confidence || 0,\n      matchReason:     jobData.matchResult?.reason || ''\n    }\n  }\n}];"
+      },
+      "id": "800d49df-ee73-4c50-b01a-130b595b12ab",
+      "name": "11. Parse AI Patch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6096,
+        3800
+      ],
+      "notes": "Reads combined patch+coverLetter from single node 10. Handles missing/failed AI responses gracefully."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/generate-resume",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ patch: $json.patch, company: $json.job.company }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "7bf79afd-6eb0-462e-92f7-a3e7ac65274d",
+      "name": "12. POST Generate Resume PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6320,
+        3800
+      ],
+      "continueOnFail": true,
+      "notes": "Sends JSON patch to local server. Server merges into base resume, opens FlowCV via Playwright, downloads PDF."
+    },
+    {
+      "parameters": {
+        "jsCode": "const patchData = $('11. Parse AI Patch').first().json;\nconst resumeResult = $('12. POST Generate Resume PDF').first().json;\nconst coverLetterResult = $input.first().json;\n\nconst now = new Date();\nconst date = now.toISOString().split('T')[0];\nconst time = now.toTimeString().split(' ')[0];\n\nreturn [{\n  json: {\n    Date:               date + ' ' + time,\n    Company:            patchData.job.company || '',\n    Role:               patchData.job.title || '',\n    'Job Type':         patchData.job.jobType || '',\n    Location:           patchData.job.location || '',\n    Source:             patchData.job.source || '',\n    'Job URL':          patchData.job.url || '',\n    'Apply URL':        patchData.job.applyUrl || '',\n    'Match Confidence': patchData.job.matchConfidence || 0,\n    'Match Reason':     patchData.job.matchReason || '',\n    'Resume File':       resumeResult.file || '',\n    'Cover Letter File': coverLetterResult.file || '',\n    Status:             (resumeResult.success && coverLetterResult.success) ? 'Generated' : 'PDF Failed',\n    Applied:            'No',\n    Response:           '',\n    Interview:          '',\n    Notes:              patchData.patch?._error || ''\n  }\n}];"
+      },
+      "id": "54be6ccc-5c7b-4b24-b01c-c36d6e8dc7ae",
+      "name": "13. Prepare Sheet Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6768,
+        3800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Type",
+              "displayName": "Job Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job URL",
+              "displayName": "Job URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Apply URL",
+              "displayName": "Apply URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Match Confidence",
+              "displayName": "Match Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Match Reason",
+              "displayName": "Match Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resume File",
+              "displayName": "Resume File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover Letter File",
+              "displayName": "Cover Letter File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Applied",
+              "displayName": "Applied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Response",
+              "displayName": "Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview",
+              "displayName": "Interview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "665859a9-81e5-4e99-a830-eacb07bee38a",
+      "name": "14. Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        6992,
+        3800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nPzI2flvEGQXgKIg",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Update your Sheet headers to: Date, Company, Role, Job Type, Location, Source, Job URL, Apply URL, Match Confidence, Match Reason, Resume File, Cover Letter, Status, Applied, Response, Interview, Notes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobData = $input.first().json;\n\nconst now = new Date();\nconst date = now.toISOString().split('T')[0];\nconst time = now.toTimeString().split(' ')[0];\n\nreturn [{\n  json: {\n    Date:               date + ' ' + time,\n    Company:            jobData.company || '',\n    Role:               jobData.title || '',\n    'Job Type':         jobData.matchResult?.jobType || '',\n    Location:           jobData.location || '',\n    Source:             jobData.source || '',\n    'Job URL':          jobData.url || '',\n    'Apply URL':        jobData.applyUrl || '',\n    'Match Confidence': jobData.matchResult?.confidence || 0,\n    'Match Reason':     jobData.matchResult?.reason || '',\n    'Resume File':      '',\n    'Cover Letter':     '',\n    Status:             'Skipped - No Match',\n    Applied:            'N/A',\n    Response:           '',\n    Interview:          '',\n    Notes:              ''\n  }\n}];"
+      },
+      "id": "c45af0f4-cef6-4dc6-92d3-d83b60cff207",
+      "name": "15. Prepare Skip Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5648,
+        3992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Type",
+              "displayName": "Job Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job URL",
+              "displayName": "Job URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Apply URL",
+              "displayName": "Apply URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Match Confidence",
+              "displayName": "Match Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Match Reason",
+              "displayName": "Match Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resume File",
+              "displayName": "Resume File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover Letter",
+              "displayName": "Cover Letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Applied",
+              "displayName": "Applied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Response",
+              "displayName": "Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview",
+              "displayName": "Interview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a8d52fd7-70ca-44b7-ad1f-a1fc608cdc79",
+      "name": "16. Log Skipped to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        5872,
+        3992
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nPzI2flvEGQXgKIg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/IGjzUXKHqlsJaT58u/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"employmentType\": [\n    \"PERMANENT_POSITION\",\n    \"FIXED_TERM_CONTRACT\",\n    \"ENTRY_LEVEL_TRAINEE\",\n    \"STUDENT_JOB_WORKING_STUDENT\",\n    \"INTERNSHIP\"\n  ],\n  \"limit\": {{ $json.jobCount }},\n  \"startUrls\": [\n    {{ $json.stepstoneUrl }}\n  ],\n  \"domain\": \"stepstone.de\",\n  \"distanceFromSource\": \"30\",\n  \"workRemote\": [],\n  \"ApplicationType\": [],\n  \"listingLanguage\": [],\n  \"WorkingHours\": [],\n  \"experience\": [],\n  \"publishedDate\": \"\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        3968
+      ],
+      "id": "d7013b56-1b24-42c5-810d-4335369fe819",
+      "name": "Run an Actor and get dataset2",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "notes": "StepStone scraper — employment types + remote filter configured."
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/bYSAbQqxwImLaf2nb/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"country\": \"Germany\",\n  \"datePosted\": \"3\",\n  \"deepSearch\": false,\n  \"includeNoSalaryJob\": true,\n  \"keywords\": [\n    \"Salesforce Developer, Software Engineer\"\n  ],\n  \"location\": \"Germany\",\n  \"maxItems\": {{ $json.jobCount }},\n  \"saveOnlyUniqueItems\": false\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        4160
+      ],
+      "id": "22d85ad8-3156-4d2b-ac24-cbc91718aea5",
+      "name": "Run an Actor and get dataset3",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "notes": "Glassdoor scraper — keywords, country=Germany, datePosted=3 days."
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/YGO6eh6ICQXnan9L4/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"results_wanted\": {{ $json.jobCount }},\n  \"startUrl\": {{ $json.XingUrl }}\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        4352
+      ],
+      "id": "774eb9dc-2d3a-444d-85db-b3e5e1a85d89",
+      "name": "Run an Actor and get dataset4",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "notes": "Xing scraper — results_wanted from jobCount, startUrl from XingUrl."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/generate-coverletter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ role: $(\"11. Parse AI Patch\").first().json.job.title, company: $(\"11. Parse AI Patch\").first().json.job.company, companyAddress: $(\"11. Parse AI Patch\").first().json.job.location, paragraph1: $(\"11. Parse AI Patch\").first().json.paragraph1, paragraph2: $(\"11. Parse AI Patch\").first().json.paragraph2, paragraph3: $(\"11. Parse AI Patch\").first().json.paragraph3 }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "c7a2e891-f3b4-4d56-9e78-0a1b2c3d4e5f",
+      "name": "12b. POST Generate Cover Letter PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6544,
+        3800
+      ],
+      "continueOnFail": true,
+      "notes": "Sends cover letter paragraphs to local server. Renders HTML and exports PDF via Playwright."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger (Daily 8am)": {
+      "main": [
+        [
+          {
+            "node": "1. Job Search URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Workflow": {
+      "main": [
+        [
+          {
+            "node": "1. Job Search URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Job Search URLs": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Run an Actor and get dataset1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "6a. Read Applied Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Run an Actor and get dataset2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Run an Actor and get dataset3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Run an Actor and get dataset4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "2c. Wait for All Scrapers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset1": {
+      "main": [
+        [
+          {
+            "node": "2c. Wait for All Scrapers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "2c. Wait for All Scrapers": {
+      "main": [
+        [
+          {
+            "node": "3. Normalize & Merge Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Normalize & Merge Jobs": {
+      "main": [
+        [
+          {
+            "node": "6c. Sync Jobs + Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6a. Read Applied Jobs": {
+      "main": [
+        [
+          {
+            "node": "6a.1. Ensure Not Empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6b. Filter Duplicates": {
+      "main": [
+        [
+          {
+            "node": "4. GET Resume Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. GET Resume Context": {
+      "main": [
+        [
+          {
+            "node": "5. Attach Resume to Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Attach Resume to Jobs": {
+      "main": [
+        [
+          {
+            "node": "6. Smart Throttle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Parse Match Result": {
+      "main": [
+        [
+          {
+            "node": "9. Is Match?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Is Match?": {
+      "main": [
+        [
+          {
+            "node": "10a. Build Tailor Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "15. Prepare Skip Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Parse AI Patch": {
+      "main": [
+        [
+          {
+            "node": "12. POST Generate Resume PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. POST Generate Resume PDF": {
+      "main": [
+        [
+          {
+            "node": "12b. POST Generate Cover Letter PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. Prepare Sheet Log": {
+      "main": [
+        [
+          {
+            "node": "14. Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15. Prepare Skip Log": {
+      "main": [
+        [
+          {
+            "node": "16. Log Skipped to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6a.1. Ensure Not Empty": {
+      "main": [
+        [
+          {
+            "node": "6c. Sync Jobs + Sheet",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "6c. Sync Jobs + Sheet": {
+      "main": [
+        [
+          {
+            "node": "6b. Filter Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Smart Throttle": {
+      "main": [
+        [
+          {
+            "node": "7a. Build Match Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7a. Build Match Prompt": {
+      "main": [
+        [
+          {
+            "node": "7b. Groq API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7b. Groq API Call": {
+      "main": [
+        [
+          {
+            "node": "8. Parse Match Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a. Build Tailor Prompt": {
+      "main": [
+        [
+          {
+            "node": "10b. OpenAI API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b. OpenAI API Call": {
+      "main": [
+        [
+          {
+            "node": "11. Parse AI Patch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset2": {
+      "main": [
+        [
+          {
+            "node": "2c. Wait for All Scrapers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset3": {
+      "main": [
+        [
+          {
+            "node": "2c. Wait for All Scrapers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset4": {
+      "main": [
+        [
+          {
+            "node": "2c. Wait for All Scrapers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "12b. POST Generate Cover Letter PDF": {
+      "main": [
+        [
+          {
+            "node": "13. Prepare Sheet Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "64e96348-bcd7-4a0f-b9f9-101b1b08b1b0",
+  "meta": {
+    "instanceId": "ab1d9b83a326652825b037e9a6d1c825d6bec27701f2a3cac612c5b257bccc08"
+  },
+  "id": "eaSVqfiE5biIt6iu",
+  "tags": [
+    {
+      "updatedAt": "2026-03-28T15:57:18.737Z",
+      "createdAt": "2026-03-28T15:57:18.737Z",
+      "id": "4r1Bw6tRFDeWnIeE",
+      "name": "resume-automation"
+    },
+    {
+      "updatedAt": "2026-03-28T15:57:18.802Z",
+      "createdAt": "2026-03-28T15:57:18.802Z",
+      "id": "IdtMSQtdOfSH1th9",
+      "name": "job-search"
+    },
+    {
+      "updatedAt": "2026-03-28T15:57:18.755Z",
+      "createdAt": "2026-03-28T15:57:18.755Z",
+      "id": "IgGAlUqpZqAUlACh",
+      "name": "ai-powered"
+    }
+  ]
+}
