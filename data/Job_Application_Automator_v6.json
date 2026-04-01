@@ -280,7 +280,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 7a. Build Match Prompt — prepare Groq API request body\nconst item = $input.first().json;\nconst apiKey = $env.GROQ_API_KEY;\n\nif (!apiKey) throw new Error('GROQ_API_KEY not set in environment variables!');\n\nconst systemPrompt = `Job-match filter. MSc student Germany, broad search. LENIENT.\nmatch:true if ANY: 40%+ skill overlap, internship/Werkstudent (always true), junior/entry, transferable skills.\nmatch:false ONLY if: 5+ yrs niche with zero candidate exposure, completely unrelated field (accounting/law/medicine), explicitly senior 8+ yrs.\nReturn ONLY JSON: {\"match\":bool,\"confidence\":0-100,\"reason\":\"one line\",\"jobType\":\"internship|werkstudent|full-time|contract|unknown\"}`;\n\nconst skills = (item.resume?.currentSkills || []).map(s => s.skill).join(', ');\nconst userMsg = `Candidate: MSc Global Software Dev, Hochschule Fulda Germany. Title: ${item.resume?.currentJobTitle || ''}. Skills: ${skills}.\n\nJob: ${item.title} at ${item.company} (${item.location}), seniority: ${item.seniority || 'unspecified'}.\nJD (800 chars): ${(item.description || '').slice(0, 800)}`;\n\nreturn [{\n  json: {\n    ...item,\n    _groqApiKey: apiKey,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ]\n    }\n  }\n}];"
+        "jsCode": "// 7a. Build Match Prompt — prepare Groq API request body\nconst item = $input.first().json;\nconst apiKey = $env.GROQ_API_KEY;\n\nif (!apiKey) throw new Error('GROQ_API_KEY not set in environment variables!');\n\nconst systemPrompt = `Job-match filter. MSc student Germany, broad search. LENIENT.\nmatch:true if ANY: 40%+ skill overlap, internship/Werkstudent (always true), junior/entry, transferable skills.\nmatch:false ONLY if:\n- completely unrelated field (accounting/law/finance/legal/medical/non-tech)\n- pure ML engineer or pure data scientist (OK if ML is just one tool among many for a software role)\n- pure project/product management with no hands-on development\n- explicitly requires 6+ years AND role is a narrow specialisation with zero candidate exposure\nReturn ONLY JSON: {\"match\":bool,\"confidence\":0-100,\"reason\":\"one line\",\"jobType\":\"internship|werkstudent|full-time|contract|unknown\"}`;\n\nconst skills = (item.resume?.currentSkills || []).map(s => s.skill).join(', ');\nconst userMsg = `Candidate: MSc Global Software Dev, Hochschule Fulda Germany. Title: ${item.resume?.currentJobTitle || ''}. Skills: ${skills}.\n\nJob: ${item.title} at ${item.company} (${item.location}), seniority: ${item.seniority || 'unspecified'}.\nJD (800 chars): ${(item.description || '').slice(0, 800)}`;\n\nreturn [{\n  json: {\n    ...item,\n    _groqApiKey: apiKey,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ]\n    }\n  }\n}];"
       },
       "id": "63a4bc65-adf7-4b13-99bd-3de09007fd6f",
       "name": "7a. Build Match Prompt",
@@ -354,6 +354,16 @@
               "operator": {
                 "type": "boolean",
                 "operation": "equals",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "confidence-check",
+              "leftValue": "={{ $json.matchResult.confidence }}",
+              "rightValue": 45,
+              "operator": {
+                "type": "number",
+                "operation": "gte",
                 "singleValue": true
               }
             }
