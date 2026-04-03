@@ -25,6 +25,32 @@ function toSlug(str) {
     .slice(0, 40) || "company";
 }
 
+function formatDatePart(n) {
+  return String(n).padStart(2, "0");
+}
+
+function buildOutputPath({ kind, company }) {
+  const now = new Date();
+  const year = String(now.getFullYear());
+  const month = formatDatePart(now.getMonth() + 1);
+  const day = formatDatePart(now.getDate());
+  const completeDateFolder = `${year}-${month}-${day}`;
+
+  const companySlug = toSlug(company || "company");
+  const folderName = kind === "resume" ? "Resume" : "Coverletter";
+  const filePrefix = kind === "resume" ? "resume" : "coverletter";
+  const fileName = `${filePrefix}-${companySlug}.pdf`;
+
+  const directoryPath = resolve(OUTPUT_DIR, completeDateFolder, folderName);
+  mkdirSync(directoryPath, { recursive: true });
+
+  return {
+    fileName,
+    directoryPath,
+    fullPath: resolve(directoryPath, fileName),
+  };
+}
+
 // Strips HTML tags to give AI clean plain text
 function stripHtml(html = "") {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -72,8 +98,10 @@ app.post("/generate-resume", async (req, res) => {
   }
 
   const mergedResume = applyPatch(rawPatch);
-  const slug = toSlug(company || "company");
-  const outPath = resolve(OUTPUT_DIR, `resume-${slug}.pdf`);
+  const output = buildOutputPath({
+    kind: "resume",
+    company,
+  });
 
   let context;
   try {
@@ -83,15 +111,15 @@ app.post("/generate-resume", async (req, res) => {
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready);
     await page.pdf({
-      path: outPath,
+      path: output.fullPath,
       format: "A4",
       printBackground: true,
       margin: { top: "15mm", right: "18mm", bottom: "15mm", left: "18mm" },
     });
-    if (!existsSync(outPath)) {
-      throw new Error(`PDF was not written to disk: ${outPath}`);
+    if (!existsSync(output.fullPath)) {
+      throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    res.json({ success: true, file: outPath });
+    res.json({ success: true, file: output.fullPath, fileName: output.fileName });
   } catch (err) {
     console.error("Resume generation error:", err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -104,8 +132,10 @@ app.post("/generate-resume", async (req, res) => {
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
   const { company } = req.body;
-  const slug = toSlug(company || "company");
-  const outPath = resolve(OUTPUT_DIR, `coverletter-${slug}.pdf`);
+  const output = buildOutputPath({
+    kind: "coverletter",
+    company,
+  });
 
   let context;
   try {
@@ -115,15 +145,15 @@ app.post("/generate-coverletter", async (req, res) => {
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready);
     await page.pdf({
-      path: outPath,
+      path: output.fullPath,
       format: "A4",
       printBackground: true,
       margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
-    if (!existsSync(outPath)) {
-      throw new Error(`PDF was not written to disk: ${outPath}`);
+    if (!existsSync(output.fullPath)) {
+      throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    res.json({ success: true, file: outPath });
+    res.json({ success: true, file: output.fullPath, fileName: output.fileName });
   } catch (err) {
     console.error("Cover letter generation error:", err.message);
     res.status(500).json({ success: false, error: err.message });

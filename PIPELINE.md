@@ -106,7 +106,8 @@ Merges AI patch into `data/resume.json`, renders HTML, exports PDF.
 }
 ```
 
-Response: `{ "success": true, "file": "D:\\KARAN\\output\\resume-sap-se.pdf" }`
+Response example:
+`{ "success": true, "file": "D:\\KARAN\\output\\2026-04-03\\Resume\\resume-sap-se.pdf", "fileName": "resume-sap-se.pdf" }`
 
 > `patch` can also be passed flat at the top level — the server handles both.
 
@@ -126,7 +127,8 @@ Renders a German cover letter PDF from 3 HTML paragraphs.
 }
 ```
 
-Response: `{ "success": true, "file": "D:\\KARAN\\output\\coverletter-sap-se.pdf" }`
+Response example:
+`{ "success": true, "file": "D:\\KARAN\\output\\2026-04-03\\Coverletter\\coverletter-sap-se.pdf", "fileName": "coverletter-sap-se.pdf" }`
 
 ---
 
@@ -210,7 +212,7 @@ d:\KARAN\
 ├── scripts/
 │   ├── test.js                 ← Manual test: hits /generate-resume with hardcoded patch
 │   └── test-coverletter.js     ← Manual test: hits /generate-coverletter with sample data
-├── output/                     ← Generated PDFs land here (git-ignored)
+├── output/                     ← Generated PDFs organized as YYYY-MM-DD/Resume and YYYY-MM-DD/Coverletter
 ├── package.json
 └── PIPELINE.md                 ← This file
 ```

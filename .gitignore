@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Runtime output
+output/
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local agent settings
+.claude/settings.local.json

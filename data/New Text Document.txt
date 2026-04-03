@@ -1,0 +1,227 @@
+What is actually broken (real issues)
+1. StepStone / Glassdoor / XING scrapers are likely not wired
+The 2c. Wait for All Scrapers merge node comment says "Waits for both Apify scrapers" — only LinkedIn and Indeed are connected. BOARD_CONFIG has entries for dataset2/3/4 but the actual Apify actor nodes probably don't exist. $(nodeName).all() wraps in try/catch + continue — so these silently return zero jobs every run. You're only scraping 2 of 5 boards.
+
+2. lastRateLimitAt is dead code — the 20s cooldown never triggers
+The Smart Throttle reads staticData.lastRateLimitAt but nothing in the workflow ever sets it. The Groq/OpenAI HTTP nodes retry natively but don't write to staticData on 429. The burst cooldown is permanently disabled.
+
+3. 6b. Filter Duplicates is URL-only against the Sheet
+Same job on LinkedIn and StepStone → different URLs → passes dedup → you'd generate two tailored resumes for the same role. The in-normalize dedup handles same-run cross-board dedup, but across days (if a job stays posted), 6b won't catch it without a compound key.
+
+4. Cover letter node — need to verify it exists
+Node 13. Prepare Sheet Log reads coverLetterResult = $input.first().json and accesses .file — implies a /generate-coverletter HTTP call exists between 12 and 13. I didn't see it in the JSON. If it's missing, coverLetterResult.file is always '' and Status shows "PDF Failed" for every run.
+
+5. $('5. Attach Resume to Jobs').item in node 8 — silent wrong-item risk
+Node 8. Parse Match Result uses $('5. Attach Resume to Jobs').item (no index). In batch processing, this always grabs item 0 from that node, not the current item. If multiple jobs are processed, every match result gets paired with job #1's data. Should be .first() or use $input context properly.
+
+Your 5 Suggestions — Verdict
+1. Country filter inconsistency — Low priority. The current design is intentionally correct (null = trusted DACH source = pass). The only real edge: if Xing returns non-DE codes inconsistently, a stray job could slip through. Worth a single-line default but not urgent.
+
+2. Relax description filter — Do it now. < 50 is too strict. A job posting that says "Salesforce Developer – apply now" (40 chars) gets silently dropped. Change to < 20 or remove entirely — the Groq filter is the right quality gate, not char count.
+
+3. Upgrade dedup — Partially already done (in-normalize), but 6b needs compound key to catch cross-day duplicates. Worth a 3-line fix.
+
+4. Silent failure risks — The lastRateLimitAt dead code and the .item wrong-index bug are the two highest-risk silent failures. Both real, both fixable.
+
+5. Modular plug-in architecture — Already implemented. BOARD_CONFIG is exactly a true adapter pattern — add a key, wire a node, done. The report missed this. Nothing to do here.
+
+Priority Stack (what to actually fix)
+Priority | Fix | Impact
+P0	 | Verify StepStone/Glassdoor/XING nodes exist and are wired to 2c	| You're missing 3 of 5 data sources
+P0	 | Fix .item → .first() in Node 8	                                | Wrong job data matched to wrong AI result
+P1   | Set staticData.lastRateLimitAt on 429 detection	                | Throttle cooldown actually works
+P1   | Relax desc.length < 50 to < 20	                                | Stops dropping valid short postings
+P2	 | Add company+title compound key to 6b Sheet dedup	                | Catch same-job reposts across days
+P3	 | Verify cover letter node exists between 12 and 13	            | Confirm PDFs actually get generated
+
+## Pipeline Overview
+
+The workflow runs 5 Apify scrapers in parallel (LinkedIn, Indeed, StepStone, Glassdoor, Xing), normalizes and deduplicates them, filters against Google Sheets for already-seen jobs, attaches resume context, calls Groq for match filtering, then GPT-4o-mini for tailoring, and finally logs everything to Sheets. The overall design is solid, but there are concrete issues in each stage.
+
+***
+
+## Deduplication
+
+**What works:** Node 3 deduplicates within a single run using `applyUrl || company::title` as the key, and Node 6b cross-checks against every URL in the spreadsheet's `Job URL` column before any AI calls are made .
+
+**What's broken or missing:**
+
+- **Cross-board duplicates with mismatched URLs are not caught.** The same job posted on both LinkedIn and StepStone will have completely different `applyUrl` values and different company name formatting (e.g., `"SAP SE"` vs `"SAP"`). The fallback key `company::title` only fires when `applyUrl` is empty. You need a normalized key that compares lowercased, punctuation-stripped `(company + title)` regardless of whether URLs exist.
+- **The Merge node `2c. Wait for All Scrapers` is misconfigured.** In the connections, all four extra scrapers (dataset2, 3, 4) feed into **index 1** of the merge node — the same input port as dataset1. Only LinkedIn (index 0) and one other (index 1) are wired correctly; the rest collide on port 1. n8n Merge v3.1 in "Merge by position" mode will only wait for two branches by default. You risk Glassdoor and Xing data being dropped silently.
+- **Sheet-based dedup reads `Job URL` but logs are inconsistent.** Node 13 (accepted jobs) writes to `Job URL`, but Node 15 (skipped jobs) also writes to `Job URL`. Because skipped jobs are logged too, the next run will treat those skipped URLs as "already seen" and permanently suppress them — even if the job was only skipped due to a low confidence score, not because you applied.
+
+**Fix:** Only log to the sheet the jobs that pass the match filter (node 14). Move skipped-job logging to a separate tab, and use a column like `Applied` with value `"Skipped"` to distinguish, or change the sheet dedup key to only match rows where `Applied != "N/A"`.
+
+***
+
+## Job Description Extraction
+
+**What works:** The normalizer extracts `description` from nested paths per board (e.g., `description.text` for Indeed, `content_details.full_description` for StepStone) and drops items with fewer than 50 characters.
+
+**What's broken or missing:**
+
+- **The AI match prompt truncates the description to 800 characters.** `(item.description || '').slice(0, 800)` is sent in node 7a. For a standard 2,000–5,000 word job description, this captures only the opening boilerplate — usually the company intro — not the required skills, tech stack, or experience section . The tailoring prompt in node 10a passes the **full** description, so the match filter is working from far less context than the tailoring step. This creates a mismatch: a job can be filtered out before tailoring gets a fair look.
+- **Fix:** Increase the match prompt to at least 2,500–3,000 characters, or extract a structured subset (required skills, years of experience, tech stack) before passing to Groq.
+
+***
+
+## Candidate Profile & Resume Passing
+
+**What works:** Node 4 fetches the full resume context from your local server, and Node 5 merges it onto each job item, making `item.resume` available downstream.
+
+**What's missing:**
+
+- **The match prompt (node 7a) uses only `currentJobTitle` and a flat join of `currentSkills`** — no work history, no education, no projects. The system prompt says "MSc student Germany" but this is hardcoded text, not drawn from the actual resume object. If you update your resume context server, the job title and skills will update, but your academic background, project experience, and work history are invisible to the matching step.
+- **The tailoring prompt (node 10a) passes full work and skills arrays**, which is correct, but also sends the entire `description` field without any length cap — which is fine for GPT-4o-mini but will hit context limits on very long JDs and increase cost significantly.
+- **Fix:** In node 7a, expand the user message to include education (`item.resume.education`), a 1-2 line project summary, and the first 150 chars of the current profile statement. This turns keyword overlap into genuine semantic matching.
+
+***
+
+## AI Output & JSON Validation
+
+**What works:** Both AI calls use `response_format: { type: 'json_object' }` which forces structured output. Node 11 catches parse errors and sets fallback values.
+
+**What's broken or missing:**
+
+- **No required-field validation after parsing.** Node 11 does `result.patch || {}` and `result.coverLetter || ''` but never checks whether `patch.work` is an array, whether work entries have valid `id` fields, or whether `coverLetter` is actually 3 paragraphs. A partial JSON (e.g., GPT returns `{"patch":{}, "coverLetter":""}`) passes through with no warning .
+- **`patch._error` from a failed AI response silently flows into the resume generator (node 12).** The `continueOnFail: true` on node 12 means a broken patch with `_error` still proceeds to PDF generation and sheet logging, and the Notes column gets the error string — but the resume PDF will be wrong or empty.
+- **Column name mismatch between node 13 and node 15.** Node 13 uses the key `'Cover Letter File'` but node 15 uses `'Cover Letter'` (no "File"). The Sheets schema in node 16 expects `'Cover Letter'` but node 14's schema expects `'Cover Letter File'`. This will cause one column to be blank in every accepted-job row.
+- **Fix:** Add a validation step after node 11 that checks for `patch._error`, validates `patch.work` is a non-empty array with `id` fields, checks `coverLetter.length > 50`, and routes failures to a separate error-log branch instead of letting them silently continue.
+
+***
+
+## Sheet Logging
+
+**What works:** Node 14 appends all accepted jobs with 17 columns including date, source, match confidence, and file paths. The schema is well-defined and includes tracking columns (Applied, Response, Interview) for manual follow-up.
+
+**What's broken or missing:**
+
+- **Race condition on parallel writes.** n8n processes items sequentially per execution, so this is low risk in practice — but if you ever enable concurrent executions, two runs could append to the sheet simultaneously and write duplicates. The sheet dedup (node 6b) reads the sheet only once at run start, so any rows appended during the same run are invisible to it.
+- **No provenance/source column for skipped jobs vs. accepted jobs.** Both go to the same sheet (`gid=0`). There is no flag or tab separator distinguishing "generated resume" rows from "skipped - no match" rows. Downstream resume tailoring logic that reads the sheet would need to filter by `Status`.
+- **The `Date` field includes both date and time as a single string** (`"2026-04-02 08:01:35"`). This is fine for human reading but breaks any date-based filtering or sorting in Sheets, since the column is typed as `string`. Splitting into separate `Date` and `Time` columns or using ISO 8601 format (`"2026-04-02T08:01:35"`) would make it sortable.
+- **Fix for the column name mismatch:** Rename `'Cover Letter File'` in node 13 to `'Cover Letter'` to match the schema everywhere, or rename the column in node 16's schema to `'Cover Letter File'` — pick one name and use it consistently.
+
+***
+
+## Summary of Issues by Priority
+
+| Priority | Stage | Issue |
+|---|---|---|
+| 🔴 Critical | Ingestion | Merge node `2c` ports 1–4 collide — Glassdoor/Xing/StepStone likely dropped |
+| 🔴 Critical | Dedup | Skipped jobs logged to same sheet dedup column → permanently suppressed next run |
+| 🔴 Critical | Logging | `'Cover Letter File'` vs `'Cover Letter'` column name mismatch (nodes 13/14 vs 15/16) |
+| 🟠 High | AI Prompting | Match prompt uses only 800 chars of JD — misses skills/requirements section |
+| 🟠 High | AI Prompting | Match prompt omits education, projects, work history from resume |
+| 🟡 Medium | JSON Validation | No required-field check after parsing; broken patch silently flows to PDF generator |
+| 🟡 Medium | Dedup | Cross-board same-job duplicates not caught when URLs differ |
+| 🟢 Low | Logging | Date+time as single string breaks Sheets sorting/filtering |
+| 🟢 Low | Logging | No tab separation between accepted and skipped jobs |
+
+
+
+1. ❌ Your bottleneck is now AI — not scraping
+
+You’re doing:
+
+7s delay per job (Groq)
+6s delay per job (OpenAI)
+
+If 50 jobs:
+
+👉 ~10–15 minutes per run
+
+That’s your new ceiling.
+
+Fix (high impact):
+
+Batch filtering first:
+
+Pre-filter jobs with cheap keyword scoring (no AI)
+Send only top ~15 to Groq
+Send top ~5–10 to OpenAI
+
+👉 You’ll cut runtime by 70%+
+
+2. ❌ Dedup key can still fail
+job.applyUrl || `${company}::${title}`
+
+Problem:
+
+Same job, slightly different title → duplicate
+Different URLs for same job → duplicate
+Better:
+const key = (job.applyUrl || job.url || '')
+  .replace(/\/$/, '')
+  .toLowerCase();
+
+Fallback:
+
+company + title + location
+3. ❌ Resume tailoring is still “single strategy”
+
+Right now:
+
+Same resume structure
+Just keyword tweaks
+
+👉 This is okay, but not elite.
+
+Next level:
+
+Add job-type routing
+
+Example:
+
+if (jobType === "Salesforce")
+  emphasize: Apex, LWC, integrations
+
+if (jobType === "Backend")
+  emphasize: Node, APIs, DB
+
+👉 Same resume JSON
+👉 Different emphasis strategy
+
+That’s how you win interviews.
+
+4. ❌ No priority scoring (huge missed opportunity)
+
+You treat all matches equally.
+
+But you already have:
+
+confidence
+jobType
+keywords
+location
+
+👉 You should rank:
+
+priorityScore =
+  confidence * 0.6 +
+  (internship ? 20 : 0) +
+  (remote ? 10 : 0)
+
+Then:
+
+Only generate PDFs for top X jobs
+5. ❌ No parallelism (safe parallelism possible)
+
+Right now everything is sequential.
+
+But:
+
+Groq + OpenAI can handle controlled concurrency
+
+Even 2–3 parallel jobs:
+
+👉 Cuts runtime massively
+
+🧠 Overall System Evaluation
+
+From the file:
+
+You now have:
+
+Scrapers → Normalize → Dedup → Filter → AI Match → AI Tailor → PDF → Log
+
+That’s a full pipeline lifecycle.
