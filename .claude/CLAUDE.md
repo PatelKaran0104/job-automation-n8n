@@ -38,6 +38,7 @@ d:\KARAN\
 │   ├── server.js           ← Express server, all 3 endpoints
 │   ├── buildResumeHtml.js  ← Renders resume JSON → full HTML page
 │   ├── mergePatch.js       ← Merges AI patch into base resume JSON
+│   ├── validatePatch.js    ← Validates AI patch shape and IDs before apply
 │   └── mergeCoverLetter.js ← Builds cover letter HTML from scratch via template literal
 ├── data/
 │   ├── resume.json         ← Base resume (FlowCV JSON export) — SOURCE OF TRUTH, never modified at runtime
@@ -102,7 +103,7 @@ Accepts an AI patch, merges it into `data/resume.json`, renders the merged data 
 
 > Note: `patch` can also be passed at the top level (the server tries `req.body.patch || req.body`).
 
-**Response:** `{ "success": true, "file": "absolute path to PDF" }`
+**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "resume-sap-se.pdf" }`
 
 ---
 
@@ -121,7 +122,7 @@ Injects content into the HTML template and renders a PDF to `output/coverletter-
 }
 ```
 
-**Response:** `{ "success": true, "file": "absolute path to PDF" }`
+**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "coverletter-sap-se.pdf" }`
 
 ---
 
@@ -141,14 +142,14 @@ No external services contacted. No login or session required.
 - **Icons:** Inline SVG (envelope, phone, location, globe, github, linkedin) — no Font Awesome
 - **HTML sanitization:** Whitelist-based (`p`, `ul`, `ol`, `li`, `strong`, `em`, `b`, `i`, `br`, `span`)
 - **Sections rendered:** Profile, Work, Education, Certificates, Skills, Languages
-- **Export:** `buildResumeHtml(resume, options = {})` — takes `resume.data.resumes[0]`
+- **Export:** `buildResumeHtml(resume, options = {})` — takes the full resume JSON object (same shape as `data/resume.json`)
 
 ### How patch merging works (`src/mergePatch.js`)
 - `data/resume.json` is loaded once at module import (cached at process start)
 - Each call to `applyPatch()` deep-clones the base via `JSON.parse(JSON.stringify(...))` — never mutates the cached base
 - Patch is matched by entry `id` for work and skill entries — IDs must come from `/context`
 - `updatedAt` is set to `new Date().toISOString()` on every modified entry
-- Returns `resume.data.resumes[0]` (not the full JSON) — this is the object passed to `buildResumeHtml()`
+- Returns the full resume JSON object (the deep-cloned `data`) — this is passed directly to `buildResumeHtml()`
 
 > Note: `/context` reads `resume.json` fresh on every request via `readFileSync` — it is NOT cached.
 
@@ -168,16 +169,20 @@ A single browser instance is launched at startup and reused across all requests.
 
 ## Data Schema Notes
 
-The resume JSON structure (`data/resume.json`) is:
+The resume JSON structure (`data/resume.json`) is flat — no FlowCV wrapper:
 ```
-resume.data.resumes[0]
-  .personalDetails.jobTitle
-  .content.profile.entries[0].text        ← HTML string
-  .content.work.entries[].{id, employer, jobTitle, location, startDateNew, endDateNew, description}
-  .content.skill.entries[].{id, skill, infoHtml}
+resume
+  .meta.template                          ← "default" or a named template
+  .personalDetails.{fullName, jobTitle, displayEmail, phone, address, website, social.github.display, social.linkedIn.display}
+  .content.profile.{displayName, entries[0].text}        ← text is HTML string
+  .content.work.{displayName, entries[].{id, employer, jobTitle, location, startDateNew, endDateNew, description}}
+  .content.education.{displayName, entries[].{degree, school, location, startDateNew, endDateNew, description?}}
+  .content.certificate.{displayName, entries[].{id, certificate}}
+  .content.skill.{displayName, entries[].{id, skill, infoHtml}}
+  .content.language.{displayName, entries[].{language, infoHtml}}
 ```
 
-All description/infoHtml fields are stored as HTML strings (FlowCV's rich-text format).
+All description/infoHtml fields are stored as HTML strings.
 
 ---
 
@@ -241,27 +246,35 @@ These IDs are hardcoded in `data/resume.json` and must be used verbatim in API p
 The full automation lives in `data/Job_Application_Automator_v6.json` (29 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
 
 **Pipeline summary:**
-1. Schedule trigger (Mon–Fri 8am) → sets URLs + `jobCount=50`
-2. 5 Apify scrapers run in parallel: LinkedIn, Indeed, StepStone, Glassdoor, Xing
-3. `3. Normalize & Merge Jobs` — Code node with `BOARD_CONFIG` adapter; deduplicates by URL; filters to DE/AT/CH/NL/BE
-4. `6b. Filter Duplicates` — removes jobs already logged to Google Sheets
-5. `6. Smart Throttle` — 7s base delay between AI calls (20s on 429)
-6. `7. Groq API` — match filter (`llama-3.1-8b-instant`); returns `{match, confidence, reason, jobType}`
-7. `10. OpenAI API` — tailors resume patch + writes cover letter text (`gpt-4o-mini`)
-8. `12. POST /generate-resume` — calls local Express server; body: `{ patch, company }`
-9. `14. Log to Google Sheets` — 17 columns including match score, PDF path, cover letter text
+1. Schedule trigger (Mon–Fri 8am) → `1. Job Search URLs` sets URLs + `jobCount=50`
+2. `2a–2e. Scrape *` — 5 Apify scrapers run in parallel: LinkedIn, Indeed, StepStone, Glassdoor, Xing
+   `2f. Read Applied Jobs` → `2f.1. Ensure Not Empty` — fetches existing sheet data in parallel
+3. `3. Wait for All Scrapers` — merges all 5 scraper outputs
+4. `4. Normalize & Merge Jobs` — Code node with `BOARD_CONFIG` adapter; deduplicates by URL; filters to DE/AT/CH/NL/BE
+5. `5. Sync Jobs + Sheet` — merges scraped jobs with applied-jobs sheet data
+6. `6. Filter Duplicates` — removes jobs already logged to Google Sheets
+7. `7. GET Resume Context` — fetches `/context` from local server
+8. `8. Attach Resume to Jobs` — attaches resume context to each job item
+9. `9. Loop Over Items` + `10c. Wait` — batch throttle (batchSize 5, 12s between batches)
+10. `10a. Build Match Prompt` → `10b. Groq API Call` — match filter (`llama-3.1-8b-instant`); returns `{match, confidence, reason, jobType}`
+11. `11. Parse Match Result` → `12. Is Match?` — routes matched jobs forward; unmatched go to skip log
+12. `13a. Build Tailor Prompt` → `13b. OpenAI API Call` — tailors resume patch + writes cover letter text (`gpt-4o-mini`)
+13. `14. Parse AI Patch` — extracts patch + 3 cover letter paragraphs from AI response
+14. `15a. POST Generate Resume PDF` + `15b. POST Generate Cover Letter PDF` — call local Express server
+15. `16. Prepare Sheet Log` → `17. Log to Google Sheets` — 17 columns including match score, PDF paths, notes
+    `18a. Prepare Skip Log` → `18b. Log Skipped to Sheets` — unmatched jobs
 
-**BOARD_CONFIG keys** (in node `3. Normalize & Merge Jobs`):
+**BOARD_CONFIG keys** (in node `4. Normalize & Merge Jobs`):
 
 | Board | n8n node name |
 |-------|--------------|
-| LinkedIn | `Run an Actor and get dataset` |
-| Indeed | `Run an Actor and get dataset1` |
-| StepStone | `Run an Actor and get dataset2` |
-| Glassdoor | `Run an Actor and get dataset3` |
-| Xing | `Run an Actor and get dataset4` |
+| LinkedIn | `2a. Scrape LinkedIn` |
+| Indeed | `2b. Scrape Indeed` |
+| StepStone | `2c. Scrape StepStone` |
+| Glassdoor | `2d. Scrape Glassdoor` |
+| Xing | `2e. Scrape Xing` |
 
-To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node to `2c. Wait for All Scrapers`. Nothing else changes.
+To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node to `3. Wait for All Scrapers`. Nothing else changes.
 
 **n8n URL for local server:** `http://host.docker.internal:3000` (Docker). Change to `http://localhost:3000` for native n8n.
 

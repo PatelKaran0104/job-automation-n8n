@@ -11,41 +11,44 @@ Schedule Trigger (Mon–Fri 8am)
           ↓
 1. Job Search URLs (set node — all URLs + jobCount)
           ↓ (parallel)
-┌─────────────────────────────────────────────────────┐
-│  LinkedIn │ Indeed │ StepStone │ Glassdoor │ Xing   │
-│  (Apify actors, each scrapes ~50 jobs)              │
-└──────────────────────┬──────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│ 2a. Scrape LinkedIn │ 2b. Scrape Indeed │ 2c. Scrape StepStone  │
+│ 2d. Scrape Glassdoor │ 2e. Scrape Xing  │  2f. Read Applied Jobs │
+│ (Apify actors, each scrapes ~50 jobs)   │  (Google Sheets)       │
+└──────────────────────────┬─────────────────────┬────────────────-┘
+                           ↓                     ↓
+               3. Wait for All Scrapers   2f.1. Ensure Not Empty
+                           ↓                     ↓
+               4. Normalize & Merge Jobs          │
+                  BOARD_CONFIG adapter            │
+                  Dedup by URL · DE/AT/CH/NL/BE   │
+                           ↓                     ↓
+                     5. Sync Jobs + Sheet ←───────┘
+                           ↓
+                     6. Filter Duplicates (remove already-logged jobs)
+                           ↓
+                     7. GET Resume Context (fetch /context)
+                           ↓
+                     8. Attach Resume to Jobs
+                           ↓
+                     9. Loop Over Items + 10c. Wait (batchSize 5, 12s)
+                           ↓
+             10a. Build Match Prompt → 10b. Groq API Call
+                match filter (llama-3.1-8b-instant)
                        ↓
-          2c. Wait for All Scrapers (merge)
-                       ↓
-          3. Normalize & Merge Jobs (Code node)
-             BOARD_CONFIG adapter — 5 sources → 1 schema
-             Dedup by URL · Country filter: DE/AT/CH/NL/BE
-                       ↓
-          6a. Read Applied Jobs (Google Sheets)
-                       ↓
-          6b. Filter Duplicates (remove already-logged jobs)
-                       ↓
-          4. GET /context (fetch resume as plain text)
-                       ↓
-          5. Attach Resume to Jobs
-                       ↓
-          6. Smart Throttle (7s base / 20s on rate limit)
-                       ↓
-          7. Groq API — match filter (llama-3.1-8b-instant)
-             match:true / match:false
-             ↓ true                    ↓ false
-    10. OpenAI API              15. Prepare Skip Log
-    (gpt-4o-mini — patch           ↓
-     + cover letter)        16. Log Skipped to Sheets
-          ↓
-    11. Parse AI Patch
-          ↓
-    12. POST /generate-resume (PDF)
-          ↓
-    13. Prepare Sheet Log
-          ↓
-    14. Log to Google Sheets
+             11. Parse Match Result → 12. Is Match?
+             ↓ true                              ↓ false
+   13a. Build Tailor Prompt              18a. Prepare Skip Log
+             ↓                                   ↓
+   13b. OpenAI API Call (gpt-4o-mini)   18b. Log Skipped to Sheets
+             ↓
+   14. Parse AI Patch
+             ↓ (parallel)
+   15a. POST /generate-resume    15b. POST /generate-coverletter
+             ↓
+   16. Prepare Sheet Log
+             ↓
+   17. Log to Google Sheets
 ```
 
 ---
@@ -158,13 +161,13 @@ All 5 scrapers output different schemas. The `BOARD_CONFIG` object in the normal
 
 | Source | n8n Node | Key field notes |
 |--------|----------|-----------------|
-| LinkedIn | `Run an Actor and get dataset` | `companyName`, `descriptionText`, `link` |
-| Indeed | `Run an Actor and get dataset1` | `employer.name`, `description.text`, `location.countryCode` |
-| StepStone | `Run an Actor and get dataset2` | `company_details.company_name`, `content_details.full_description` |
-| Glassdoor | `Run an Actor and get dataset3` | `company.companyName`, `description_text`, country=null (de-only) |
-| Xing | `Run an Actor and get dataset4` | `apply_url`, `location_country_code`, salary already formatted string |
+| LinkedIn | `2a. Scrape LinkedIn` | `companyName`, `descriptionText`, `link` |
+| Indeed | `2b. Scrape Indeed` | `employer.name`, `description.text`, `location.countryCode` |
+| StepStone | `2c. Scrape StepStone` | `company_details.company_name`, `content_details.full_description` |
+| Glassdoor | `2d. Scrape Glassdoor` | `company.companyName`, `description_text`, country=null (de-only) |
+| Xing | `2e. Scrape Xing` | `apply_url`, `location_country_code`, salary already formatted string |
 
-To add a new board: add one entry to `BOARD_CONFIG` and wire its Apify node into `2c. Wait for All Scrapers`. Nothing else changes.
+To add a new board: add one entry to `BOARD_CONFIG` and wire its Apify node into `3. Wait for All Scrapers`. Nothing else changes.
 
 ---
 
@@ -185,7 +188,7 @@ Each logged job (match or skip) writes 17 columns:
 | Match Confidence | Groq 0–100 score |
 | Match Reason | Groq one-line reason |
 | Resume File | absolute path to generated PDF (success) or empty (skip) |
-| Cover Letter | AI-generated plain text (success) or empty (skip) |
+| Cover Letter File | absolute path to generated cover letter PDF (success) or empty (skip) |
 | Status | `Generated` / `PDF Failed` / `Skipped - No Match` |
 | Applied | manual column (default `No` / `N/A`) |
 | Response | manual column |
@@ -204,6 +207,7 @@ d:\KARAN\
 │   ├── server.js               ← Express server (all 3 endpoints)
 │   ├── buildResumeHtml.js      ← Renders resume JSON → full HTML page
 │   ├── mergePatch.js           ← Merges AI patch into base JSON
+│   ├── validatePatch.js        ← Validates AI patch shape and IDs before apply
 │   ├── mergeCoverLetter.js     ← Builds cover letter HTML (pure JS builder)
 │   └── loadFonts.js            ← Embeds Source Serif Pro WOFF2 as base64
 ├── data/

@@ -1,10 +1,9 @@
 // src/validatePatch.js
 import { readFileSync } from "fs";
 
-const baseResume = JSON.parse(
+const resumeData = JSON.parse(
   readFileSync(new URL("../data/resume.json", import.meta.url))
 );
-const resumeData = baseResume.data.resumes[0];
 
 const VALID_WORK_IDS = new Set(resumeData.content.work.entries.map((e) => e.id));
 const VALID_SKILL_IDS = new Set(resumeData.content.skill.entries.map((e) => e.id));

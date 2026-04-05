@@ -1,740 +1,124 @@
 {
-  "success": true,
-  "data": {
-    "resumes": [
-      {
-        "id": "6c137fe4-9d0a-418c-bf99-a167cecd94a0",
-        "userId": "5bd2571a-c9f5-4d8d-b499-02eff5e40a33",
-        "mongoId": "",
-        "title": "Resume 1",
-        "order": 0,
-        "feedbackToken": "s1il47q3kg",
-        "webToken": "cg7b1cn66mgs",
-        "uuid": "a7a971d0-b7c4-44c9-ab67-93ce704b2f14",
-        "feedbackEnabled": false,
-        "webResumeLive": false,
-        "webResumeDownloadBtn": false,
-        "webResumeSearchIndex": false,
-        "webResumeCached": false,
-        "personalDetails": {
-          "phone": "+49 15210894179",
-          "photo": {
-            "xPct": 0,
-            "yPct": 0,
-            "shape": "round",
-            "imageId": "avatar/MnuS69CRsWl6yln3xyA-Z.jpeg",
-            "widthPct": 0.999000999000999,
-            "heightPct": 0.665834165834166,
-            "originalWidth": 1333,
-            "originalHeight": 2000
-          },
-          "social": {
-            "github": {
-              "link": "https://github.com/patelkaran0104",
-              "display": "github.com/patelkaran0104"
-            },
-            "linkedIn": {
-              "link": "https://linkedin.com/in/patelkaran0104/",
-              "display": "linkedin.com/in/patelkaran0104/"
-            }
-          },
-          "address": "Hesse, Germany",
-          "website": "karanpatel.live",
-          "fullName": "Karan Patel",
-          "jobTitle": "Salesforce Developer",
-          "usAddress": false,
-          "websiteLink": "karanpatel.live",
-          "detailsOrder": [
-            "displayEmail",
-            "phone",
-            "address",
-            "email",
-            "website",
-            "github",
-            "linkedIn"
-          ],
-          "displayEmail": "khpatel0104@gmail.com",
-          "showPlaceholder": false
-        },
-        "content": {
-          "work": {
-            "entries": [
-              {
-                "id": "286ca64e-9ab1-4d32-9905-0996d5d6a5c1",
-                "employer": "MV Clouds",
-                "isHidden": false,
-                "jobTitle": "Salesforce Developer",
-                "location": "Ahmedabad, India",
-                "createdAt": "2026-03-13T09:06:22.566Z",
-                "updatedAt": "2026-03-26T12:20:26.146Z",
-                "endDateNew": "04/2025",
-                "description": "\u003Cul\u003E\u003Cli\u003E\u003Cp\u003EAgentforce and AI integration: Configured Agentforce AI agents with custom actions and REST API interfaces enabling real-time access to third-party systems, applying the same architectural review discipline to AI-generated outputs as to hand-written code.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003EAI-assisted engineering: Adopted AI coding assistants to accelerate Apex and LWC development cycles while taking full ownership of architecture validation, performance review against Salesforce governor limits, and security best practices across all generated code.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003ELow-code and system orchestration: Built complex Salesforce Flows for rapid process automation alongside pro-code Apex triggers, selecting the right tool for each scenario; experienced in low-code-first thinking for system integration and workflow orchestration.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003EAgentforce Actions and REST API integrations: Designed and implemented REST API callouts and custom Apex actions enabling Salesforce AI agents to read from and write to external systems in real time, including HomeAdvisor (lead ingestion), QuickBooks (financial sync), and an aerospace parts inventory platform.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003EAppExchange managed package: Built and published a production package through Salesforce's full security review cycle, enforcing 85%+ Apex test coverage via automated test suites and code reviews; authored documentation and marketing materials for the listing.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003EConstruction Management System: Delivered a Service Cloud platform for a client in the construction sector using LWC, Aura, Flows, and QuickBooks integration; worked end-to-end from requirements scoping with the client through to go-live and post-deployment support.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003ECustom Form Builder: Engineered a zero-code form creation tool (LWC + Apex) with configurable parent-child object relationships up to 3 levels, reducing form creation time from hours to under 10 minutes. Integrated an Einstein Chatbot for automated customer support.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003EInventory Management System: Identified automation potential in a client's stock management process and designed a Service Cloud solution with threshold-based restocking triggers, automated alerts, and real-time supply chain dashboards.\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003ECI/CD and code quality: Owned the team's GitHub-integrated Jenkins CI/CD pipeline, acting as deployment quality gate; enforced code review standards and automated testing across all releases, reducing average deployment time by approximately 40%.\u003C/p\u003E\u003C/li\u003E\u003C/ul\u003E",
-                "employerLink": "",
-                "startDateNew": "02/2023",
-                "showPlaceholder": false
-              },
-              {
-                "id": "4ea57bcd-62e6-4928-9c40-bd11d0afc5ff",
-                "employer": "Independent Salesforce Consultant",
-                "isHidden": false,
-                "jobTitle": "Aerospace Industry Client",
-                "location": "Remote",
-                "createdAt": "2026-03-16T16:16:28.175Z",
-                "updatedAt": "2026-03-16T16:16:28.175Z",
-                "endDateNew": "2025",
-                "description": "\u003Cul\u003E\u003Cli\u003E\u003Cp\u003EEngaged directly with client stakeholders to scope, design, and deliver REST APIs enabling real-time data exchange between an airplane parts inventory system and external buyers; owned the full project lifecycle from requirements analysis to production deployment.\u003C/p\u003E\u003C/li\u003E\u003C/ul\u003E",
-                "employerLink": "",
-                "startDateNew": "2024",
-                "showPlaceholder": false
-              }
-            ],
-            "iconKey": "briefcase",
-            "displayName": "PROFESSIONAL EXPERIENCE",
-            "sectionType": "work"
-          },
-          "skill": {
-            "entries": [
-              {
-                "id": "07d4ce0e-0dcf-4193-8425-06a3e01fe20c",
-                "level": "",
-                "skill": "Agentforce and AI",
-                "infoHtml": "\u003Cp\u003EAgentforce Agent Builder, Custom Actions, Prompt Templates, Einstein Chatbot, AI-Assisted Engineering, Vibe Coding (prompt-driven development with architectural validation)\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:16:36.690Z",
-                "updatedAt": "2026-03-18T14:16:36.690Z",
-                "showPlaceholder": false
-              },
-              {
-                "id": "9a905d12-825c-4090-a90c-3ff010a9d8b4",
-                "level": "",
-                "skill": "Salesforce Development",
-                "infoHtml": "\u003Cp\u003EApex, Lightning Web Components (LWC), Aura, Visualforce, SOQL/SOSL, Triggers, Flows, Process Builder, Salesforce DX, Governor Limit Optimization\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:17:01.503Z",
-                "updatedAt": "2026-03-18T14:17:01.503Z",
-                "showPlaceholder": false
-              },
-              {
-                "id": "7e0af879-e5a3-457e-ab86-634363abf266",
-                "level": "",
-                "skill": "Low-Code and Automation",
-                "infoHtml": "\u003Cp\u003ESalesforce Flows, n8n, Zapier, rapid workflow orchestration for SME and startup environments\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:17:13.370Z",
-                "updatedAt": "2026-03-18T14:17:46.611Z",
-                "showPlaceholder": false
-              },
-              {
-                "id": "c7231132-d4b1-47eb-9bee-a66c7756ce1d",
-                "level": "",
-                "skill": "Integration and DevOps",
-                "infoHtml": "\u003Cp\u003EREST API, SOAP API, HTTP Callouts, Jenkins CI/CD, GitHub Actions, Git/GitHub, Ant Tool, Workbench, Terraform, AWS (EC2, VPC, RDS)\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:18:02.038Z",
-                "updatedAt": "2026-03-18T14:18:02.038Z",
-                "showPlaceholder": false
-              },
-              {
-                "id": "4e5c9b0d-2b32-48a6-9b61-0c320df13632",
-                "level": "",
-                "skill": "Salesforce Platform",
-                "infoHtml": "\u003Cp\u003ESales Cloud, Service Cloud, Experience Cloud, Data Cloud, AppExchange Package Development\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:18:13.620Z",
-                "updatedAt": "2026-03-18T14:18:13.620Z",
-                "showPlaceholder": false
-              },
-              {
-                "id": "b38fcbc7-ae5a-41f8-87c3-8e1fd55a8445",
-                "level": "",
-                "skill": "Languages and Tools",
-                "infoHtml": "\u003Cp\u003EJavaScript, Python, React, MySQL, MongoDB, JIRA, Confluence, QuickBooks Integration, Bryntum Gantt\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-18T14:18:22.189Z",
-                "updatedAt": "2026-03-18T14:18:22.189Z",
-                "showPlaceholder": false
-              }
-            ],
-            "iconKey": "head-side-brain",
-            "displayName": "Skills",
-            "sectionType": "skill"
-          },
-          "profile": {
-            "entries": [
-              {
-                "id": "0e576a26-5c0c-4d8e-8d42-860cca615f27",
-                "text": "\u003Cp\u003ESalesforce Developer and certified Agentforce Specialist with 2+ years of hands-on experience delivering Apex, LWC, and API-driven solutions for SME and startup clients. Comfortable working in an AI-assisted engineering environment: I use AI tools to accelerate development but bring the architectural understanding and code-review discipline to validate, refine, and own every line of output. Certified Platform Developer I (96 pts), Agentforce Specialist, and Data Cloud Consultant. Published a production AppExchange managed package through Salesforce's full security review. Currently pursuing an M.Sc. in Global Software Development in Germany.\u003C/p\u003E",
-                "isHidden": false,
-                "createdAt": "2026-03-16T16:15:09.167Z",
-                "updatedAt": "2026-03-18T14:13:52.833Z",
-                "showPlaceholder": false
-              }
-            ],
-            "iconKey": "address-card",
-            "displayName": "PROFILE",
-            "sectionType": "profile"
-          },
-          "language": {
-            "entries": [
-              {
-                "id": "fbc3269f-4086-4119-a755-4f655a063488",
-                "infoHtml": "\u003Cp\u003EC1\u003C/p\u003E",
-                "isHidden": false,
-                "language": "English"
-              },
-              {
-                "id": "d3d3d885-60c7-4b63-ba8c-4a729256806d",
-                "level": "",
-                "infoHtml": "\u003Cp\u003EActive learner\u003C/p\u003E",
-                "isHidden": false,
-                "language": "German",
-                "createdAt": "2026-03-16T16:21:42.728Z",
-                "updatedAt": "2026-03-16T16:21:42.728Z",
-                "showPlaceholder": false
-              }
-            ],
-            "iconKey": "earth-americas",
-            "displayName": "LANGUAGES",
-            "sectionType": "language"
-          },
-          "education": {
-            "entries": [
-              {
-                "id": "8713cd53-f2f1-4cd1-a2e2-45a2af43177c",
-                "degree": "M.Sc. Global Software Development",
-                "school": "Hochschule Fulda - University of Applied Sciences, Germany",
-                "isHidden": false,
-                "location": "Fulda, Germany",
-                "endDateNew": "Present",
-                "schoolLink": "",
-                "description": "",
-                "startDateNew": "2025"
-              },
-              {
-                "id": "e2f8e7b0-6e0a-4df7-9d7c-6908e812c040",
-                "degree": "B.E. Information Technology",
-                "school": "Government Engineering College, Modasa - Gujarat Technological University, India",
-                "isHidden": false,
-                "location": "Modasa, India",
-                "createdAt": "2026-03-12T15:35:30.343Z",
-                "updatedAt": "2026-03-12T15:35:30.343Z",
-                "endDateNew": "2023",
-                "schoolLink": "",
-                "description": "\u003Cp\u003E1.5\u003C/p\u003E",
-                "startDateNew": "2019",
-                "showPlaceholder": false
-              }
-            ],
-            "iconKey": "graduation-cap",
-            "displayName": "EDUCATION",
-            "sectionType": "education"
-          },
-          "certificate": {
-            "entries": [
-              {
-                "id": "88d8dfa6-39b2-4703-889c-5e1895c57f8a",
-                "infoHtml": "",
-                "isHidden": false,
-                "certificate": "Salesforce Certified Platform Developer I",
-                "certificateLink": ""
-              },
-              {
-                "id": "0a918a7a-3049-4acd-b638-c1bba0cbe483",
-                "infoHtml": "",
-                "isHidden": false,
-                "certificate": "Salesforce Certified Agentforce Specialist",
-                "certificateLink": ""
-              },
-              {
-                "id": "a76c9d1b-948e-4ede-b07f-478c795a8ddc",
-                "infoHtml": "",
-                "isHidden": false,
-                "certificate": "Salesforce Certified Data Cloud Consultant",
-                "certificateLink": ""
-              }
-            ],
-            "iconKey": "certificate",
-            "displayName": "CERTIFICATES",
-            "sectionType": "certificate",
-            "disableAutoSort": true
-          }
-        },
-        "customization": {
-          "font": {
-            "selected": "serif",
-            "fontFamily": "Source Serif Pro"
-          },
-          "colors": {
-            "mode": "basic",
-            "basic": {
-              "multi": {
-                "textColor": "#000000",
-                "accentColor": "#000000",
-                "backgroundColor": "#ffffff"
-              },
-              "single": "#000000",
-              "selected": "single",
-              "multiCustom": {
-                "textColor": "#000000",
-                "accentColor": "#000000",
-                "backgroundColor": "#ffffff"
-              },
-              "singleCustom": "#000000"
-            },
-            "border": {
-              "top": true,
-              "left": true,
-              "right": true,
-              "width": "m",
-              "bottom": true,
-              "single": "#000000",
-              "selected": "single",
-              "singleCustom": "#000000"
-            },
-            "advanced": {
-              "multi": {
-                "light": {
-                  "textColor": "#000",
-                  "accentColor": "#000",
-                  "backgroundColor": "#fff"
-                },
-                "strong": {
-                  "textColor": "#000",
-                  "accentColor": "#000",
-                  "backgroundColor": "#fff"
-                }
-              },
-              "single": "#000000",
-              "selected": "single",
-              "multiCustom": {
-                "light": {
-                  "textColor": "#000",
-                  "accentColor": "#000",
-                  "backgroundColor": "#fff"
-                },
-                "strong": {
-                  "textColor": "#000",
-                  "accentColor": "#000",
-                  "backgroundColor": "#fff"
-                }
-              },
-              "singleCustom": "#000000"
-            }
-          },
-          "expert": {
-            "footer": {
-              "name": false,
-              "email": false,
-              "pages": false,
-              "custom": {
-                "col1": "",
-                "col2": "",
-                "col3": "",
-                "enabled": false
-              }
-            },
-            "subTitlePlacement": "trySameLine",
-            "showProfileHeading": true
-          },
-          "header": {
-            "photo": {
-              "show": false,
-              "size": "m",
-              "grayscale": false
-            },
-            "nameSize": "m",
-            "iconFrame": "none",
-            "detailsGrid": false,
-            "jobTitleSize": "s",
-            "jobTitleStyle": "italic",
-            "accentuateName": true,
-            "iconFrameStyle": "filled",
-            "jobTitlePosition": "below",
-            "detailsArrangement": "wrap",
-            "detailsDisplayCenter": "icon",
-            "detailsDisplayLeftRight": "icon",
-            "photoPositionFromHeaderPosition": {
-              "top": "center",
-              "left": "center",
-              "right": "center"
-            }
-          },
-          "layout": {
-            "colsFromDetails": {
-              "top": "one",
-              "left": "two",
-              "right": "two"
-            },
-            "detailsPosition": "top",
-            "colWidthsFromDetails": {
-              "top": {
-                "leftWidth": 50,
-                "rightWidth": 50
-              },
-              "left": {
-                "leftWidth": 50,
-                "rightWidth": 50
-              },
-              "right": {
-                "leftWidth": 50,
-                "rightWidth": 50
-              }
-            }
-          },
-          "heading": {
-            "icons": "none",
-            "style": "line",
-            "headingSize": "s",
-            "capitalization": "uppercase"
-          },
-          "spacing": {
-            "fontSize": "3",
-            "lineHeight": "7",
-            "spacingFactor": "5",
-            "marginVertical": "4",
-            "marginHorizontal": "5"
-          },
-          "advanced": {
-            "linkIcon": "diagonalChain",
-            "listStyle": "bullet",
-            "makeLinksBlue": false,
-            "underlineLinks": false,
-            "groupPromotions": false,
-            "applyLinkStylingToHeaderLinks": {
-              "phone": false,
-              "displayEmail": false
-            }
-          },
-          "regional": {
-            "format": "A4",
-            "anonymous": false,
-            "dateDisplay": "DD/MM/YYYY",
-            "monthFormat": "MMM",
-            "dateDelimiter": "/"
-          },
-          "arabicFont": "IBM Plex Sans Arabic",
-          "hebrewFont": "Assistant",
-          "pageFormat": "A4",
-          "entryLayout": {
-            "colMode": "auto",
-            "colWidths": {
-              "dateLocationLeft": {
-                "left": 0,
-                "right": 0
-              },
-              "dateLocationRight": {
-                "left": 0,
-                "right": 0
-              },
-              "dateContentLocation": {
-                "left": 0,
-                "right": 0,
-                "middle": 0
-              }
-            },
-            "displayMode": "fullWidth",
-            "subtitleStyle": "italic",
-            "bodyIndentation": "0",
-            "dateLocationOpacity": false,
-            "titleAndSubtitleSize": "s"
-          },
-          "workDisplay": {
-            "jobTitleBeforeEmployer": false
-          },
-          "japaneseFont": "Noto Sans JP",
-          "sectionOrder": {
-            "mix": [
-              "profile",
-              "education",
-              "work",
-              "certificate",
-              "language",
-              "skill"
-            ],
-            "one": {
-              "sectionsSorted": [
-                "profile",
-                "work",
-                "education",
-                "certificate",
-                "skill",
-                "language"
-              ]
-            },
-            "two": {
-              "leftSectionsSorted": [
-                "education",
-                "work",
-                "profile"
-              ],
-              "rightSectionsSorted": [
-                "certificate",
-                "language",
-                "skill"
-              ]
-            }
-          },
-          "skillDisplay": {
-            "grid": {
-              "columns": "four"
-            },
-            "text": "newLine",
-            "level": {
-              "selected": "bar"
-            },
-            "selected": "text",
-            "subinfoSeparator": "colon"
-          },
-          "fullDateFormat": "DD/MM/YYYY",
-          "interestDisplay": {
-            "grid": {
-              "columns": "one"
-            },
-            "text": "pipe",
-            "selected": "text",
-            "subinfoSeparator": "dash"
-          },
-          "languageDisplay": {
-            "grid": {
-              "columns": "three"
-            },
-            "text": "bullet",
-            "level": {
-              "selected": "dots"
-            },
-            "selected": "level",
-            "subinfoSeparator": "dash"
-          },
-          "monthYearFormat": "MM/YYYY",
-          "applyAccentColor": {
-            "name": true,
-            "dates": false,
-            "icons": false,
-            "headings": true,
-            "jobTitle": true,
-            "linkIcons": false,
-            "headingLine": true,
-            "entrySubtitle": false,
-            "dotsBarsBubbles": false
-          },
-          "creativeNameFont": "bodyFont",
-          "educationDisplay": {
-            "degreeBeforeSchool": false
-          },
-          "certificateDisplay": {
-            "grid": {
-              "columns": "two"
-            },
-            "text": "wrap",
-            "selected": "grid",
-            "subinfoSeparator": "bracket"
-          },
-          "declarationDisplay": {
-            "line": "solid",
-            "position": "right",
-            "showHeading": true
-          },
-          "lastUsedTemplateId": "f8eb0955-667c-4bf2-9ea8-73c23940d96f",
-          "customSkillSections": {
-
-          },
-          "unsplashImageHistory": [
-            {
-              "width": 4550,
-              "height": 3033,
-              "photoId": "--Tn3E5ZtfQ",
-              "urlFull": "https://images.unsplash.com/photo-1530075430575-bd9b0fc83fe1?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1530075430575-bd9b0fc83fe1?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 147,
-              "urlRegular": "https://images.unsplash.com/photo-1530075430575-bd9b0fc83fe1?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@andreilazarev",
-              "dominantColors": [
-                "#2d2f2d",
-                "#dadfdf",
-                "#657167",
-                "#8c8f8b",
-                "#777970",
-                "#b3b5b3",
-                "#98a69c",
-                "#a7aaa1",
-                "#646474",
-                "#7c647c"
-              ],
-              "photographerId": "AeBfZT85r-I",
-              "photographerFullName": "Andrei Lazarev",
-              "photographerLastName": "Lazarev",
-              "photographerFirstName": "Andrei"
-            },
-            {
-              "width": 4928,
-              "height": 3280,
-              "photoId": "V-s59aKpcGc",
-              "urlFull": "https://images.unsplash.com/photo-1505990312512-1d688dbb1324?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1505990312512-1d688dbb1324?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 53,
-              "urlRegular": "https://images.unsplash.com/photo-1505990312512-1d688dbb1324?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@anniespratt",
-              "dominantColors": [
-                "#2c2c2c",
-                "#bfbfbf",
-                "#727272",
-                "#949494",
-                "#9c9c9c",
-                "#8c8c8c",
-                "#5c5c5c",
-                "#545454",
-                "#444444",
-                "#4c4c4c"
-              ],
-              "photographerId": "IFcEhJqem0Q",
-              "photographerFullName": "Annie Spratt",
-              "photographerLastName": "Spratt",
-              "photographerFirstName": "Annie"
-            },
-            {
-              "width": 3280,
-              "height": 4928,
-              "photoId": "2kIfhlykiN8",
-              "urlFull": "https://images.unsplash.com/photo-1490276190462-3c300f98bfc4?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1490276190462-3c300f98bfc4?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 51,
-              "urlRegular": "https://images.unsplash.com/photo-1490276190462-3c300f98bfc4?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@anniespratt",
-              "dominantColors": [
-                "#666868",
-                "#0c0e0e",
-                "#9bacb3",
-                "#7e888f",
-                "#4e4947",
-                "#3b3b37",
-                "#947971",
-                "#7c9499",
-                "#43494c",
-                "#989c74"
-              ],
-              "photographerId": "IFcEhJqem0Q",
-              "photographerFullName": "Annie Spratt",
-              "photographerLastName": "Spratt",
-              "photographerFirstName": "Annie"
-            },
-            {
-              "width": 3986,
-              "height": 5979,
-              "photoId": "vg6vtRS0cpo",
-              "urlFull": "https://images.unsplash.com/photo-1500858283188-3fc2caebe9d0?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1500858283188-3fc2caebe9d0?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 141,
-              "urlRegular": "https://images.unsplash.com/photo-1500858283188-3fc2caebe9d0?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@lin_alessio",
-              "dominantColors": [
-                "#383e43",
-                "#71767c",
-                "#d7d6d9",
-                "#b6b4ba",
-                "#a3a4a9",
-                "#c3c3cc",
-                "#4c5453",
-                "#9d9ba4",
-                "#4c4c52",
-                "#c4ccca"
-              ],
-              "photographerId": "MtpGGNgBUHA",
-              "photographerFullName": "Alessio Lin",
-              "photographerLastName": "Lin",
-              "photographerFirstName": "Alessio"
-            },
-            {
-              "width": 3250,
-              "height": 2600,
-              "photoId": "3SWQCLmxH1U",
-              "urlFull": "https://images.unsplash.com/photo-1542491873-564432bfb050?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1542491873-564432bfb050?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 220,
-              "urlRegular": "https://images.unsplash.com/photo-1542491873-564432bfb050?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@cadop",
-              "dominantColors": [
-                "#e6e6e6",
-                "#8d8d8d",
-                "#323232",
-                "#6c6c6c",
-                "#646464",
-                "#747474",
-                "#5c5c5c",
-                "#a4a4a4",
-                "#acacac",
-                "#b8b8b8"
-              ],
-              "photographerId": "hae8rLbohfw",
-              "photographerFullName": "Mathew Schwartz",
-              "photographerLastName": "Schwartz",
-              "photographerFirstName": "Mathew"
-            },
-            {
-              "width": 2565,
-              "height": 4560,
-              "photoId": "xljtGZ2-P3Y",
-              "urlFull": "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "urlThumb": "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "brightness": 53,
-              "urlRegular": "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjEwMTg4M30",
-              "userHtmlLink": "https://unsplash.com/@nahilnaseer",
-              "dominantColors": [
-                "#1f2c2c",
-                "#5d9479",
-                "#3f6e5a",
-                "#86aa96",
-                "#587c6c",
-                "#2d5145",
-                "#3d574f",
-                "#304344",
-                "#485b5c",
-                "#748484"
-              ],
-              "photographerId": "dD4xvxNBI2Y",
-              "photographerFullName": "Nahil Naseer",
-              "photographerLastName": "Naseer",
-              "photographerFirstName": "Nahil"
-            }
-          ]
-        },
-        "feedback": {
-          "comments": []
-        },
-        "businessDetails": {
-          "email": "",
-          "phone": "",
-          "address": "",
-          "company": "",
-          "logoImageId": ""
-        },
-        "downloads": [
-          {
-            "date": "2026-03-12T15:38:27.256Z",
-            "type": "direct"
-          },
-          {
-            "date": "2026-03-13T09:10:07.788Z",
-            "type": "direct"
-          },
-          {
-            "date": "2026-03-16T16:21:52.171Z",
-            "type": "direct"
-          },
-          {
-            "date": "2026-03-18T14:18:41.393Z",
-            "type": "direct"
-          }
-        ],
-        "usingBusinessTemplateId": "",
-        "schemaVersion": "17",
-        "lastChangeAt": "2026-03-26T12:20:26.146Z",
-        "createdAt": "2026-03-12T15:31:10.039Z",
-        "updatedAt": "2026-03-26T12:20:26.146Z",
-        "lng": "en",
-        "tags": []
-      }
-    ]
+  "meta": {
+    "template": "default"
   },
-  "error": "",
-  "code": 200
+  "personalDetails": {
+    "fullName": "Karan Patel",
+    "jobTitle": "Salesforce Developer",
+    "displayEmail": "khpatel0104@gmail.com",
+    "phone": "+49 15210894179",
+    "address": "Hesse, Germany",
+    "website": "karanpatel.live",
+    "social": {
+      "github": {
+        "display": "github.com/patelkaran0104"
+      },
+      "linkedIn": {
+        "display": "linkedin.com/in/patelkaran0104/"
+      }
+    }
+  },
+  "content": {
+    "profile": {
+      "displayName": "PROFILE",
+      "entries": [
+        {
+          "text": "<p>Salesforce Developer and certified Agentforce Specialist with 2+ years of hands-on experience delivering Apex, LWC, and API-driven solutions for SME and startup clients. Comfortable working in an AI-assisted engineering environment: I use AI tools to accelerate development but bring the architectural understanding and code-review discipline to validate, refine, and own every line of output. Certified Platform Developer I (96 pts), Agentforce Specialist, and Data Cloud Consultant. Published a production AppExchange managed package through Salesforce's full security review. Currently pursuing an M.Sc. in Global Software Development in Germany.</p>"
+        }
+      ]
+    },
+    "work": {
+      "displayName": "PROFESSIONAL EXPERIENCE",
+      "entries": [
+        {
+          "id": "286ca64e-9ab1-4d32-9905-0996d5d6a5c1",
+          "employer": "MV Clouds",
+          "jobTitle": "Salesforce Developer",
+          "location": "Ahmedabad, India",
+          "startDateNew": "02/2023",
+          "endDateNew": "04/2025",
+          "description": "<ul><li><p>Agentforce and AI integration: Configured Agentforce AI agents with custom actions and REST API interfaces enabling real-time access to third-party systems, applying the same architectural review discipline to AI-generated outputs as to hand-written code.</p></li><li><p>AI-assisted engineering: Adopted AI coding assistants to accelerate Apex and LWC development cycles while taking full ownership of architecture validation, performance review against Salesforce governor limits, and security best practices across all generated code.</p></li><li><p>Low-code and system orchestration: Built complex Salesforce Flows for rapid process automation alongside pro-code Apex triggers, selecting the right tool for each scenario; experienced in low-code-first thinking for system integration and workflow orchestration.</p></li><li><p>Agentforce Actions and REST API integrations: Designed and implemented REST API callouts and custom Apex actions enabling Salesforce AI agents to read from and write to external systems in real time, including HomeAdvisor (lead ingestion), QuickBooks (financial sync), and an aerospace parts inventory platform.</p></li><li><p>AppExchange managed package: Built and published a production package through Salesforce's full security review cycle, enforcing 85%+ Apex test coverage via automated test suites and code reviews; authored documentation and marketing materials for the listing.</p></li><li><p>Construction Management System: Delivered a Service Cloud platform for a client in the construction sector using LWC, Aura, Flows, and QuickBooks integration; worked end-to-end from requirements scoping with the client through to go-live and post-deployment support.</p></li><li><p>Custom Form Builder: Engineered a zero-code form creation tool (LWC + Apex) with configurable parent-child object relationships up to 3 levels, reducing form creation time from hours to under 10 minutes. Integrated an Einstein Chatbot for automated customer support.</p></li><li><p>Inventory Management System: Identified automation potential in a client's stock management process and designed a Service Cloud solution with threshold-based restocking triggers, automated alerts, and real-time supply chain dashboards.</p></li><li><p>CI/CD and code quality: Owned the team's GitHub-integrated Jenkins CI/CD pipeline, acting as deployment quality gate; enforced code review standards and automated testing across all releases, reducing average deployment time by approximately 40%.</p></li></ul>"
+        },
+        {
+          "id": "4ea57bcd-62e6-4928-9c40-bd11d0afc5ff",
+          "employer": "Independent Salesforce Consultant",
+          "jobTitle": "Aerospace Industry Client",
+          "location": "Remote",
+          "startDateNew": "2024",
+          "endDateNew": "2025",
+          "description": "<ul><li><p>Engaged directly with client stakeholders to scope, design, and deliver REST APIs enabling real-time data exchange between an airplane parts inventory system and external buyers; owned the full project lifecycle from requirements analysis to production deployment.</p></li></ul>"
+        }
+      ]
+    },
+    "education": {
+      "displayName": "EDUCATION",
+      "entries": [
+        {
+          "degree": "M.Sc. Global Software Development",
+          "school": "Hochschule Fulda - University of Applied Sciences, Germany",
+          "location": "Fulda, Germany",
+          "startDateNew": "2025",
+          "endDateNew": "Present"
+        },
+        {
+          "degree": "B.E. Information Technology",
+          "school": "Government Engineering College, Modasa - Gujarat Technological University, India",
+          "location": "Modasa, India",
+          "startDateNew": "2019",
+          "endDateNew": "2023",
+          "description": "<p>1.5</p>"
+        }
+      ]
+    },
+    "certificate": {
+      "displayName": "CERTIFICATES",
+      "entries": [
+        { "certificate": "Salesforce Certified Platform Developer I" },
+        { "certificate": "Salesforce Certified Agentforce Specialist" },
+        { "certificate": "Salesforce Certified Data Cloud Consultant" }
+      ]
+    },
+    "skill": {
+      "displayName": "SKILLS",
+      "entries": [
+        {
+          "id": "07d4ce0e-0dcf-4193-8425-06a3e01fe20c",
+          "skill": "Agentforce and AI",
+          "infoHtml": "<p>Agentforce Agent Builder, Custom Actions, Prompt Templates, Einstein Chatbot, AI-Assisted Engineering, Vibe Coding (prompt-driven development with architectural validation)</p>"
+        },
+        {
+          "id": "9a905d12-825c-4090-a90c-3ff010a9d8b4",
+          "skill": "Salesforce Development",
+          "infoHtml": "<p>Apex, Lightning Web Components (LWC), Aura, Visualforce, SOQL/SOSL, Triggers, Flows, Process Builder, Salesforce DX, Governor Limit Optimization</p>"
+        },
+        {
+          "id": "7e0af879-e5a3-457e-ab86-634363abf266",
+          "skill": "Low-Code and Automation",
+          "infoHtml": "<p>Salesforce Flows, n8n, Zapier, rapid workflow orchestration for SME and startup environments</p>"
+        },
+        {
+          "id": "c7231132-d4b1-47eb-9bee-a66c7756ce1d",
+          "skill": "Integration and DevOps",
+          "infoHtml": "<p>REST API, SOAP API, HTTP Callouts, Jenkins CI/CD, GitHub Actions, Git/GitHub, Ant Tool, Workbench, Terraform, AWS (EC2, VPC, RDS)</p>"
+        },
+        {
+          "id": "4e5c9b0d-2b32-48a6-9b61-0c320df13632",
+          "skill": "Salesforce Platform",
+          "infoHtml": "<p>Sales Cloud, Service Cloud, Experience Cloud, Data Cloud, AppExchange Package Development</p>"
+        },
+        {
+          "id": "b38fcbc7-ae5a-41f8-87c3-8e1fd55a8445",
+          "skill": "Languages and Tools",
+          "infoHtml": "<p>JavaScript, Python, React, MySQL, MongoDB, JIRA, Confluence, QuickBooks Integration, Bryntum Gantt</p>"
+        }
+      ]
+    },
+    "language": {
+      "displayName": "LANGUAGES",
+      "entries": [
+        { "language": "English", "infoHtml": "<p>C1</p>" },
+        { "language": "German", "infoHtml": "<p>Active learner</p>" }
+      ]
+    }
+  }
 }

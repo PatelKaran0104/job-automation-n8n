@@ -58,8 +58,7 @@ function stripHtml(html = "") {
 
 // GET /context — returns only the human-readable resume content for AI input
 app.get("/context", (_req, res) => {
-  const base = JSON.parse(readFileSync(new URL("../data/resume.json", import.meta.url)));
-  const resume = base.data.resumes[0];
+  const resume = JSON.parse(readFileSync(new URL("../data/resume.json", import.meta.url)));
   res.json({
     currentJobTitle: resume.personalDetails.jobTitle,
     currentProfile: stripHtml(resume.content.profile.entries[0]?.text),

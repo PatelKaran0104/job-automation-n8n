@@ -2,20 +2,20 @@ import { readFileSync } from "fs";
 const baseResume = JSON.parse(readFileSync(new URL("../data/resume.json", import.meta.url)));
 
 /**
- * Merges an AI patch into the base FlowCV resume JSON.
+ * Merges an AI patch into the base resume JSON.
  *
  * AI patch shape:
  * {
  *   jobTitle?: string,
- *   profile?: string,        // HTML string
+ *   profile?: string,           // HTML string
+ *   showCertificates?: false,   // omit section when Salesforce certs are irrelevant
  *   work?: [{ id, description }],
- *   skills?: [{ id, infoHtml }]
+ *   skills?: [{ id, skill?, infoHtml }]  // skill renames the category label
  * }
  */
 export function applyPatch(patch) {
   // Deep clone base to avoid mutating the imported module
-  const resume = JSON.parse(JSON.stringify(baseResume));
-  const data = resume.data.resumes[0];
+  const data = JSON.parse(JSON.stringify(baseResume));
 
   if (patch.jobTitle) {
     data.personalDetails.jobTitle = patch.jobTitle;
@@ -40,10 +40,16 @@ export function applyPatch(patch) {
     for (const skillPatch of patch.skills) {
       const entry = data.content.skill.entries.find((e) => e.id === skillPatch.id);
       if (entry) {
-        entry.infoHtml = skillPatch.infoHtml;
+        if (skillPatch.skill) entry.skill = skillPatch.skill;
+        if (skillPatch.infoHtml) entry.infoHtml = skillPatch.infoHtml;
         entry.updatedAt = new Date().toISOString();
       }
     }
+  }
+
+  if (patch.showCertificates === false) {
+    data.meta = data.meta || {};
+    data.meta.showCertificates = false;
   }
 
   return data;

@@ -108,6 +108,7 @@ function renderEducation(resume) {
 }
 
 function renderCertificates(resume) {
+  if (resume.meta?.showCertificates === false) return "";
   const entries = resume.content.certificate?.entries || [];
   if (!entries.length) return "";
   const heading = resume.content.certificate.displayName || "CERTIFICATES";
@@ -166,16 +167,19 @@ export function buildResumeHtml(resume, options = {}) {
   if (!resume?.personalDetails) throw new Error("Invalid resume structure: missing personalDetails");
 
   const p = resume.personalDetails;
+  const link = (href, icon, text) =>
+    `<a href="${href}" class="contact-link"><span>${icon} ${escapeHtml(text)}</span></a>`;
+
   const contactLine1 = [
-    p.displayEmail              && `<span>${ICON.envelope} ${escapeHtml(p.displayEmail)}</span>`,
-    p.phone                     && `<span>${ICON.phone} ${escapeHtml(p.phone)}</span>`,
-    p.address                   && `<span>${ICON.location} ${escapeHtml(p.address)}</span>`,
-    p.website                   && `<span>${ICON.globe} ${escapeHtml(p.website)}</span>`,
+    p.displayEmail && link(`mailto:${p.displayEmail}`, ICON.envelope, p.displayEmail),
+    p.phone        && link(`tel:${p.phone.replace(/\s/g, "")}`, ICON.phone, p.phone),
+    p.address      && `<span>${ICON.location} ${escapeHtml(p.address)}</span>`,
+    p.website      && link(`https://${p.website}`, ICON.globe, p.website),
   ].filter(Boolean);
 
   const contactLine2 = [
-    p.social?.github?.display   && `<span>${ICON.github} ${escapeHtml(p.social.github.display)}</span>`,
-    p.social?.linkedIn?.display && `<span>${ICON.linkedin} ${escapeHtml(p.social.linkedIn.display)}</span>`,
+    p.social?.github?.display   && link(`https://${p.social.github.display}`, ICON.github, p.social.github.display),
+    p.social?.linkedIn?.display && link(`https://${p.social.linkedIn.display}`, ICON.linkedin, p.social.linkedIn.display),
   ].filter(Boolean);
 
   const contactRow = [
@@ -210,6 +214,7 @@ export function buildResumeHtml(resume, options = {}) {
     .name { font-size: 22pt; font-weight: 700; }
     .job-title { font-size: 12pt; font-style: italic; margin-top: 2px; }
     .contact-row { margin-top: 8px; font-size: 9pt; }
+    .contact-link { color: #1a5276; text-decoration: none; }
     .header hr { border: none; border-top: 1px solid #000; margin-top: 10px; }
     .section { margin-bottom: 10px; }
     .section-heading {
