@@ -261,7 +261,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const item = $json;\n\n// Skip non-job items safely\nif (item.skipped || item.error) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n    },\n  };\n}\n\n// MUST include \"JSON\" for Groq response_format\nconst systemPrompt = `You are a job-match filter.\n\nReturn ONLY valid JSON. No explanation, no text outside JSON.\n\nOutput format:\n{\n  \"match\": true or false,\n  \"confidence\": number (0-100),\n  \"reason\": \"one short line\",\n  \"jobType\": \"internship|werkstudent|full-time|contract|unknown\"\n}\n\nRules:\n- Be LENIENT (Germany job search context)\n- match=true if ANY:\n  - 40%+ skill overlap\n  - internship/Werkstudent (almost always true)\n  - junior/entry roles\n  - transferable software/backend skills\n- match=false ONLY if:\n  - completely unrelated field (law, finance, medical, etc.)\n  - pure ML/Data Science role (unless mixed with software dev)\n  - strict senior role (6+ years AND narrow specialization)\n`;\n\n// ===== Helper =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\n\n// ===== Resume Data =====\nconst skills = (item.resume?.currentSkills || [])\n  .map(s => s?.skill || '')\n  .filter(Boolean)\n  .join(', ');\n\nconst education = (item.resume?.education || [])\n  .map(e =>\n    `${e.degree || ''} ${e.field || ''} at ${e.institution || ''} (${e.year || ''})`.trim()\n  )\n  .join('; ');\n\nconst recentWork = (item.resume?.workExperience || [])\n  .slice(0, 2)\n  .map(w =>\n    `${w.title || ''} at ${w.company || ''}: ${(w.summary || '').slice(0, 120)}`\n  )\n  .join(' | ');\n\n// ===== Smart JD Extraction (EN + DE aware) =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\n// Split by important sections (English + German)\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\n// Pick best section or fallback\nlet jdImportant =\n  parts.length > 1 && parts[1].trim().length > 120\n    ? parts[1]\n    : jd;\n\n// Add intro for context only if meaningful\nconst intro = jd.length > 400 ? jd.slice(0, 300) : '';\n\n// Combine intro + requirements\njdImportant = intro\n  ? `${intro}\\n\\n${jdImportant}`\n  : jdImportant;\n\n// Remove HTML tags if present\njdImportant = jdImportant.replace(/<[^>]+>/g, '');\n\n// Final cap for token safety\njdImportant = jdImportant.slice(0, 1500);\n\n// ===== Build User Prompt =====\nconst userMsg = `Candidate:\nTitle: ${item.resume?.currentJobTitle || 'Software Developer'}\nLocation: Germany\n\nEducation:\n${education || 'MSc Global Software Development, Hochschule Fulda Germany'}\n\nRecent Work:\n${recentWork || 'N/A'}\n\nSkills:\n${skills || 'N/A'}\n\nJob:\n${item.title} at ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\n\nJob Description:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg },\n      ],\n    },\n  },\n};"
+        "jsCode": "const item = $json;\n\n// Skip non-job items safely\nif (item.skipped || item.error) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n    },\n  };\n}\n\n// ===== Role-Type Pre-Filter =====\n// Reject fundamentally misaligned roles BEFORE burning a Groq API call.\nconst ROLE_REJECT_PATTERNS = [\n  /\\b(au(?:ß|ss)endienst|vertrieb|verkauf|sales\\s*rep|account\\s*manager)\\b/i,\n  /\\b(kundenberater|kundenbetreuer|kundenservice|customer\\s*service)\\b/i,\n  /\\b(disponent|logistik|versand|spedition|lagerlogistik|supply\\s*chain)\\b/i,\n  /\\b(personalr|recruiting|human\\s*resource|hr\\s*manager|talent\\s*acquisition)\\b/i,\n  /\\b(marketing\\s*manager|communications|public\\s*relations|pr\\s*manager)\\b/i,\n  /\\b(buchhalter|accounting|finanzbuchhalter|steuerberater)\\b/i,\n];\n\nconst jobTitle = (item.title || '').trim();\nconst rejected = ROLE_REJECT_PATTERNS.some(pattern => pattern.test(jobTitle));\n\nif (rejected) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n      _skipReason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n        jobType: 'unknown',\n        _preFilterReject: true,\n      },\n    },\n  };\n}\n\n// MUST include \"JSON\" for Groq response_format\nconst systemPrompt = `You are a job-match filter.\n\nReturn ONLY valid JSON. No explanation, no text outside JSON.\n\nOutput format:\n{\n  \"match\": true or false,\n  \"confidence\": number (0-100),\n  \"reason\": \"one short line\",\n  \"jobType\": \"internship|werkstudent|full-time|contract|unknown\"\n}\n\nRules:\n- Be LENIENT (Germany job search context)\n- match=true if ANY:\n  - 40%+ skill overlap\n  - internship/Werkstudent (almost always true)\n  - junior/entry roles\n  - transferable software/backend skills\n- match=false ONLY if:\n  - completely unrelated field (law, finance, medical, etc.)\n  - pure ML/Data Science role (unless mixed with software dev)\n  - strict senior role (6+ years AND narrow specialization)\n`;\n\n// ===== Helper =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\n\n// ===== Resume Data =====\nconst skills = (item.resume?.currentSkills || [])\n  .map(s => s?.skill || '')\n  .filter(Boolean)\n  .join(', ');\n\nconst education = (item.resume?.education || [])\n  .map(e =>\n    `${e.degree || ''} ${e.field || ''} at ${e.institution || ''} (${e.year || ''})`.trim()\n  )\n  .join('; ');\n\nconst recentWork = (item.resume?.workExperience || [])\n  .slice(0, 2)\n  .map(w =>\n    `${w.title || ''} at ${w.company || ''}: ${(w.summary || '').slice(0, 120)}`\n  )\n  .join(' | ');\n\n// ===== Smart JD Extraction (EN + DE aware) =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\n// Split by important sections (English + German)\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\n// Pick best section or fallback\nlet jdImportant =\n  parts.length > 1 && parts[1].trim().length > 120\n    ? parts[1]\n    : jd;\n\n// Add intro for context only if meaningful\nconst intro = jd.length > 400 ? jd.slice(0, 300) : '';\n\n// Combine intro + requirements\njdImportant = intro\n  ? `${intro}\\n\\n${jdImportant}`\n  : jdImportant;\n\n// Remove HTML tags if present\njdImportant = jdImportant.replace(/<[^>]+>/g, '');\n\n// Final cap for token safety\njdImportant = jdImportant.slice(0, 1500);\n\n// ===== Build User Prompt =====\nconst userMsg = `Candidate:\nTitle: ${item.resume?.currentJobTitle || 'Software Developer'}\nLocation: Germany\n\nEducation:\n${education || 'MSc Global Software Development, Hochschule Fulda Germany'}\n\nRecent Work:\n${recentWork || 'N/A'}\n\nSkills:\n${skills || 'N/A'}\n\nJob:\n${item.title} at ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\n\nJob Description:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg },\n      ],\n    },\n  },\n};"
       },
       "id": "85de6134-44cc-46ec-9b9a-db20517a7d41",
       "name": "10a. Build Match Prompt",
@@ -275,7 +275,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _groqBody, ...cleanJobData } = jobData;\n\n// Handle rate limit or API error from 10c. Groq API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Groq API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.choices[0].message.content;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: result,\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: true,\n        confidence: 50,\n        reason: 'AI parse error - defaulting to match: ' + err.message,\n        jobType: 'unknown',\n        _apiError: false,\n      },\n    },\n  };\n}"
+        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _groqBody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Groq call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Groq API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Groq API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.choices[0].message.content;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: result,\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: true,\n        confidence: 50,\n        reason: 'AI parse error - defaulting to match: ' + err.message,\n        jobType: 'unknown',\n        _apiError: false,\n      },\n    },\n  };\n}"
       },
       "id": "31f9556b-2417-40c7-a547-c1fd2baae790",
       "name": "11. Parse Match Result",
@@ -999,6 +999,51 @@
         }
       },
       "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "skip-groq-condition",
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-skip-groq-if-node-0001",
+      "name": "10a1. Skip Groq?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        22896,
+        5680
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const jobData = $json;\nconst now = new Date();\n\nreturn {\n  json: {\n    Date:               now.toISOString().slice(0, 10),\n    Company:            jobData.company || '',\n    Role:               jobData.title || '',\n    'Job Type':         jobData.matchResult?.jobType || '',\n    Location:           jobData.location || '',\n    Source:             jobData.source || '',\n    'Job URL':          jobData.url || '',\n    'Apply URL':        jobData.applyUrl || '',\n    'Match Confidence': 0,\n    'Match Reason':     jobData.matchResult?.reason || 'Pre-filter reject',\n    'Resume File':      '',\n    'Cover Letter File': '',\n    Status:             'Skipped - Pre-Filter Reject',\n    Applied:            'N/A',\n    Response:           '',\n    Interview:          '',\n    Notes:              jobData._skipReason || '',\n  },\n};"
+      },
+      "id": "a1b2c3d4-prefilter-log-node-0002",
+      "name": "10a2. Prepare Pre-Filter Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        22896,
+        5920
+      ]
     }
   ],
   "pinData": {},
@@ -1248,7 +1293,7 @@
       "main": [
         [
           {
-            "node": "10b. Wait",
+            "node": "10a1. Skip Groq?",
             "type": "main",
             "index": 0
           }
@@ -1371,6 +1416,35 @@
         [
           {
             "node": "11. Parse Match Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a1. Skip Groq?": {
+      "main": [
+        [
+          {
+            "node": "10a2. Prepare Pre-Filter Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10b. Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a2. Prepare Pre-Filter Log": {
+      "main": [
+        [
+          {
+            "node": "18b. Log Skipped to Sheets",
             "type": "main",
             "index": 0
           }
