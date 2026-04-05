@@ -1,27 +1,27 @@
 # Resume Generator — Pipeline Guide
 
-Automated job application pipeline: scrapes 5 job boards daily → AI match filter → AI resume/cover letter tailoring → PDF generation → Google Sheets logging.
+Automated job application pipeline: scrapes 5 job boards on a schedule → AI match filter → AI resume/cover letter tailoring → PDF generation → Google Sheets logging.
 
 ---
 
 ## Architecture Overview
 
 ```
-Schedule Trigger (Mon–Fri 8am)
+Schedule Trigger (configurable schedule)
           ↓
 1. Job Search URLs (set node — all URLs + jobCount)
           ↓ (parallel)
 ┌──────────────────────────────────────────────────────────────────┐
 │ 2a. Scrape LinkedIn │ 2b. Scrape Indeed │ 2c. Scrape StepStone  │
 │ 2d. Scrape Glassdoor │ 2e. Scrape Xing  │  2f. Read Applied Jobs │
-│ (Apify actors, each scrapes ~50 jobs)   │  (Google Sheets)       │
+│ (Apify actors, each scrapes jobCount jobs)  │  (Google Sheets)   │
 └──────────────────────────┬─────────────────────┬────────────────-┘
                            ↓                     ↓
                3. Wait for All Scrapers   2f.1. Ensure Not Empty
                            ↓                     ↓
                4. Normalize & Merge Jobs          │
                   BOARD_CONFIG adapter            │
-                  Dedup by URL · DE/AT/CH/NL/BE   │
+                  Dedup by URL · country filter   │
                            ↓                     ↓
                      5. Sync Jobs + Sheet ←───────┘
                            ↓
@@ -31,24 +31,24 @@ Schedule Trigger (Mon–Fri 8am)
                            ↓
                      8. Attach Resume to Jobs
                            ↓
-                     9. Loop Over Items + 10c. Wait (batchSize 5, 12s)
+                     9. Loop Over Items + 10b. Wait (configurable batch + delay)
                            ↓
-             10a. Build Match Prompt → 10b. Groq API Call
-                match filter (llama-3.1-8b-instant)
-                       ↓
+             10a. Build Match Prompt → 10c. Groq API Call
+                       match filter
+                           ↓
              11. Parse Match Result → 12. Is Match?
              ↓ true                              ↓ false
    13a. Build Tailor Prompt              18a. Prepare Skip Log
              ↓                                   ↓
-   13b. OpenAI API Call (gpt-4o-mini)   18b. Log Skipped to Sheets
+   13b. OpenAI API Call           18b. Log Skipped to Sheets
              ↓
    14. Parse AI Patch
-             ↓ (parallel)
-   15a. POST /generate-resume    15b. POST /generate-coverletter
              ↓
-   16. Prepare Sheet Log
-             ↓
-   17. Log to Google Sheets
+   15a. POST /generate-resume  →  15b. POST /generate-coverletter
+                           ↓
+                   16. Prepare Sheet Log
+                           ↓
+                   17. Log to Google Sheets
 ```
 
 ---
@@ -59,7 +59,7 @@ Schedule Trigger (Mon–Fri 8am)
 # Install dependencies (first time only)
 npm install
 
-# Start server on port 3000
+# Start server
 npm start
 
 # Manual test — resume PDF
@@ -80,14 +80,14 @@ Returns base resume as plain text. The n8n workflow calls this once per run to a
 
 ```json
 {
-  "currentJobTitle": "Salesforce Developer",
+  "currentJobTitle": "...",
   "currentProfile": "plain text...",
   "currentWork": [
-    { "id": "286ca64e-...", "employer": "MV Clouds", "jobTitle": "Salesforce Developer",
-      "location": "...", "startDate": "02/2023", "endDate": "04/2025", "description": "plain text" }
+    { "id": "...", "employer": "...", "jobTitle": "...",
+      "location": "...", "startDate": "...", "endDate": "...", "description": "plain text" }
   ],
   "currentSkills": [
-    { "id": "9a905d12-...", "skill": "Salesforce Development", "details": "plain text" }
+    { "id": "...", "skill": "...", "details": "plain text" }
   ]
 }
 ```
@@ -105,12 +105,9 @@ Merges AI patch into `data/resume.json`, renders HTML, exports PDF.
     "work": [{ "id": "must match /context id", "description": "<ul><li><p>...</p></li></ul>" }],
     "skills": [{ "id": "must match /context id", "infoHtml": "<p>HTML</p>" }]
   },
-  "company": "SAP SE"
+  "company": "Company Name"
 }
 ```
-
-Response example:
-`{ "success": true, "file": "D:\\KARAN\\output\\2026-04-03\\Resume\\resume-sap-se.pdf", "fileName": "resume-sap-se.pdf" }`
 
 > `patch` can also be passed flat at the top level — the server handles both.
 
@@ -121,17 +118,14 @@ Renders a German cover letter PDF from 3 HTML paragraphs.
 
 ```json
 {
-  "role": "Salesforce Developer",
-  "company": "SAP SE",
-  "companyAddress": "Walldorf, Deutschland",
+  "role": "...",
+  "company": "...",
+  "companyAddress": "...",
   "paragraph1": "Opening hook (HTML or plain text)",
   "paragraph2": "Skills/experience evidence",
   "paragraph3": "Availability + CTA"
 }
 ```
-
-Response example:
-`{ "success": true, "file": "D:\\KARAN\\output\\2026-04-03\\Coverletter\\coverletter-sap-se.pdf", "fileName": "coverletter-sap-se.pdf" }`
 
 ---
 
@@ -143,7 +137,7 @@ Response example:
 If running n8n natively (not Docker), change to `http://localhost:3000`.
 
 **Environment variables required in n8n:**
-- `GROQ_API_KEY` — for the match filter node (free tier)
+- `GROQ_API_KEY` — for the match filter node
 - `OPENAI_API_KEY` — for the tailor prompt node
 
 **Credentials required in n8n:**
@@ -151,21 +145,45 @@ If running n8n natively (not Docker), change to `http://localhost:3000`.
 - `openAiApi` — OpenAI API credential
 - Google Sheets OAuth credential
 
-**To activate:** set `"active": true` in the workflow JSON or toggle in n8n UI.
+**To activate:** toggle the workflow active in the n8n UI.
 
 ---
 
-## Job Board Adapter (Node: "3. Normalize & Merge Jobs")
+## Configuration Reference
 
-All 5 scrapers output different schemas. The `BOARD_CONFIG` object in the normalize Code node maps each scraper's fields to a unified schema:
+All tunable values live in specific nodes. Edit them directly in the n8n workflow JSON or via the n8n UI.
+
+| What | Where to change |
+|------|----------------|
+| Run schedule | `Schedule Trigger` node → cron expression |
+| Jobs scraped per board | `1. Job Search URLs` → `jobCount` |
+| Search keywords / URLs | `1. Job Search URLs` → per-board URL fields |
+| Batch size (items per loop) | `9. Loop Over Items` → `batchSize` |
+| Delay between batches | `10b. Wait` → `amount` (seconds) |
+| Match confidence threshold | `12. Is Match?` → `confidence-check` condition value |
+| Groq model (match filter) | `10a. Build Match Prompt` → `model` field in `_groqBody` |
+| OpenAI model (tailoring) | `13a. Build Tailor Prompt` → `model` field in `_openAIBody` |
+| OpenAI temperature | `13a. Build Tailor Prompt` → `temperature` field in `_openAIBody` |
+| Pre-call throttle delay | `13a. Build Tailor Prompt` → `PRE_CALL_DELAY_MS` constant |
+| Country filter | `4. Normalize & Merge Jobs` → `ALLOWED_COUNTRIES` set |
+| Min description length | `4. Normalize & Merge Jobs` → `desc.length < N` check |
+| Resume server timeout | `7. GET Resume Context`, `15a`, `15b` → `timeout` option |
+| Groq API retry config | `10c. Groq API Call` → `maxTries` / `waitBetweenTries` |
+| OpenAI API retry config | `13b. OpenAI API Call` → `maxTries` / `waitBetweenTries` |
+
+---
+
+## Job Board Adapter (Node: "4. Normalize & Merge Jobs")
+
+All 5 scrapers output different schemas. The `BOARD_CONFIG` object maps each scraper's fields to a unified shape:
 
 | Source | n8n Node | Key field notes |
 |--------|----------|-----------------|
 | LinkedIn | `2a. Scrape LinkedIn` | `companyName`, `descriptionText`, `link` |
 | Indeed | `2b. Scrape Indeed` | `employer.name`, `description.text`, `location.countryCode` |
 | StepStone | `2c. Scrape StepStone` | `company_details.company_name`, `content_details.full_description` |
-| Glassdoor | `2d. Scrape Glassdoor` | `company.companyName`, `description_text`, country=null (de-only) |
-| Xing | `2e. Scrape Xing` | `apply_url`, `location_country_code`, salary already formatted string |
+| Glassdoor | `2d. Scrape Glassdoor` | `company.companyName`, `description_text`, country filter skipped (DE-only board) |
+| Xing | `2e. Scrape Xing` | `apply_url`, `location_country_code`, salary already a formatted string |
 
 To add a new board: add one entry to `BOARD_CONFIG` and wire its Apify node into `3. Wait for All Scrapers`. Nothing else changes.
 
@@ -173,7 +191,7 @@ To add a new board: add one entry to `BOARD_CONFIG` and wire its Apify node into
 
 ## Google Sheets Schema
 
-Each logged job (match or skip) writes 17 columns:
+Each logged job (match or skip) writes these columns:
 
 | Column | Source |
 |--------|--------|
@@ -182,18 +200,18 @@ Each logged job (match or skip) writes 17 columns:
 | Role | normalized job |
 | Job Type | Groq match result (internship/werkstudent/full-time/contract) |
 | Location | normalized job |
-| Source | board name (LinkedIn/Indeed/StepStone/Glassdoor/Xing) |
+| Source | board name |
 | Job URL | normalized job |
 | Apply URL | normalized job |
-| Match Confidence | Groq 0–100 score |
+| Match Confidence | Groq score (0–100) |
 | Match Reason | Groq one-line reason |
-| Resume File | absolute path to generated PDF (success) or empty (skip) |
-| Cover Letter File | absolute path to generated cover letter PDF (success) or empty (skip) |
+| Resume File | absolute path to generated PDF (or empty if skipped) |
+| Cover Letter File | absolute path to generated cover letter PDF (or empty if skipped) |
 | Status | `Generated` / `PDF Failed` / `Skipped - No Match` |
-| Applied | manual column (default `No` / `N/A`) |
+| Applied | manual column |
 | Response | manual column |
 | Interview | manual column |
-| Notes | AI parse error message if any |
+| Notes | AI parse warning or error if any |
 
 ---
 
@@ -227,10 +245,11 @@ d:\KARAN\
 
 | Error | Fix |
 |-------|-----|
-| `EADDRINUSE: port 3000` | Kill existing server process and restart |
+| `EADDRINUSE` | Kill existing server process and restart |
 | PDF not in `/output` | Restart server after any code change |
 | Fonts missing in PDF | `npm install` to restore `@fontsource/source-serif-pro` |
 | HTML layout broken | Check `buildResumeHtml.js` — likely a resume JSON schema mismatch |
 | n8n can't reach server | Change URL from `host.docker.internal` to `localhost` if not on Docker |
-| Groq/OpenAI 429 | Smart throttle will slow down automatically; wait for cooldown |
-| No jobs after normalize | Check Apify actor outputs match BOARD_CONFIG field names |
+| Groq/OpenAI 429 | Increase `PRE_CALL_DELAY_MS` in `13a` or reduce `batchSize` in `9` |
+| No jobs after normalize | Check Apify actor outputs match `BOARD_CONFIG` field names |
+| Scraper failure hangs pipeline | Check `onError` setting on scraper nodes — should emit to merge node on error |

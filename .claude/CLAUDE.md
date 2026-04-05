@@ -246,7 +246,7 @@ These IDs are hardcoded in `data/resume.json` and must be used verbatim in API p
 The full automation lives in `data/Job_Application_Automator_v6.json` (29 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
 
 **Pipeline summary:**
-1. Schedule trigger (Mon–Fri 8am) → `1. Job Search URLs` sets URLs + `jobCount=50`
+1. Schedule trigger → `1. Job Search URLs` sets per-board URLs + `jobCount`
 2. `2a–2e. Scrape *` — 5 Apify scrapers run in parallel: LinkedIn, Indeed, StepStone, Glassdoor, Xing
    `2f. Read Applied Jobs` → `2f.1. Ensure Not Empty` — fetches existing sheet data in parallel
 3. `3. Wait for All Scrapers` — merges all 5 scraper outputs
@@ -255,10 +255,10 @@ The full automation lives in `data/Job_Application_Automator_v6.json` (29 nodes)
 6. `6. Filter Duplicates` — removes jobs already logged to Google Sheets
 7. `7. GET Resume Context` — fetches `/context` from local server
 8. `8. Attach Resume to Jobs` — attaches resume context to each job item
-9. `9. Loop Over Items` + `10c. Wait` — batch throttle (batchSize 5, 12s between batches)
-10. `10a. Build Match Prompt` → `10b. Groq API Call` — match filter (`llama-3.1-8b-instant`); returns `{match, confidence, reason, jobType}`
+9. `9. Loop Over Items` + `10b. Wait` — batch throttle (configurable batch size and inter-batch delay)
+10. `10a. Build Match Prompt` → `10c. Groq API Call` — match filter; returns `{match, confidence, reason, jobType}`
 11. `11. Parse Match Result` → `12. Is Match?` — routes matched jobs forward; unmatched go to skip log
-12. `13a. Build Tailor Prompt` → `13b. OpenAI API Call` — tailors resume patch + writes cover letter text (`gpt-4o-mini`)
+12. `13a. Build Tailor Prompt` → `13b. OpenAI API Call` — tailors resume patch + writes cover letter text
 13. `14. Parse AI Patch` — extracts patch + 3 cover letter paragraphs from AI response
 14. `15a. POST Generate Resume PDF` + `15b. POST Generate Cover Letter PDF` — call local Express server
 15. `16. Prepare Sheet Log` → `17. Log to Google Sheets` — 17 columns including match score, PDF paths, notes
