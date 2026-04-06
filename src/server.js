@@ -16,20 +16,31 @@ app.use(express.json({ limit: "10mb" }));
 // Shared browser instance — launched once at startup, reused across all requests
 const browser = await chromium.launch({ headless: true });
 
-// Sanitize company name for safe filenames: "SAP SE" → "sap-se"
+// Sanitize company/role name for safe filenames: "SAP SE" → "sap-se", "Drägerwerk" → "draegerwerk"
 function toSlug(str) {
+  const TRANSLITERATE = {
+    'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss',
+    'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a',
+    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+    'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u',
+    'ñ': 'n', 'ç': 'c', 'ø': 'o', 'å': 'a',
+  };
   return String(str)
+    .replace(/./g, c => TRANSLITERATE[c] || c)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 40) || "company";
+    .slice(0, 50) || "company";
 }
 
 function formatDatePart(n) {
   return String(n).padStart(2, "0");
 }
 
-function buildOutputPath({ kind, company }) {
+function buildOutputPath({ kind, company, role }) {
   const now = new Date();
   const year = String(now.getFullYear());
   const month = formatDatePart(now.getMonth() + 1);
@@ -37,9 +48,15 @@ function buildOutputPath({ kind, company }) {
   const completeDateFolder = `${year}-${month}-${day}`;
 
   const companySlug = toSlug(company || "company");
+  const roleSlug = role ? toSlug(role) : "";
   const folderName = kind === "resume" ? "Resume" : "Coverletter";
   const filePrefix = kind === "resume" ? "resume" : "coverletter";
-  const fileName = `${filePrefix}-${companySlug}.pdf`;
+
+  let baseName = companySlug;
+  if (roleSlug) {
+    baseName = `${companySlug}--${roleSlug}`.slice(0, 100);
+  }
+  const fileName = `${filePrefix}-${baseName}.pdf`;
 
   const directoryPath = resolve(OUTPUT_DIR, completeDateFolder, folderName);
   mkdirSync(directoryPath, { recursive: true });
@@ -82,7 +99,7 @@ app.get("/context", (_req, res) => {
 // POST /generate-resume
 // Body: { patch: {...}, company: "SAP SE" }
 app.post("/generate-resume", async (req, res) => {
-  const { patch, company } = req.body;
+  const { patch, company, role } = req.body;
   const rawPatch = patch || req.body;
 
   const validation = validatePatch(rawPatch);
@@ -100,6 +117,7 @@ app.post("/generate-resume", async (req, res) => {
   const output = buildOutputPath({
     kind: "resume",
     company,
+    role,
   });
 
   let context;
@@ -130,10 +148,11 @@ app.post("/generate-resume", async (req, res) => {
 // POST /generate-coverletter
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
-  const { company } = req.body;
+  const { company, role } = req.body;
   const output = buildOutputPath({
     kind: "coverletter",
     company,
+    role,
   });
 
   let context;
