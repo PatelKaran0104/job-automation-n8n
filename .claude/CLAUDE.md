@@ -23,7 +23,7 @@ Node.js/Express automation service that tailors resumes and cover letters for jo
 | Workflow orchestration | n8n (external) |
 | Package manager | npm |
 
-No build step. No database. No TypeScript. No test framework. No CI/CD. Code runs directly with `node`.
+No build step. No database. No TypeScript. No CI/CD. Code runs directly with `node`. Unit tests use `node:test` (built-in).
 
 ---
 
@@ -39,14 +39,18 @@ d:\KARAN\
 │   ├── buildResumeHtml.js  ← Renders resume JSON → full HTML page
 │   ├── mergePatch.js       ← Merges AI patch into base resume JSON
 │   ├── validatePatch.js    ← Validates AI patch shape and IDs before apply
-│   └── mergeCoverLetter.js ← Builds cover letter HTML from scratch via template literal
+│   ├── mergeCoverLetter.js ← Builds cover letter HTML from scratch via template literal
+│   └── loadFonts.js        ← Base64-encodes Source Serif Pro WOFF2 fonts, exports FONT_CSS
 ├── data/
 │   ├── resume.json         ← Base resume (FlowCV JSON export) — SOURCE OF TRUTH, never modified at runtime
 │   └── Job_Application_Automator_v6.json  ← n8n workflow definition
 ├── scripts/
 │   ├── test.js             ← Manual test (hits /generate-resume with a hardcoded patch)
 │   └── test-coverletter.js ← Manual test (hits /generate-coverletter with sample data)
-├── output/                 ← Generated PDFs land here (git-ignored, created at startup)
+├── tests/
+│   └── validatePatch.test.js ← Unit tests for patch validation (node:test)
+├── docs/                   ← Design specs and implementation plans
+├── output/                 ← Generated PDFs land here (git-ignored, date-organized)
 ├── package.json
 ├── PIPELINE.md             ← Full setup and n8n configuration guide
 ```
@@ -64,6 +68,9 @@ npm test
 
 # Manual test without n8n — cover letter
 npm run test:coverletter
+
+# Unit tests (validatePatch)
+npm run test:unit
 ```
 
 ---
@@ -71,7 +78,7 @@ npm run test:coverletter
 ## API Endpoints
 
 ### `GET /context`
-Returns base resume as clean plain text (HTML stripped). Feed directly to AI so it knows what the current resume says.
+Returns base resume as clean plain text (HTML stripped). Feed directly to AI so it knows what the current resume says. Work descriptions use `stripHtmlPreserveBullets()` which preserves bullet structure as newlines; all other fields use `stripHtml()`.
 
 **Response shape:**
 ```json
@@ -86,7 +93,7 @@ Returns base resume as clean plain text (HTML stripped). Feed directly to AI so 
 ---
 
 ### `POST /generate-resume`
-Accepts an AI patch, merges it into `data/resume.json`, renders the merged data to HTML via `buildResumeHtml`, and exports a PDF to `output/resume-{slug}.pdf`.
+Accepts an AI patch, validates it via `validatePatch()`, merges it into `data/resume.json`, renders the merged data to HTML via `buildResumeHtml`, and exports a PDF to `output/YYYY-MM-DD/Resume/resume-{company}--{role}.pdf`.
 
 **Request body (only include changed fields):**
 ```json
@@ -94,21 +101,23 @@ Accepts an AI patch, merges it into `data/resume.json`, renders the merged data 
   "patch": {
     "jobTitle": "string",
     "profile": "<p>HTML</p>",
+    "showCertificates": false,
     "work": [{ "id": "must match /context id", "description": "<ul><li><p>...</p></li></ul>" }],
-    "skills": [{ "id": "must match /context id", "infoHtml": "<p>HTML</p>" }]
+    "skills": [{ "id": "must match /context id", "skill": "optional rename", "infoHtml": "<p>HTML</p>" }]
   },
-  "company": "SAP SE"
+  "company": "SAP SE",
+  "role": "Salesforce Developer"
 }
 ```
 
 > Note: `patch` can also be passed at the top level (the server tries `req.body.patch || req.body`).
 
-**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "resume-sap-se.pdf" }`
+**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "resume-sap-se--salesforce-developer.pdf" }`
 
 ---
 
 ### `POST /generate-coverletter`
-Injects content into the HTML template and renders a PDF to `output/coverletter-{slug}.pdf` via Playwright.
+Injects content into the HTML template and renders a PDF to `output/YYYY-MM-DD/Coverletter/coverletter-{company}--{role}.pdf` via Playwright.
 
 **Request body:**
 ```json
@@ -122,18 +131,19 @@ Injects content into the HTML template and renders a PDF to `output/coverletter-
 }
 ```
 
-**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "coverletter-sap-se.pdf" }`
+**Response:** `{ "success": true, "file": "absolute path to PDF", "fileName": "coverletter-sap-se--salesforce-developer.pdf" }`
 
 ---
 
 ## Key Implementation Details
 
 ### How resume generation works (`src/server.js` + `src/buildResumeHtml.js`)
-1. `applyPatch()` deep-clones `data/resume.json` and merges the AI patch
-2. `buildResumeHtml()` converts the merged resume JSON into a complete, self-contained HTML page
-3. A shared Playwright browser context renders the HTML via `page.setContent()`
-4. `page.evaluate(() => document.fonts.ready)` waits for embedded fonts to load
-5. `page.pdf()` exports an A4 PDF to `output/`
+1. `validatePatch()` checks patch shape and IDs; rejects invalid patches with 422
+2. `applyPatch()` deep-clones `data/resume.json` and merges the AI patch
+3. `buildResumeHtml()` converts the merged resume JSON into a complete, self-contained HTML page
+4. A shared Playwright browser context renders the HTML via `page.setContent()`
+5. `page.evaluate(() => document.fonts.ready)` waits for embedded fonts to load
+6. `page.pdf()` exports an A4 PDF to `output/YYYY-MM-DD/Resume/`
 
 No external services contacted. No login or session required.
 
@@ -177,7 +187,7 @@ resume
   .content.profile.{displayName, entries[0].text}        ← text is HTML string
   .content.work.{displayName, entries[].{id, employer, jobTitle, location, startDateNew, endDateNew, description}}
   .content.education.{displayName, entries[].{degree, school, location, startDateNew, endDateNew, description?}}
-  .content.certificate.{displayName, entries[].{id, certificate}}
+  .content.certificate.{displayName, entries[].{certificate}}
   .content.skill.{displayName, entries[].{id, skill, infoHtml}}
   .content.language.{displayName, entries[].{language, infoHtml}}
 ```
@@ -243,7 +253,7 @@ These IDs are hardcoded in `data/resume.json` and must be used verbatim in API p
 
 ## n8n Workflow Architecture
 
-The full automation lives in `data/Job_Application_Automator_v6.json` (29 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
+The full automation lives in `data/Job_Application_Automator_v6.json` (33 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
 
 **Pipeline summary:**
 1. Schedule trigger → `1. Job Search URLs` sets per-board URLs + `jobCount`
@@ -252,17 +262,19 @@ The full automation lives in `data/Job_Application_Automator_v6.json` (29 nodes)
 3. `3. Wait for All Scrapers` — merges all 5 scraper outputs
 4. `4. Normalize & Merge Jobs` — Code node with `BOARD_CONFIG` adapter; deduplicates by URL; filters to DE/AT/CH/NL/BE
 5. `5. Sync Jobs + Sheet` — merges scraped jobs with applied-jobs sheet data
-6. `6. Filter Duplicates` — removes jobs already logged to Google Sheets
+6. `6. Filter Duplicates` — removes jobs already logged to Google Sheets; also deduplicates by company+role within the scraped batch
 7. `7. GET Resume Context` — fetches `/context` from local server
 8. `8. Attach Resume to Jobs` — attaches resume context to each job item
 9. `9. Loop Over Items` + `10b. Wait` — batch throttle (configurable batch size and inter-batch delay)
-10. `10a. Build Match Prompt` → `10c. Groq API Call` — match filter; returns `{match, confidence, reason, jobType}`
+10. `10a. Build Match Prompt` — builds prompt with role-type pre-filter (rejects sales, HR, customer service, logistics, accounting roles)
+    `10a1. Skip Gemini?` — If node routes pre-filtered roles to `10a2. Prepare Pre-Filter Log` (skip log), rest to `10c. Gemini API Call`
+    `10c. Gemini API Call` — match filter; returns `{match, confidence, reason, jobType}`
 11. `11. Parse Match Result` → `12. Is Match?` — routes matched jobs forward; unmatched go to skip log
-12. `13a. Build Tailor Prompt` → `13b. OpenAI API Call` — tailors resume patch + writes cover letter text
-13. `14. Parse AI Patch` — extracts patch + 3 cover letter paragraphs from AI response
+12. `13a. Build Tailor Prompt` → `13b. OpenAI API Call` — tailors resume patch + structured cover letter `{paragraph1, paragraph2, paragraph3}`; includes skill rename guards and profile guard
+13. `14. Parse AI Patch` — extracts patch + 3 cover letter paragraphs; computes quality flag (Good Fit / Bad Fit / Review / Error)
 14. `15a. POST Generate Resume PDF` + `15b. POST Generate Cover Letter PDF` — call local Express server
-15. `16. Prepare Sheet Log` → `17. Log to Google Sheets` — 17 columns including match score, PDF paths, notes
-    `18a. Prepare Skip Log` → `18b. Log Skipped to Sheets` — unmatched jobs
+15. `16. Prepare Sheet Log` → `17. Log to Google Sheets` — includes match score, quality flag, PDF paths, notes
+    `18a. Prepare Skip Log` → `18b. Log Skipped to Sheets` — unmatched and pre-filtered jobs
 
 **BOARD_CONFIG keys** (in node `4. Normalize & Merge Jobs`):
 
@@ -278,7 +290,7 @@ To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node 
 
 **n8n URL for local server:** `http://host.docker.internal:3000` (Docker). Change to `http://localhost:3000` for native n8n.
 
-**Required env vars in n8n:** `GROQ_API_KEY`, `OPENAI_API_KEY`
+**Required env vars in n8n:** `GOOGLE_AI_API_KEY` (Gemini), `OPENAI_API_KEY`
 
 ---
 

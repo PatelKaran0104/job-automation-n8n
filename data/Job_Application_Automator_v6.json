@@ -12,24 +12,24 @@
           ]
         }
       },
-      "id": "71422e25-1c96-4ab7-b0dc-9f34678a4256",
+      "id": "f82e3aed-cf57-4b17-a972-3958456b7086",
       "name": "Schedule Trigger (Daily 8am)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        20544,
-        5800
+        34032,
+        13352
       ]
     },
     {
       "parameters": {},
-      "id": "b8c8f1d7-c3d8-4f43-bf78-372d14c7eb1c",
+      "id": "6c8850f7-2b65-4b0a-a8dc-fe168a45fb13",
       "name": "Run Workflow",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        20544,
-        5608
+        34032,
+        13160
       ]
     },
     {
@@ -63,20 +63,20 @@
             {
               "id": "3a643fdf-caa2-4581-916c-2ca7a6130f35",
               "name": "jobCount",
-              "value": 20,
+              "value": 10,
               "type": "number"
             }
           ]
         },
         "options": {}
       },
-      "id": "796422e5-94e5-48fc-91e8-fa6ec28f3ca9",
+      "id": "8bb0b054-08ec-472c-b8c0-d03dc77196cf",
       "name": "1. Job Search URLs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        20768,
-        5704
+        34256,
+        13352
       ]
     },
     {
@@ -93,10 +93,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        20992,
-        5152
+        34480,
+        12704
       ],
-      "id": "2c0ad7f9-2dbe-466b-b360-aacab1670ba6",
+      "id": "68bb9583-25a7-408d-a8ba-98beb31cdc98",
       "name": "2a. Scrape LinkedIn",
       "credentials": {
         "apifyApi": {
@@ -120,10 +120,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        20992,
-        5344
+        34480,
+        12896
       ],
-      "id": "d79f0252-2f15-4b07-9a4b-4e8f641e39ef",
+      "id": "b63e2852-97d1-4468-8b40-b4acfce8ae4e",
       "name": "2b. Scrape Indeed",
       "credentials": {
         "apifyApi": {
@@ -131,32 +131,33 @@
           "name": "Apify account"
         }
       },
+      "disabled": true,
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "numberInputs": 5
       },
-      "id": "9111ba1a-ffcd-43ad-b1d3-dc6ae95c3827",
+      "id": "a0e93e06-67f3-41e2-8494-df4c8ac6c5fa",
       "name": "3. Wait for All Scrapers",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
       "position": [
-        21216,
-        5488
+        34704,
+        13112
       ]
     },
     {
       "parameters": {
         "jsCode": "// ═══════════════════════════════════════════════════════════════\n// NORMALIZE & DEDUP — Config-based adapter for any job board\n// To add a new board: add an entry to BOARD_CONFIG, wire the\n// Apify node to this Code node, done. Nothing else changes.\n// ═══════════════════════════════════════════════════════════════\n\nconst BOARD_CONFIG = {\n  '2a. Scrape LinkedIn': {\n    source: 'LinkedIn',\n    fields: {\n      id:          'id',\n      title:       ['title', 'jobTitle'],\n      company:     ['companyName', 'company'],\n      location:    'location',\n      description: ['descriptionText', 'description'],\n      url:         ['link', 'url'],\n      applyUrl:    ['applyUrl', 'link'],\n      postedAt:    'postedAt',\n      salary:      'salary',\n      remote:      'workRemoteAllowed',\n      seniority:   ['seniorityLevel', 'seniority'],\n      country:     'country',\n    }\n  },\n  '2b. Scrape Indeed': {\n    source: 'Indeed',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     'employer.name',\n      location:    ['location.formattedLocation', 'location.city', 'location'],\n      description: 'description.text',\n      url:         ['url', 'jobUrl'],\n      applyUrl:    ['url', 'jobUrl'],\n      postedAt:    'datePublished',\n      salary:      null,\n      remote:      null,\n      seniority:   null,\n      country:     'location.countryCode',\n    }\n  },\n  '2c. Scrape StepStone': {\n    source: 'StepStone',\n    fields: {\n      id:          'id',\n      title:       'title',\n      company:     'company_details.company_name',\n      location:    'workplace_details.job_location',\n      description: 'content_details.full_description',\n      url:         'source.url',\n      applyUrl:    'detail_page.applying_details.applying_url',\n      postedAt:    'posting_details.published_at',\n      salary:      'compensation_details.detail_salary',\n      remote:      'workplace_details.work_arrangement',\n      seniority:   null,\n      country:     null,  // StepStone.de is DACH-only — skip code filter\n    }\n  },\n  '2d. Scrape Glassdoor': {\n    source: 'Glassdoor',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     ['company.companyName', 'company.name', 'companyName', 'employer_name', 'employer'],\n      location:    ['location_city', 'location', 'location_country'],\n      description: 'description_text',\n      url:         'jobUrl',\n      applyUrl:    'applyUrl',\n      postedAt:    'datePublished',\n      salary:      null,  // flat baseSalary_min/max handled in extractSalary\n      remote:      'remoteWorkTypes',\n      seniority:   null,\n      country:     null,  // location_country is \"Germany\" not a code; Glassdoor.de is DACH-only\n    }\n  },\n  '2e. Scrape Xing': {\n    source: 'Xing',\n    fields: {\n      id:          'job_id',\n      title:       'title',\n      company:     'company',\n      location:    'location',\n      description: 'description_text',\n      url:         'url',\n      applyUrl:    'apply_url',\n      postedAt:    'date_posted',\n      salary:      'salary',\n      remote:      'remote',\n      seniority:   null,\n      country:     'location_country_code',\n    }\n  },\n};\n\nconst ALLOWED_COUNTRIES = new Set(['DE', 'AT', 'CH', 'NL', 'BE', '']);\n\nfunction getNestedValue(obj, path) {\n  if (!path) return undefined;\n  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);\n}\n\nfunction resolveField(obj, mapping) {\n  if (mapping === null || mapping === undefined) return '';\n  if (Array.isArray(mapping)) {\n    for (const path of mapping) {\n      const val = getNestedValue(obj, path);\n      if (val !== undefined && val !== null && val !== '') return val;\n    }\n    return '';\n  }\n  return getNestedValue(obj, mapping) || '';\n}\n\nfunction extractSalary(obj, config) {\n  const raw = resolveField(obj, config.fields.salary);\n  // Already a string (Xing, LinkedIn)\n  if (raw && typeof raw === 'string' && raw.length > 0) return raw;\n  // StepStone: { min, max, currency, period }\n  if (raw && typeof raw === 'object' && raw.min) {\n    const { min, max, currency, currencyIso, period } = raw;\n    return `${currency || currencyIso || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  // LinkedIn: baseSalary nested object\n  if (obj.baseSalary && obj.baseSalary.min) {\n    const { min, max, currencyCode, unitOfWork } = obj.baseSalary;\n    return `${currencyCode || ''} ${min}-${max}/${unitOfWork || ''}`.trim();\n  }\n  // Glassdoor: flat baseSalary_min / baseSalary_max fields\n  if (obj.baseSalary_min) {\n    const { baseSalary_min: min, baseSalary_max: max, salary_currency: cur, salary_period: period } = obj;\n    return `${cur || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  return '';\n}\n\nfunction extractCompanyFromUrl(url) {\n  if (!url) return '';\n  // Glassdoor pattern: /job-listing/...-at-COMPANY-NAME-JV_...\n  const glassdoorMatch = String(url).match(/-at-([\\w-]+?)-JV_/i);\n  if (glassdoorMatch) {\n    return glassdoorMatch[1].replace(/-/g, ' ').trim();\n  }\n  return '';\n}\n\nconst jobs = [];\n\nfor (const [nodeName, config] of Object.entries(BOARD_CONFIG)) {\n  let items;\n  try {\n    items = $(nodeName).all();\n  } catch (e) {\n    continue;\n  }\n  if (!items || items.length === 0) continue;\n\n  for (const item of items) {\n    const d = item.json;\n    if (!d || typeof d !== 'object') continue;\n\n    const desc = String(resolveField(d, config.fields.description));\n    if (desc.length < 20) continue;\n\n    const country = String(resolveField(d, config.fields.country) || '').toUpperCase();\n    if (country && !ALLOWED_COUNTRIES.has(country)) continue;\n\n    const rawCompany = String(resolveField(d, config.fields.company));\n    jobs.push({\n      source:      config.source,\n      id:          String(resolveField(d, config.fields.id)),\n      title:       String(resolveField(d, config.fields.title)),\n      company:     rawCompany || extractCompanyFromUrl(resolveField(d, config.fields.url)) || 'Unknown Company',\n      location:    String(resolveField(d, config.fields.location)),\n      description: desc,\n      url:         String(resolveField(d, config.fields.url)),\n      applyUrl:    String(resolveField(d, config.fields.applyUrl)),\n      postedAt:    String(resolveField(d, config.fields.postedAt)),\n      salary:      extractSalary(d, config),\n      remote:      resolveField(d, config.fields.remote) === true,\n      seniority:   String(resolveField(d, config.fields.seniority)),\n    });\n  }\n}\n\nconst seen = new Set();\nconst unique = [];\nfor (const job of jobs) {\n  const key = job.applyUrl || `${job.company}::${job.title}`;\n  if (seen.has(key)) continue;\n  seen.add(key);\n  unique.push(job);\n}\n\nif (unique.length === 0) {\n  return [{ json: { error: 'No valid jobs after normalize + dedup. Check Apify outputs and country filter.', rawCount: jobs.length } }];\n}\n\nreturn unique.map(j => ({ json: j }));"
       },
-      "id": "1f437649-6f3c-4fe4-8f54-6525ed3d1175",
+      "id": "0affe89e-1fce-447c-b264-ccf12ed93198",
       "name": "4. Normalize & Merge Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        21440,
-        5536
+        34928,
+        13160
       ]
     },
     {
@@ -175,13 +176,13 @@
         },
         "options": {}
       },
-      "id": "6610cdd6-938e-4725-a9d0-e677ab16539d",
+      "id": "abc31489-2e84-42f0-9d12-edddb49a57a2",
       "name": "2f. Read Applied Jobs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        21216,
-        6064
+        34704,
+        13616
       ],
       "executeOnce": true,
       "credentials": {
@@ -195,37 +196,37 @@
       "parameters": {
         "jsCode": "const rows = $input.all();\nif (rows.length === 0) {\n  return [{ json: { _emptySheet: true } }];\n}\nreturn rows;"
       },
-      "id": "c4888969-dcd1-40eb-901c-ca2f030cdb39",
+      "id": "1aa20235-c62a-49bc-9ae7-0c147a390fca",
       "name": "2f.1. Ensure Not Empty",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        21440,
-        6064
+        34928,
+        13616
       ]
     },
     {
       "parameters": {},
-      "id": "82a1a674-503a-4b80-b101-f7b1914077e5",
+      "id": "d0365de3-bfdf-4858-8b73-95eb99b0ca53",
       "name": "5. Sync Jobs + Sheet",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
       "position": [
-        21664,
-        5752
+        35152,
+        13376
       ]
     },
     {
       "parameters": {
         "jsCode": "// Get all scraped jobs from normalize step\nconst jobs = $('4. Normalize & Merge Jobs').all();\n\n// Build set of already-seen job URLs from Sheets\nconst seenUrls = new Set();\ntry {\n  const sheetRows = $('2f. Read Applied Jobs').all();\n  for (const row of sheetRows) {\n    // Only suppress URLs for jobs that were actually processed (not skipped)\n    // Skipped rows (Applied = 'N/A') should remain eligible for re-evaluation\n    if ((row.json['Applied'] || '').trim() === 'N/A') continue;\n    const url = (row.json['Job URL'] || '').trim();\n    if (url) seenUrls.add(url);\n  }\n} catch (e) {\n  // Sheet is empty on first run — that's fine\n}\n\n// Filter to only new jobs not yet in Sheets (by URL)\nconst urlFiltered = jobs.filter(job => {\n  const url = (job.json.url || job.json.applyUrl || '').trim();\n  return url && !seenUrls.has(url);\n});\n\n// Second pass: deduplicate same company + same role title within this batch.\n// Keeps only the first occurrence. Different locations for the same role at\n// the same company produce identical resume PDFs (same slug), so processing\n// duplicates wastes API calls and overwrites files.\nconst seenCompanyRole = new Set();\nconst newJobs = urlFiltered.filter(job => {\n  const key = `${(job.json.company || '').toLowerCase().trim()}::${(job.json.title || '').toLowerCase().trim()}`;\n  if (seenCompanyRole.has(key)) return false;\n  seenCompanyRole.add(key);\n  return true;\n});\n\nif (newJobs.length === 0) {\n  return [{ json: { skipped: true, message: 'No new jobs — all already logged in Sheets', totalScraped: jobs.length } }];\n}\n\nconsole.log(`New jobs to process: ${newJobs.length} / ${urlFiltered.length} URL-filtered / ${jobs.length} scraped`);\nreturn newJobs;"
       },
-      "id": "43b5863e-ef90-4eaf-98a3-7a49e9b92aed",
+      "id": "6936d1e3-8ece-4c4c-825f-9371dec5551d",
       "name": "6. Filter Duplicates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        21888,
-        5752
+        35376,
+        13376
       ]
     },
     {
@@ -235,13 +236,13 @@
           "timeout": 10000
         }
       },
-      "id": "6574ee04-f317-4dad-a84c-ff6ec70f2e37",
+      "id": "f9c0e8c5-6c98-40bd-ab10-9b8072564b07",
       "name": "7. GET Resume Context",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        22112,
-        5752
+        35600,
+        13376
       ],
       "continueOnFail": true
     },
@@ -249,41 +250,41 @@
       "parameters": {
         "jsCode": "const resumeItem = $('7. GET Resume Context').first();\n// If the resume server is down, continueOnFail gives us an error item.\n// Fall back to an empty resume object so the pipeline can still run and log jobs.\nconst resumeContext = (resumeItem.json && !resumeItem.json.error)\n  ? resumeItem.json\n  : {};\n\nconst jobs = $('6. Filter Duplicates').all();\n\n// Short-circuit: no new jobs today — pass sentinel through without attaching resume.\n// This prevents a wasted Gemini API call and a misleading Sheet row.\nif (jobs.length === 1 && (jobs[0].json.skipped || jobs[0].json.error)) {\n  return [{ json: jobs[0].json }];\n}\n\nreturn jobs.map(job => ({\n  json: {\n    ...job.json,\n    resume: resumeContext,\n    _resumeFallback: Object.keys(resumeContext).length === 0\n  }\n}));"
       },
-      "id": "2dc7a7c6-abae-4bc0-8799-2edcc28735e0",
+      "id": "e2aa1fd6-aa88-4fcc-98b4-0f55167cf536",
       "name": "8. Attach Resume to Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        22336,
-        5752
+        35824,
+        13376
       ]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const item = $json;\n\n// Skip non-job items safely\nif (item.skipped || item.error) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n    },\n  };\n}\n\n// ===== Role-Type Pre-Filter =====\n// Reject fundamentally misaligned roles BEFORE burning a Groq API call.\nconst ROLE_REJECT_PATTERNS = [\n  /\\b(au(?:ß|ss)endienst|vertrieb|verkauf|sales\\s*rep)\\b/i,\n  /\\b(kundenberater|kundenbetreuer|kundenservice|customer\\s*service)\\b/i,\n  /\\b(disponent|logistik|versand|spedition|lagerlogistik|supply\\s*chain)\\b/i,\n  /\\b(personal(?:referent|leiter|manager|wesen)|recruiting|recruiter|human\\s*resource|hr\\s*manager|talent\\s*acquisition)\\b/i,\n  /\\b(marketing\\s*manager|communications|public\\s*relations|pr\\s*manager)\\b/i,\n  /\\b(buchhalter|accounting|finanzbuchhalter|steuerberater)\\b/i,\n  /\\b(linienf(?:ü|ue)hrer|produktionsleiter|schichtf(?:ü|ue)hrer|maschinenf(?:ü|ue)hrer|anlagenf(?:ü|ue)hrer)\\b/i,\n  /\\b(inbetriebnahme(?:leiter|ingenieur)?|instandsetzung|instandhaltung)\\b/i,\n  /\\b(sachbearbeiter|kaufmann|kauffrau|verwaltung(?:sfachangestellte)?)\\b/i,\n  /\\b(eventmanager|eventdekoration|veranstaltung|gastronomie|k(?:ü|ue)chenleiter)\\b/i,\n];\n\nconst jobTitle = (item.title || '').trim();\nconst rejected = ROLE_REJECT_PATTERNS.some(pattern => pattern.test(jobTitle));\n\nif (rejected) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n      _preFilterReject: true,\n      _skipReason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n        jobType: 'unknown',\n        _preFilterReject: true,\n      },\n    },\n  };\n}\n\n// MUST include \"JSON\" for Groq response_format\nconst systemPrompt = `You are a job-match filter for a Salesforce Developer / Software Developer seeking tech roles in Germany.\n\nReturn ONLY valid JSON. No explanation, no text outside JSON.\n\nOutput format:\n{\n  \"match\": true or false,\n  \"confidence\": number (0-100),\n  \"reason\": \"one short line explaining WHY this confidence score\",\n  \"jobType\": \"internship|werkstudent|full-time|contract|unknown\"\n}\n\nCONFIDENCE CALIBRATION (use the full 0-100 range):\n- 90-100: Core match — Salesforce Developer, Salesforce Consultant, or closely related CRM/platform role\n- 75-89: Strong match — software development role where candidate skills are directly applicable (backend, full-stack, integration, DevOps)\n- 60-74: Moderate match — tech-adjacent role where some skills transfer but significant gaps exist (e.g., pure frontend, QA/testing, data engineering)\n- 40-59: Weak match — tech role but poor skill alignment (e.g., embedded systems, C++/low-level, pure ML research)\n- 20-39: Very weak — role has some IT connection but is not a developer position (e.g., IT project management, tech sales, system admin)\n- 0-19: No match — completely unrelated field\n\nMATCH RULES:\n- match=true if confidence >= 40\n- match=false if confidence < 40\n\nEXAMPLES (use these to calibrate your confidence scores):\n- \"Salesforce Developer\" at SAP: {\"match\":true,\"confidence\":95,\"reason\":\"Core Salesforce platform role\",\"jobType\":\"full-time\"}\n- \"Junior Backend Developer (Python/Node.js)\" at Zalando: {\"match\":true,\"confidence\":78,\"reason\":\"Software dev role with overlapping JS/Python stack\",\"jobType\":\"full-time\"}\n- \"IT Project Manager\" at Siemens: {\"match\":false,\"confidence\":28,\"reason\":\"Management role, not hands-on development\",\"jobType\":\"full-time\"}\n- \"Werkstudent Softwareentwicklung\" at BMW: {\"match\":true,\"confidence\":68,\"reason\":\"Entry-level tech role, transferable development skills\",\"jobType\":\"werkstudent\"}\n- \"Senior DevOps Engineer\" at Delivery Hero: {\"match\":true,\"confidence\":72,\"reason\":\"Infrastructure role, candidate has CI/CD and AWS experience\",\"jobType\":\"full-time\"}\n- \"Sachbearbeiter Vertriebsinnendienst\" at Bosch: {\"match\":false,\"confidence\":5,\"reason\":\"Administrative sales support, no tech component\",\"jobType\":\"full-time\"}\n\nIMPORTANT DISTINCTIONS:\n- \"Salesforce\" in a role title means CRM platform development — this is the candidate PRIMARY expertise. High confidence.\n- \"Sales\" in a role title (without \"force\") means selling products/services — this is NOT the candidate field. Low confidence.\n- \"Business Development Manager\", \"Account Executive\", \"Sales Manager\" = sales roles, NOT tech roles. Confidence 0-20.\n- \"Projektleiter\" / \"Project Manager\" without \"IT\" or \"Software\" qualifier = generic management. Confidence 10-30.\n- \"Sachbearbeiter\" / \"Clerk\" = administrative role. Confidence 0.\n- \"Linienführer\" / \"Line Leader\" = manufacturing/production. Confidence 0.\n- \"Inbetriebnahme\" / \"Commissioning\" = industrial engineering. Confidence 0.\n- Internship / Werkstudent in ANY tech field: confidence 60+ (be lenient with entry-level tech roles)\n- Junior roles in software/IT: confidence 65+ (transferable skills)\n\nThe candidate skills: Salesforce (Apex, LWC, Flows), JavaScript, Python, React, REST APIs, CI/CD, Git, AWS basics, n8n/Zapier automation.\n`;\n\n// ===== Helper =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\n\n// ===== Resume Data =====\nconst skills = (item.resume?.currentSkills || [])\n  .map(s => s?.skill || '')\n  .filter(Boolean)\n  .join(', ');\n\nconst education = (item.resume?.education || [])\n  .map(e =>\n    `${e.degree || ''} ${e.field || ''} at ${e.institution || ''} (${e.year || ''})`.trim()\n  )\n  .join('; ');\n\nconst recentWork = (item.resume?.workExperience || [])\n  .slice(0, 2)\n  .map(w =>\n    `${w.title || ''} at ${w.company || ''}: ${(w.summary || '').slice(0, 120)}`\n  )\n  .join(' | ');\n\n// ===== Smart JD Extraction (EN + DE aware) =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\n// Split by important sections (English + German)\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\n// Pick best section or fallback\nlet jdImportant =\n  parts.length > 1 && parts[1].trim().length > 120\n    ? parts[1]\n    : jd;\n\n// Add intro for context only if meaningful\nconst intro = jd.length > 400 ? jd.slice(0, 300) : '';\n\n// Combine intro + requirements\njdImportant = intro\n  ? `${intro}\\n\\n${jdImportant}`\n  : jdImportant;\n\n// Filter out benefits/offer sections that waste tokens\njdImportant = jdImportant.replace(/(?:was wir bieten|what we offer|benefits|unsere leistungen|unser angebot|wir bieten dir|das bieten wir|your benefits|perks)[sS]{0,800}/gi, '');\n\n// Remove HTML tags if present\njdImportant = jdImportant.replace(/<[^>]+>/g, '');\n\n// Final cap for token safety\njdImportant = jdImportant.slice(0, 1500);\n\n// ===== Build User Prompt =====\nconst userMsg = `Candidate:\nTitle: ${item.resume?.currentJobTitle || 'Software Developer'}\nLocation: Germany\n\nEducation:\n${education || 'MSc Global Software Development, Hochschule Fulda Germany'}\n\nRecent Work:\n${recentWork || 'N/A'}\n\nSkills:\n${skills || 'N/A'}\n\nJob:\n${item.title} at ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\n\nJob Description:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _groqBody: {\n      model: 'llama-3.1-8b-instant',\n      temperature: 0.1,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg },\n      ],\n    },\n  },\n};"
+        "jsCode": "const item = $json;\n\n// Skip non-job items safely\nif (item.skipped || item.error) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n    },\n  };\n}\n\n// ===== Role-Type Pre-Filter =====\n// Reject fundamentally misaligned roles BEFORE burning a Gemini API call.\nconst ROLE_REJECT_PATTERNS = [\n  /\\b(au(?:ß|ss)endienst|vertrieb|verkauf|sales\\s*rep)\\b/i,\n  /\\b(kundenberater|kundenbetreuer|kundenservice|customer\\s*service)\\b/i,\n  /\\b(disponent|logistik|versand|spedition|lagerlogistik|supply\\s*chain)\\b/i,\n  /\\b(personal(?:referent|leiter|manager|wesen)|recruiting|recruiter|human\\s*resource|hr\\s*manager|talent\\s*acquisition)\\b/i,\n  /\\b(marketing\\s*manager|communications|public\\s*relations|pr\\s*manager)\\b/i,\n  /\\b(buchhalter|accounting|finanzbuchhalter|steuerberater)\\b/i,\n  /\\b(linienf(?:ü|ue)hrer|produktionsleiter|schichtf(?:ü|ue)hrer|maschinenf(?:ü|ue)hrer|anlagenf(?:ü|ue)hrer)\\b/i,\n  /\\b(inbetriebnahme(?:leiter|ingenieur)?|instandsetzung|instandhaltung)\\b/i,\n  /\\b(sachbearbeiter|kaufmann|kauffrau|verwaltung(?:sfachangestellte)?)\\b/i,\n  /\\b(eventmanager|eventdekoration|veranstaltung|gastronomie|k(?:ü|ue)chenleiter)\\b/i,\n];\n\nconst jobTitle = (item.title || '').trim();\nconst rejected = ROLE_REJECT_PATTERNS.some(pattern => pattern.test(jobTitle));\n\nif (rejected) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n      _preFilterReject: true,\n      _skipReason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n        jobType: 'unknown',\n        _preFilterReject: true,\n      },\n    },\n  };\n}\n\n// MUST include \"JSON\" for Gemini response_format\nconst systemPrompt = `You are a job-match filter for a Salesforce Developer / Software Developer seeking tech roles in Germany.\n\nReturn ONLY valid JSON. No explanation, no text outside JSON.\n\nOutput format:\n{\n  \"match\": true or false,\n  \"confidence\": number (0-100),\n  \"reason\": \"one short line explaining WHY this confidence score\",\n  \"jobType\": \"internship|werkstudent|full-time|contract|unknown\"\n}\n\nCONFIDENCE CALIBRATION (use the full 0-100 range):\n- 90-100: Core match — Salesforce Developer, Salesforce Consultant, or closely related CRM/platform role\n- 75-89: Strong match — software development role where candidate skills are directly applicable (backend, full-stack, integration, DevOps)\n- 60-74: Moderate match — tech-adjacent role where some skills transfer but significant gaps exist (e.g., pure frontend, QA/testing, data engineering)\n- 40-59: Weak match — tech role but poor skill alignment (e.g., embedded systems, C++/low-level, pure ML research)\n- 20-39: Very weak — role has some IT connection but is not a developer position (e.g., IT project management, tech sales, system admin)\n- 0-19: No match — completely unrelated field\n\nMATCH RULES:\n- match=true if confidence >= 40\n- match=false if confidence < 40\n\nEXAMPLES (use these to calibrate your confidence scores):\n- \"Salesforce Developer\" at SAP: {\"match\":true,\"confidence\":95,\"reason\":\"Core Salesforce platform role\",\"jobType\":\"full-time\"}\n- \"Junior Backend Developer (Python/Node.js)\" at Zalando: {\"match\":true,\"confidence\":78,\"reason\":\"Software dev role with overlapping JS/Python stack\",\"jobType\":\"full-time\"}\n- \"IT Project Manager\" at Siemens: {\"match\":false,\"confidence\":28,\"reason\":\"Management role, not hands-on development\",\"jobType\":\"full-time\"}\n- \"Werkstudent Softwareentwicklung\" at BMW: {\"match\":true,\"confidence\":68,\"reason\":\"Entry-level tech role, transferable development skills\",\"jobType\":\"werkstudent\"}\n- \"Senior DevOps Engineer\" at Delivery Hero: {\"match\":true,\"confidence\":72,\"reason\":\"Infrastructure role, candidate has CI/CD and AWS experience\",\"jobType\":\"full-time\"}\n- \"Sachbearbeiter Vertriebsinnendienst\" at Bosch: {\"match\":false,\"confidence\":5,\"reason\":\"Administrative sales support, no tech component\",\"jobType\":\"full-time\"}\n\nIMPORTANT DISTINCTIONS:\n- \"Salesforce\" in a role title means CRM platform development — this is the candidate PRIMARY expertise. High confidence.\n- \"Sales\" in a role title (without \"force\") means selling products/services — this is NOT the candidate field. Low confidence.\n- \"Business Development Manager\", \"Account Executive\", \"Sales Manager\" = sales roles, NOT tech roles. Confidence 0-20.\n- \"Projektleiter\" / \"Project Manager\" without \"IT\" or \"Software\" qualifier = generic management. Confidence 10-30.\n- \"Sachbearbeiter\" / \"Clerk\" = administrative role. Confidence 0.\n- \"Linienführer\" / \"Line Leader\" = manufacturing/production. Confidence 0.\n- \"Inbetriebnahme\" / \"Commissioning\" = industrial engineering. Confidence 0.\n- Internship / Werkstudent in ANY tech field: confidence 60+ (be lenient with entry-level tech roles)\n- Junior roles in software/IT: confidence 65+ (transferable skills)\n\nThe candidate skills: Salesforce (Apex, LWC, Flows), JavaScript, Python, React, REST APIs, CI/CD, Git, AWS basics, n8n/Zapier automation.\n`;\n\n// ===== Helper =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\n\n// ===== Resume Data =====\nconst skills = (item.resume?.currentSkills || [])\n  .map(s => s?.skill || '')\n  .filter(Boolean)\n  .join(', ');\n\nconst education = (item.resume?.education || [])\n  .map(e =>\n    `${e.degree || ''} ${e.field || ''} at ${e.institution || ''} (${e.year || ''})`.trim()\n  )\n  .join('; ');\n\nconst recentWork = (item.resume?.workExperience || [])\n  .slice(0, 2)\n  .map(w =>\n    `${w.title || ''} at ${w.company || ''}: ${(w.summary || '').slice(0, 120)}`\n  )\n  .join(' | ');\n\n// ===== Smart JD Extraction (EN + DE aware) =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\n// Split by important sections (English + German)\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\n// Pick best section or fallback\nlet jdImportant =\n  parts.length > 1 && parts[1].trim().length > 120\n    ? parts[1]\n    : jd;\n\n// Add intro for context only if meaningful\nconst intro = jd.length > 400 ? jd.slice(0, 300) : '';\n\n// Combine intro + requirements\njdImportant = intro\n  ? `${intro}\\n\\n${jdImportant}`\n  : jdImportant;\n\n// Filter out benefits/offer sections that waste tokens\njdImportant = jdImportant.replace(/(?:was wir bieten|what we offer|benefits|unsere leistungen|unser angebot|wir bieten dir|das bieten wir|your benefits|perks)[sS]{0,800}/gi, '');\n\n// Remove HTML tags if present\njdImportant = jdImportant.replace(/<[^>]+>/g, '');\n\n// Final cap for token safety\njdImportant = jdImportant.slice(0, 1500);\n\n// ===== Build User Prompt =====\nconst userMsg = `Candidate:\nTitle: ${item.resume?.currentJobTitle || 'Software Developer'}\nLocation: Germany\n\nEducation:\n${education || 'MSc Global Software Development, Hochschule Fulda Germany'}\n\nRecent Work:\n${recentWork || 'N/A'}\n\nSkills:\n${skills || 'N/A'}\n\nJob:\n${item.title} at ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\n\nJob Description:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _geminibody: {\n      contents: [\n        {\n          role: 'user',\n          parts: [\n            {\n              text: `${systemPrompt}\\n\\n${userMsg}`\n            }\n          ]\n        }\n      ],\n      generationConfig: {\n        temperature: 0.3,\n        responseMimeType: 'application/json'\n      }\n    },\n  },\n};"
       },
-      "id": "85de6134-44cc-46ec-9b9a-db20517a7d41",
+      "id": "cccb25c6-748b-4257-8e30-3961ec388ac3",
       "name": "10a. Build Match Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        22784,
-        5680
+        36272,
+        13232
       ]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _geminiBody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Gemini call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Gemini API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Gemini API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.choices[0].message.content;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: result,\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'AI parse error – skipped: ' + err.message,\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}"
+        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _geminibody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Gemini call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Gemini API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Gemini API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.choices[0].message.content;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: result,\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'AI parse error – skipped: ' + err.message,\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}"
       },
-      "id": "31f9556b-2417-40c7-a547-c1fd2baae790",
+      "id": "468435fb-3446-44d9-a76c-3260f8266263",
       "name": "11. Parse Match Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        23456,
-        5680
+        37168,
+        13136
       ]
     },
     {
@@ -331,13 +332,13 @@
         },
         "options": {}
       },
-      "id": "76bf57c8-1cb5-4e77-9b37-e694bc383c85",
+      "id": "f21d5802-be44-4ab9-aff5-0aa073af9619",
       "name": "12. Is Match?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        23680,
-        5680
+        37392,
+        13136
       ]
     },
     {
@@ -345,13 +346,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// 10a. Build Tailor Prompt — production-grade version\n\nconst item = $json;\nconst staticData = $getWorkflowStaticData('global');\n\n// ===== Rate limiting =====\nconst PRE_CALL_DELAY_MS = 6000;\nconst lastCall = staticData.lastOpenAICallAt || 0;\nconst elapsed = Date.now() - lastCall;\nif (elapsed < PRE_CALL_DELAY_MS) {\n  await new Promise(r => setTimeout(r, PRE_CALL_DELAY_MS - elapsed));\n}\nstaticData.lastOpenAICallAt = Date.now();\n\n// ===== Helpers =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\nconst stripHtml = (s) => (s || '').replace(/<[^>]+>/g, '').replace(/\\s+/g, ' ').trim();\n\n// ===== Smart JD extraction =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\nlet jdImportant =\n  parts.length > 1 && parts[1].trim().length > 120\n    ? parts[1]\n    : jd;\n\nconst intro = jd.length > 400 ? jd.slice(0, 300) : '';\n\njdImportant = intro\n  ? `${intro}\\n\\n${jdImportant}`\n  : jdImportant;\n\n// Filter out benefits/offer sections that waste tokens\njdImportant = jdImportant.replace(/(?:was wir bieten|what we offer|benefits|unsere leistungen|unser angebot|wir bieten dir|das bieten wir|your benefits|perks)[\\s\\S]{0,800}/gi, '');\n\njdImportant = jdImportant.replace(/<[^>]+>/g, '').slice(0, 2200).trim();\n\n// ===== Strip HTML from resume input =====\n// Prevents model from confusing input HTML with output format instructions\n// Descriptions are already plain text from /context — preserve newlines for bullet structure\nconst workClean = item.resume?.currentWork || [];\n\nconst skillsClean = (item.resume?.currentSkills || []).map(s => ({\n  ...s,\n  details: stripHtml(s.details),\n}));\n\n// ===== System Prompt =====\nconst systemPrompt = `You are an expert resume and cover letter writer for tech jobs in Germany.\n\nYour goal is NOT to write nicely — your goal is to maximize interview callback rate.\n\nThe output MUST be strictly valid JSON.\n- No text before or after the JSON object\n- No comments\n- No trailing commas\n- No additional keys beyond the schema\n\n========================\nRESUME PATCH RULES\n========================\n\nGENERAL:\n- You MUST update work bullets AND skills in every response — patching only jobTitle/profile is not acceptable.\n- DO NOT invent tools, skills, or experience not present in the resume.\n- Reordering, trimming, and re-emphasis of existing content is always allowed and encouraged.\n- Each sentence must add new information — no filler, no repetition.\n- Avoid generic statements that could apply to any company or role.\n\nPROFILE (3–4 sentences):\n- Mention MSc Global Software Development (Hochschule Fulda, Germany)\n- Align current title to the job role\n- Highlight core tech stack matching the job description\n- Clearly state target role\n- The profile MUST only reference skills, experience, and domains present in the resume.\n  NEVER claim experience in domains like \"technical sales\", \"customer relationship management\",\n  \"market penetration\", \"logistics\", \"supply chain\", or \"business development\" unless these appear in the resume data.\n  If the role requires such experience and the resume has none, write a profile that honestly\n  frames the developer's transferable technical skills — do not fabricate domain experience.\n\nWORK EXPERIENCE:\n- REORDER bullets so the most JD-relevant ones appear FIRST.\n- DROP bullets with zero relevance to this specific JD.\n- Bullet count should reflect actual relevance: 6–8 for a highly matched role, 3–4 for a partial match, 1–2 if the entry is barely relevant.\n- Incorporate JD keywords ONLY when natural — prefer exact tool/tech wording for ATS.\n- Focus on technologies used and measurable impact.\n- Use action verbs: Built, Implemented, Optimized, Designed, Automated, Reduced, Delivered.\n- NEVER use: \"worked on\", \"responsible for\", \"helped with\", \"assisted\", \"was involved in\"\n- When adapting bullets for non-Salesforce roles, translate technical OUTCOMES, not domain experience.\n  Good: \"Designed system integrations reducing manual workflows by 40%\" (outcome-focused)\n  Bad: \"Developed customer relationship strategies resulting in client retention\" (fabricated domain)\n  If a bullet has no relevance to the target role, DROP it rather than rewriting it into a false narrative.\n  But make sure to have enough content in experience section so that recruiters see a strong technical background — do not fabricate non-technical experience.\n\nSKILLS:\n- For Salesforce roles: reorder entries so the most JD-relevant categories appear first; update infoHtml content to match the JD.\n- For non-Salesforce TECHNICAL roles (DevOps, backend, cloud, full-stack):\n  - You MAY rename skill category labels ONLY if you can authentically map existing skills to the new domain.\n    ALLOWED renames (same technical domain):\n      \"Salesforce Development\" -> \"Backend Development\" (both are coding)\n      \"Integration and DevOps\" -> \"Infrastructure & DevOps\" (related domain)\n      \"Agentforce and AI\" -> \"AI & Automation\" (related domain)\n    FORBIDDEN renames (different domain entirely):\n      \"Salesforce Development\" -> \"Sales Strategies\" (NEVER — developer has no sales background)\n      \"Low-Code and Automation\" -> \"Customer Relationship Management\" (NEVER — unrelated domain)\n      Any rename to: \"Sales\", \"Marketing\", \"Logistics\", \"HR\", \"Finance\", \"Business Development\"\n  - infoHtml items MUST come from the resume. You may reorder and emphasize, but do NOT invent tools or skills not present in the original resume data.\n- infoHtml MUST be a comma-separated list of 4-8 specific tools/technologies — never a single vague phrase.\n  Good: \"Jenkins CI/CD, GitHub Actions, Terraform, AWS (EC2, VPC, RDS), Docker\"\n  Bad: \"Cloud Infrastructure Management\"\n- If the role requires fundamentally different skills not present in the resume (e.g., sales, logistics, HR):\n  - Keep skill category labels as-is (do not rename them)\n  - You may still reorder skill entries and update infoHtml content based on JD emphasis\n  - Do NOT invent new domains\n  - This signals the role is a poor fit — the match filter should have caught it\n- Keep the same number of skill entries.\n\nCERTIFICATES:\n- Set \"showCertificates\": false in the patch if Salesforce certifications are not relevant to this role.\n  Apply this for DevOps, cloud infrastructure, general software development, backend, or any non-Salesforce role.\n\nSTRICT:\n- Keep all entry IDs exactly as given — never modify or omit them\n- Do not create new entries or sections\n- Do not remove existing entries\n- HTML formatting ONLY where required by schema\n\n========================\nCOVER LETTER RULES (GERMANY STYLE)\n========================\n\n- EXACTLY 3 paragraphs, returned as separate fields in the coverLetter object (paragraph1, paragraph2, paragraph3)\n- 180–220 words total\n- Plain text only\n\nP1:\n- State role and company name\n- Mention MSc Hochschule Fulda (Germany)\n- Start with a strong, specific hook tied to relevant experience\n\nP2:\n- 2–3 concrete skills or project outcomes aligned with the job\n- Include specific technologies and results\n- No generic claims\n\nP3:\n- Clearly state availability (internship / Werkstudent / full-time)\n- Match jobType context\n- End with a confident and direct closing\n\nSTRICT:\n- No clichés: \"passionate\", \"excited\", \"team player\", \"fast learner\", \"driven\"\n- No greetings, no date, no subject line, no sign-off\n- No repetition of resume bullets\n- Avoid generic statements\n- Each sentence must add value\n- If job requires German and resume does not show it → do NOT claim German skills\n\n========================\nOUTPUT FORMAT (STRICT JSON)\n========================\n\n{\n  \"patch\": {\n    \"jobTitle\": \"string (omit if unchanged)\",\n    \"profile\": \"<p>...</p> (omit if no improvement)\",\n    \"showCertificates\": false,\n    \"work\": [\n      {\n        \"id\": \"existing-id\",\n        \"description\": \"<ul><li><p>...</p></li></ul>\"\n      }\n    ],\n    \"skills\": [\n      {\n        \"id\": \"existing-id\",\n        \"skill\": \"renamed category label (omit if Salesforce role or label is still appropriate)\",\n        \"infoHtml\": \"<p>Tool A, Tool B, Tool C, Tool D</p>\"\n      }\n    ]\n  },\n  \"coverLetter\": {\n    \"paragraph1\": \"Opening paragraph: state role, company, MSc Hochschule Fulda, strong hook\",\n    \"paragraph2\": \"Evidence paragraph: 2-3 concrete skills/outcomes with technologies and results\",\n    \"paragraph3\": \"Closing paragraph: availability, job type fit, confident direct closing\"\n  }\n}\n\nCRITICAL: coverLetter MUST be an object with exactly 3 keys: paragraph1, paragraph2, paragraph3.\nEach value is a plain text string (one paragraph). Do NOT return coverLetter as a single string.\n\n========================\nFINAL RULES\n========================\n\n- Always make at least one meaningful improvement if possible\n- Only return an empty patch if absolutely no improvement can be made\n- Ensure JSON is valid and parseable\n- Do not include any text outside the JSON object`;\n\n// ===== User Message =====\nconst workFormatted = workClean.map(w =>\n  `[ID: ${w.id}]\\n${w.employer} — ${w.jobTitle} (${w.startDate}–${w.endDate})\\n` +\n  w.description.split(/\\n+/).filter(s => s.trim()).map(b => `  • ${b.trim()}`).join('\\n')\n).join('\\n\\n');\n\nconst skillsFormatted = skillsClean.map(s =>\n  `[ID: ${s.id}] ${s.skill}: ${s.details}`\n).join('\\n');\n\nconst userMsg = `RESUME:\nTitle: ${item.resume?.currentJobTitle || ''}\nProfile: ${stripHtml(item.resume?.currentProfile || '')}\n\nWork Experience:\n${workFormatted}\n\nSkills:\n${skillsFormatted}\n\nJOB DETAILS:\nRole: ${item.title}\nCompany: ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\nType: ${item.matchResult?.jobType || 'unknown'}\n\nJOB DESCRIPTION:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _openAIBody: {\n      model: 'gpt-4o-mini',\n      temperature: 0.3,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg },\n      ],\n    },\n  },\n};"
       },
-      "id": "e4f379dd-08f3-4f83-8bc4-b1b2f8322939",
+      "id": "1e31a507-4fec-4a9e-9e28-0d7fa9f6f350",
       "name": "13a. Build Tailor Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        23904,
-        5584
+        37616,
+        12992
       ]
     },
     {
@@ -367,7 +368,7 @@
           "timeout": 90000
         }
       },
-      "id": "a8349baf-446f-463f-bd6f-73759c580af0",
+      "id": "55f4604b-7f76-468f-8448-cd83424ad346",
       "name": "13b. OpenAI API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -375,8 +376,8 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        24128,
-        5584
+        37840,
+        12992
       ],
       "credentials": {
         "openAiApi": {
@@ -391,13 +392,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// Single combined AI call returns both patch and coverLetter\n\n// Current item = OpenAI HTTP response for this job\nconst aiResponse = $json;\n\n// Original job from 13a, matched by index\nconst jobData = $('13a. Build Tailor Prompt').item.json;\n\nlet patch = {};\nlet coverLetter = '';\n\ntry {\n  if (!aiResponse?.choices?.[0]?.message?.content) {\n    throw new Error('No choices in AI response — possible rate limit or API error');\n  }\n  const result = JSON.parse(aiResponse.choices[0].message.content);\n  patch = result.patch || {};\n  coverLetter = result.coverLetter || '';\n} catch (err) {\n  patch = { _error: 'AI parse failed: ' + err.message };\n  coverLetter = '';\n}\n\nlet paragraph1 = '';\nlet paragraph2 = '';\nlet paragraph3 = '';\nlet _coverLetterWarning = '';\n\nif (typeof coverLetter === 'object' && coverLetter !== null) {\n  // New structured format: { paragraph1, paragraph2, paragraph3 }\n  paragraph1 = (coverLetter.paragraph1 || '').trim();\n  paragraph2 = (coverLetter.paragraph2 || '').trim();\n  paragraph3 = (coverLetter.paragraph3 || '').trim();\n\n  if (!paragraph1 || !paragraph2 || !paragraph3) {\n    _coverLetterWarning = 'Cover letter object missing one or more paragraph fields';\n  }\n} else if (typeof coverLetter === 'string' && coverLetter.length > 0) {\n  // Legacy fallback: single string with \\n\\n separators\n  const rawParts = coverLetter\n    .split(/\\n\\n+/)\n    .map(p => p.trim())\n    .filter(p => p.length > 0);\n\n  paragraph1 = rawParts[0] || '';\n  paragraph2 = rawParts[1] || '';\n  paragraph3 = rawParts[2] || '';\n\n  if (rawParts.length < 3) {\n    _coverLetterWarning = `Cover letter has ${rawParts.length} paragraph(s), expected 3`;\n    // Sentence-split recovery for legacy single-block responses\n    if (rawParts.length === 1 && rawParts[0].length > 100) {\n      const sentences = rawParts[0].split(/(?<=[.!?])\\s+(?=[A-Z\\u00C4\\u00D6\\u00DC])/);\n      if (sentences.length >= 3) {\n        const third = Math.floor(sentences.length / 3);\n        const p1 = sentences.slice(0, third).join(' ');\n        const p2 = sentences.slice(third, third * 2).join(' ');\n        const p3 = sentences.slice(third * 2).join(' ');\n        if (p1.length >= 40 && p2.length >= 40 && p3.length >= 40) {\n          paragraph1 = p1;\n          paragraph2 = p2;\n          paragraph3 = p3;\n          _coverLetterWarning += ' — recovered via sentence split (legacy format)';\n        }\n      }\n    }\n  }\n} else {\n  _coverLetterWarning = 'AI returned empty cover letter';\n}\n\n\n// ===== Quality Flag =====\n// Detect signs of weak fit based on patch content\nlet _qualityFlag = 'Good Fit';\n\nif (patch._error) {\n  _qualityFlag = 'Error';\n} else {\n  // Check if skill categories were renamed to non-tech domains\n  const NON_TECH_DOMAINS = /\\bsales\\b|\\bmarketing\\b|\\blogistics\\b|\\bhr\\b|\\bhuman\\s*resource\\b|\\bcustomer\\s*service\\b|\\baccounting\\b|\\bfinance\\b|\\bbusiness\\s*development\\b/i;\n  const SALESFORCE_PATTERN = /salesforce/i;\n  const renamedSkills = (patch.skills || [])\n    .filter(s => s.skill)\n    .map(s => s.skill);\n  const hasFabricatedSkills = renamedSkills.some(name =>\n    NON_TECH_DOMAINS.test(name) && !SALESFORCE_PATTERN.test(name)\n  );\n\n  if (hasFabricatedSkills) {\n    _qualityFlag = 'Bad Fit';\n  } else if (_coverLetterWarning && _coverLetterWarning.includes('sentence split')) {\n    _qualityFlag = 'Review';\n  }\n\n  // Check if AI actually tailored work and skills (not just title/profile)\n  const hasWorkChanges = Array.isArray(patch.work) && patch.work.length > 0;\n  const hasSkillChanges = Array.isArray(patch.skills) && patch.skills.length > 0;\n  if (_qualityFlag === 'Good Fit' && (!hasWorkChanges || !hasSkillChanges)) {\n    _qualityFlag = 'Review';\n  }\n}\n\nreturn {\n  json: {\n    patch,\n    coverLetter,\n    paragraph1,\n    paragraph2,\n    paragraph3,\n    _coverLetterWarning,\n    _qualityFlag,\n    job: {\n      source:          jobData.source || '',\n      title:           jobData.title || '',\n      company:         jobData.company || '',\n      location:        jobData.location || '',\n      url:             jobData.url || '',\n      applyUrl:        jobData.applyUrl || '',\n      postedAt:        jobData.postedAt || '',\n      salary:          jobData.salary || '',\n      jobType:         jobData.matchResult?.jobType || 'unknown',\n      matchConfidence: jobData.matchResult?.confidence || 0,\n      matchReason:     jobData.matchResult?.reason || '',\n    },\n  },\n};"
       },
-      "id": "a6759d15-af1c-47de-84a3-274a8f771c1d",
+      "id": "3bc613ca-e925-4bd1-9f8b-dc82c096008c",
       "name": "14. Parse AI Patch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        24352,
-        5584
+        38064,
+        12992
       ]
     },
     {
@@ -411,13 +412,13 @@
           "timeout": 60000
         }
       },
-      "id": "984bcaf7-6ca2-4b7c-9828-45a65aa5aa44",
+      "id": "0ba62666-f420-430d-988b-400b82cee30a",
       "name": "15a. POST Generate Resume PDF",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        24576,
-        5584
+        38288,
+        12992
       ],
       "continueOnFail": true
     },
@@ -426,13 +427,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const patchData = $('14. Parse AI Patch').item.json;\nconst resumeResult = $('15a. POST Generate Resume PDF').item.json;\n\n// Current item = cover letter HTTP response\nconst coverLetterResult = $json;\n\nconst now = new Date();\n\nreturn {\n  json: {\n    Date:               now.toISOString().slice(0, 10),\n    Company:            patchData.job.company || '',\n    Role:               patchData.job.title || '',\n    'Job Type':         patchData.job.jobType || '',\n    Location:           patchData.job.location || '',\n    Source:             patchData.job.source || '',\n    'Job URL':          patchData.job.url || '',\n    'Apply URL':        patchData.job.applyUrl || '',\n    'Match Confidence': patchData.job.matchConfidence || 0,\n    'Match Reason':     patchData.job.matchReason || '',\n    'Resume File':      resumeResult.file || '',\n    'Cover Letter File': coverLetterResult.file || '',\n    Status:             (resumeResult.success && coverLetterResult.success) ? 'Generated' : 'PDF Failed',\n    Applied:            'No',\n    Response:           '',\n    Interview:          '',\n    Notes:              patchData.patch?._error || resumeResult.error || coverLetterResult.error || patchData._coverLetterWarning || '',\n    Quality:            patchData._qualityFlag || 'Unknown',\n  },\n};"
       },
-      "id": "0db02b01-571b-4c6b-b572-ea2df1f93d4a",
+      "id": "140b65ab-431a-477b-bec5-780a9f2bc70c",
       "name": "16. Prepare Sheet Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        25024,
-        5584
+        38736,
+        12992
       ]
     },
     {
@@ -623,13 +624,13 @@
         },
         "options": {}
       },
-      "id": "e46a129a-2ea0-4b6e-a893-5c4ccfe96157",
+      "id": "995419c3-c80d-4c30-9cf6-6f4679c56612",
       "name": "17. Log to Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        25248,
-        5752
+        38960,
+        13304
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -643,13 +644,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const jobData = $json;\n\nconst now = new Date();\n\n// Distinguish 'no new jobs today' sentinel from a real unmatched job\nif (jobData.skipped) {\n  return {\n    json: {\n      Date:               now.toISOString().slice(0, 10),\n      Company:            '',\n      Role:               '',\n      'Job Type':         '',\n      Location:           '',\n      Source:             '',\n      'Job URL':          '',\n      'Apply URL':        '',\n      'Match Confidence': 0,\n      'Match Reason':     '',\n      'Resume File':      '',\n      'Cover Letter File': '',\n      Status:             'No New Jobs',\n      Applied:            'N/A',\n      Response:           '',\n      Interview:          '',\n      Notes:              jobData.message || '',\n      Quality:            'N/A',\n    }\n  };\n}\n\nreturn {\n  json: {\n    Date:               now.toISOString().slice(0, 10),\n    Company:            jobData.company || '',\n    Role:               jobData.title || '',\n    'Job Type':         jobData.matchResult?.jobType || '',\n    Location:           jobData.location || '',\n    Source:             jobData.source || '',\n    'Job URL':          jobData.url || '',\n    'Apply URL':        jobData.applyUrl || '',\n    'Match Confidence': jobData.matchResult?.confidence || 0,\n    'Match Reason':     jobData.matchResult?.reason || '',\n    'Resume File':      '',\n    'Cover Letter File': '',\n    Status:             'Skipped - No Match',\n    Applied:            'N/A',\n    Response:           '',\n    Interview:          '',\n    Notes:              '',\n    Quality:            'Skipped',\n  }\n};"
       },
-      "id": "9010fd15-9f84-46cc-a46b-663a3e4270d0",
+      "id": "38729007-fe65-4b83-a0e8-56ef544c31bd",
       "name": "18a. Prepare Skip Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        23904,
-        5776
+        37616,
+        13184
       ]
     },
     {
@@ -840,13 +841,13 @@
         },
         "options": {}
       },
-      "id": "13efd48a-ca9a-4cdc-a3eb-4b0bbf9c31fd",
+      "id": "9ee622ef-89bd-4727-99f6-d574cc062add",
       "name": "18b. Log Skipped to Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        24128,
-        5776
+        37840,
+        13376
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -869,10 +870,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        20992,
-        5536
+        34480,
+        13088
       ],
-      "id": "f0cfdb21-9493-4394-9dfc-20796e6e1043",
+      "id": "2ba39911-9a8b-4a91-8afc-fc8293ee0719",
       "name": "2c. Scrape StepStone",
       "credentials": {
         "apifyApi": {
@@ -891,15 +892,15 @@
           "value": "https://console.apify.com/actors/bYSAbQqxwImLaf2nb/input",
           "mode": "url"
         },
-        "customBody": "={\n  \"country\": \"Germany\",\n  \"datePosted\": \"3\",\n  \"deepSearch\": false,\n  \"includeNoSalaryJob\": true,\n  \"keywords\": [\n    \"Salesforce Developer\", \"Software Engineer\", \"Junior Developer\", \"Backend Developer\", \"DevOps Engineer\", \"Full Stack Developer\"\n  ],\n  \"location\": \"Germany\",\n  \"maxItems\": {{ $json.jobCount }},\n  \"saveOnlyUniqueItems\": false\n}"
+        "customBody": "={\n  \"keywords\": [\n    \"Salesforce Developer\",\n    \"Software Developer\",\n    \"Backend Developer\",\n    \"Frontend Developer\",\n    \"Full Stack Developer\",\n    \"DevOps Engineer\",\n    \"Software Engineer\",\n    \"Junior Developer\",\n    \"Werkstudent Softwareentwicklung\",\n    \"Web Developer\",\n    \"Cloud Engineer\",\n    \"Java Developer\",\n    \"Python Developer\",\n    \"JavaScript Developer\"\n  ],\n  \"location\": \"Germany\",\n  \"country\": \"Germany\",\n  \"datePosted\": \"1\",\n  \"saveOnlyUniqueItems\": true,\n  \"includeNoSalaryJob\": true,\n  \"deepSearch\": true\n  \"maxItems\": {{ $json.jobCount }}\n}"
       },
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        20992,
-        5728
+        34480,
+        13280
       ],
-      "id": "05de76e1-f3b8-4814-9633-9c4097f59a5a",
+      "id": "fac29d2a-feba-4a46-aabf-2c04965b0fcc",
       "name": "2d. Scrape Glassdoor",
       "credentials": {
         "apifyApi": {
@@ -907,6 +908,7 @@
           "name": "Apify account"
         }
       },
+      "disabled": true,
       "onError": "continueErrorOutput"
     },
     {
@@ -918,16 +920,15 @@
           "value": "https://console.apify.com/actors/YGO6eh6ICQXnan9L4/input",
           "mode": "url"
         },
-        "customBody": "={\n  \"results_wanted\": {{ $json.jobCount }},\n  \"startUrl\": \"{{ $json.XingUrl }}\"\n}",
-        "timeout": {}
+        "customBody": "={\n  \"keyword\": \"Salesforce Developer OR Software Developer OR Backend Developer OR Frontend Developer OR Full Stack Developer OR DevOps Engineer OR Software Engineer OR Junior Developer OR Werkstudent Softwareentwicklung OR Web Developer OR Cloud Engineer OR Java Developer OR Python Developer OR JavaScript Developer\",\n  \"location\": \"Germany\",\n  \"results_wanted\": {{ $json.jobCount }},\n  \"max_pages\": 20,\n}"
       },
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        20992,
-        5920
+        34480,
+        13472
       ],
-      "id": "476ef78f-b692-46b7-a7b0-1d49675bf783",
+      "id": "3b8efa92-7cb5-4c84-a81d-1272a84c8272",
       "name": "2e. Scrape Xing",
       "credentials": {
         "apifyApi": {
@@ -935,6 +936,7 @@
           "name": "Apify account"
         }
       },
+      "disabled": true,
       "onError": "continueErrorOutput"
     },
     {
@@ -948,74 +950,75 @@
           "timeout": 60000
         }
       },
-      "id": "8f52e70c-48b3-4bdb-8337-f3b1acab6079",
+      "id": "3b369476-d741-4676-90a0-92c0d9b64068",
       "name": "15b. POST Generate Cover Letter PDF",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        24800,
-        5584
+        38512,
+        12992
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "batchSize": 1,
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        22560,
-        5752
+        36048,
+        13376
       ],
-      "id": "d31e42c8-e342-403f-bcb2-b8c22fcb79cd",
+      "id": "5e871208-498f-4d9b-89ec-0a0284e12f2d",
       "name": "9. Loop Over Items"
     },
     {
-      "parameters": {
-        "amount": 2
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        23008,
-        5680
+        36720,
+        13136
       ],
-      "id": "4348a96a-f8e9-4bbd-b295-80e187446c64",
+      "id": "efb9c953-59ce-4eee-8379-9938f35044a3",
       "name": "10b. Wait",
       "webhookId": "4798fc68-5ccc-4194-8beb-8cf9be816efc"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyBLKFRzrgCU_LPS2hEtRc1_19Qh2cOx6CU"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json._geminiBody) }}",
+        "jsonBody": "={{ JSON.stringify($json._geminibody) }}",
         "options": {
           "timeout": 30000
         }
       },
-      "id": "b2db16f2-adb0-46a8-aba6-ef3d3b08c46e",
+      "id": "6f044b7b-f812-4860-8643-33e59a0db639",
       "name": "10c. Gemini API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 15000,
+      "waitBetweenTries": 5000,
       "position": [
-        23232,
-        5680
+        36944,
+        13136
       ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Google AI API Key"
-        }
-      },
       "continueOnFail": true
     },
     {
@@ -1023,7 +1026,9 @@
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
           },
           "conditions": [
             {
@@ -1040,13 +1045,13 @@
         },
         "options": {}
       },
-      "id": "6f214391-6160-4199-8d23-78d35bd0757b",
+      "id": "320a5197-1b00-42cf-9dea-e1a31203b699",
       "name": "10a1. Skip Gemini?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        22896,
-        5680
+        36496,
+        13232
       ]
     },
     {
@@ -1054,13 +1059,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const jobData = $json;\nconst now = new Date();\n\nreturn {\n  json: {\n    Date:               now.toISOString().slice(0, 10),\n    Company:            jobData.company || '',\n    Role:               jobData.title || '',\n    'Job Type':         jobData.matchResult?.jobType || '',\n    Location:           jobData.location || '',\n    Source:             jobData.source || '',\n    'Job URL':          jobData.url || '',\n    'Apply URL':        jobData.applyUrl || '',\n    'Match Confidence': 0,\n    'Match Reason':     jobData.matchResult?.reason || 'Pre-filter reject',\n    'Resume File':      '',\n    'Cover Letter File': '',\n    Status:             'Skipped - Pre-Filter Reject',\n    Applied:            'N/A',\n    Response:           '',\n    Interview:          '',\n    Notes:              jobData._skipReason || '',\n    Quality:            'Pre-Filter Reject',\n  },\n};"
       },
-      "id": "c1f7546b-9426-4d6a-be64-23ccb06b29ef",
+      "id": "16c40143-3d69-4a42-b6e5-6180c98e850a",
       "name": "10a2. Prepare Pre-Filter Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        22896,
-        5920
+        37616,
+        13376
       ]
     }
   ],
@@ -1475,11 +1480,12 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "416fda0e-d30c-499b-9ec1-c9a67ac238d2",
+  "versionId": "437bac4c-8412-434b-a664-956d7efef7d8",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "ab1d9b83a326652825b037e9a6d1c825d6bec27701f2a3cac612c5b257bccc08"
   },
-  "id": "ml6YUgWCLCaSrAHI",
+  "id": "eaSVqfiE5biIt6iu",
   "tags": [
     {
       "updatedAt": "2026-03-28T15:57:18.737Z",

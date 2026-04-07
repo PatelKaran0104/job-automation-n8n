@@ -73,6 +73,18 @@ function stripHtml(html = "") {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+// Like stripHtml but preserves list-item boundaries as newlines so bullet
+// structure survives for downstream AI prompts that need to reorder/drop bullets.
+function stripHtmlPreserveBullets(html = "") {
+  return html
+    .replace(/<\/li>/g, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*/g, "\n")
+    .replace(/^\n+|\n+$/g, "")
+    .trim();
+}
+
 // GET /context — returns only the human-readable resume content for AI input
 app.get("/context", (_req, res) => {
   const resume = JSON.parse(readFileSync(new URL("../data/resume.json", import.meta.url)));
@@ -86,7 +98,7 @@ app.get("/context", (_req, res) => {
       location: e.location,
       startDate: e.startDateNew,
       endDate: e.endDateNew,
-      description: stripHtml(e.description),
+      description: stripHtmlPreserveBullets(e.description),
     })),
     currentSkills: resume.content.skill.entries.map((e) => ({
       id: e.id,
