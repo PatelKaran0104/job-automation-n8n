@@ -162,6 +162,16 @@ const SECTION_RENDERERS = {
 // Matches the PDF section order
 const DEFAULT_ORDER = ["profile", "work", "education", "certificate", "skill", "language"];
 
+// German overrides for section headings (used when language === "de")
+const DE_HEADINGS = {
+  profile:     "PROFIL",
+  work:        "BERUFSERFAHRUNG",
+  education:   "AUSBILDUNG",
+  certificate: "ZERTIFIKATE",
+  skill:       "KENNTNISSE",
+  language:    "SPRACHEN",
+};
+
 export function buildResumeHtml(resume, options = {}) {
   if (!resume?.content) throw new Error("Invalid resume structure: missing content");
   if (!resume?.personalDetails) throw new Error("Invalid resume structure: missing personalDetails");
@@ -186,11 +196,20 @@ export function buildResumeHtml(resume, options = {}) {
     contactLine1.join(" · "),
     contactLine2.length ? contactLine2.join(" · ") : "",
   ].filter(Boolean).join("<br>");
+  // Override section headings for German output
+  if (options.language === "de") {
+    for (const [key, heading] of Object.entries(DE_HEADINGS)) {
+      if (resume.content[key]) resume.content[key].displayName = heading;
+    }
+  }
+
   const order = options.sectionOrder || DEFAULT_ORDER;
   const sections = order.map(key => SECTION_RENDERERS[key]?.(resume) || "").join("\n");
 
+  const htmlLang = options.language === "de" ? "de" : "en";
+
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8" />
   <style>

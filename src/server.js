@@ -111,7 +111,7 @@ app.get("/context", (_req, res) => {
 // POST /generate-resume
 // Body: { patch: {...}, company: "SAP SE" }
 app.post("/generate-resume", async (req, res) => {
-  const { patch, company, role } = req.body;
+  const { patch, company, role, language } = req.body;
   const rawPatch = patch || req.body;
 
   const validation = validatePatch(rawPatch);
@@ -134,7 +134,7 @@ app.post("/generate-resume", async (req, res) => {
 
   let context;
   try {
-    const html = buildResumeHtml(mergedResume);
+    const html = buildResumeHtml(mergedResume, { language });
     context = await browser.newContext();
     const page = await context.newPage();
     await page.setContent(html, { waitUntil: "domcontentloaded" });

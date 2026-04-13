@@ -24,25 +24,35 @@ export function buildCoverLetterHtml(content) {
     paragraph1 = "",
     paragraph2 = "",
     paragraph3 = "",
+    language = "de",
   } = content;
 
+  const isDE = language === "de";
+
   // Generated fresh on each call — intentionally not cached
-  const dateStr = new Date().toLocaleDateString("de-DE", {
+  const dateStr = new Date().toLocaleDateString(isDE ? "de-DE" : "en-US", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
 
-  const subject = `Bewerbung als ${escapeHtml(role)}`;
+  const subject = isDE
+    ? `Bewerbung als ${escapeHtml(role)}`
+    : `Application for ${escapeHtml(role)}`;
   const footerRole = company
     ? `${escapeHtml(role)} @ ${escapeHtml(company)}`
     : escapeHtml(role);
 
+  const salutation = isDE ? "Sehr geehrte Damen und Herren," : "Dear Hiring Manager,";
+  const closing = isDE ? "Mit freundlichen Grüßen," : "Kind regards,";
+  const htmlLang = isDE ? "de" : "en";
+  const pageTitle = isDE ? "Anschreiben" : "Cover Letter";
+
   return `<!DOCTYPE html>
-<html lang="de">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8" />
-  <title>Anschreiben – Karan Patel</title>
+  <title>${pageTitle} – Karan Patel</title>
   <style>
     ${FONT_CSS}
 
@@ -191,7 +201,7 @@ export function buildCoverLetterHtml(content) {
 
     <div class="subject">${subject}</div>
 
-    <div style="margin-bottom: 13px;">Sehr geehrte Damen und Herren,</div>
+    <div style="margin-bottom: 13px;">${salutation}</div>
 
     <div class="body-text">
       ${wrapParagraph(paragraph1)}
@@ -200,7 +210,7 @@ export function buildCoverLetterHtml(content) {
     </div>
 
     <div class="closing">
-      <div class="closing-line">Mit freundlichen Grüßen,</div>
+      <div class="closing-line">${closing}</div>
       <div class="signature-name">Karan Patel</div>
       <div class="signature-title">${escapeHtml(role)}</div>
     </div>

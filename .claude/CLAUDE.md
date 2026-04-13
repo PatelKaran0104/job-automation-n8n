@@ -106,7 +106,8 @@ Accepts an AI patch, validates it via `validatePatch()`, merges it into `data/re
     "skills": [{ "id": "must match /context id", "skill": "optional rename", "infoHtml": "<p>HTML</p>" }]
   },
   "company": "SAP SE",
-  "role": "Salesforce Developer"
+  "role": "Salesforce Developer",
+  "language": "de or en (optional, defaults to no override — German headings when \"de\")"
 }
 ```
 
@@ -127,7 +128,8 @@ Injects content into the HTML template and renders a PDF to `output/YYYY-MM-DD/C
   "companyAddress": "Walldorf, Deutschland",
   "paragraph1": "HTML or plain text — opening hook",
   "paragraph2": "HTML or plain text — skills/experience evidence",
-  "paragraph3": "HTML or plain text — availability + CTA"
+  "paragraph3": "HTML or plain text — availability + CTA",
+  "language": "de or en (optional, defaults to \"de\" — controls salutation, closing, subject, date locale)"
 }
 ```
 
@@ -296,7 +298,7 @@ To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node 
 
 ## Cover Letter Details
 
-**Language:** German. Salutation is `Sehr geehrte Damen und Herren,`, closing is `Mit freundlichen Grüßen,`. Date is formatted in German locale (`31. März 2026`).
+**Language:** Adaptive based on `language` parameter (`"de"` or `"en"`, defaults to `"de"`). The n8n workflow detects the JD language and passes it through. German uses `Sehr geehrte Damen und Herren,` / `Mit freundlichen Grüßen,` / `Bewerbung als {role}` / de-DE date. English uses `Dear Hiring Manager,` / `Kind regards,` / `Application for {role}` / en-US date.
 
 **Hardcoded in `src/mergeCoverLetter.js`** (NOT injected via API — edit the file directly to change):
 - Name: Karan Patel
@@ -309,8 +311,8 @@ To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node 
 **Auto-derived fields** (computed inside `buildCoverLetterHtml()`, not accepted from the request body):
 | Field | Value |
 |-------|-------|
-| Date | Current date in de-DE locale |
-| Subject line | `Bewerbung als {role}` |
+| Date | Current date in de-DE or en-US locale (based on `language`) |
+| Subject line | `Bewerbung als {role}` (de) / `Application for {role}` (en) |
 | Header title | `{role}` |
 | Closing title | `{role}` |
 | Footer | `{role} @ {company}` |
