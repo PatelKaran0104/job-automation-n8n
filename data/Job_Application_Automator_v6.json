@@ -49,7 +49,7 @@
             {
               "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
               "name": "geminiModel",
-              "value": "gemini-3.1-flash-lite-preview",
+              "value": "gemini-2.5-flash-lite",
               "type": "string"
             },
             {
@@ -273,7 +273,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _geminibody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Gemini call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Gemini API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Gemini API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.candidates[0].content.parts[0].text;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: result,\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'AI parse error – skipped: ' + err.message,\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}"
+        "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _geminibody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Gemini call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Gemini API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Gemini API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.candidates[0].content.parts[0].text;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: { ...result, _apiError: false },\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'AI parse error – skipped: ' + err.message,\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}"
       },
       "id": "f2a4a006-82c9-43f0-ba3e-30025921e37c",
       "name": "11. Parse Match Result",
