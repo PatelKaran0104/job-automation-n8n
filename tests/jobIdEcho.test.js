@@ -32,6 +32,23 @@ test("/generate-resume works without jobId (backward compat)", async () => {
   assert.equal(data.jobId, undefined);
 });
 
+test("/generate-coverletter works without jobId (backward compat)", async () => {
+  const resp = await fetch(`${BASE}/generate-coverletter`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      role: "Test Dev",
+      company: "TestCo",
+      companyAddress: "Berlin",
+      paragraph1: "Opening paragraph text here.",
+      paragraph2: "Evidence paragraph text here.",
+      paragraph3: "Closing paragraph text here.",
+    }),
+  });
+  const data = await resp.json();
+  assert.equal(data.jobId, undefined);
+});
+
 test("/generate-coverletter echoes jobId when provided", async () => {
   const resp = await fetch(`${BASE}/generate-coverletter`, {
     method: "POST",
