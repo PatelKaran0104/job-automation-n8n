@@ -111,7 +111,7 @@ app.get("/context", (_req, res) => {
 // POST /generate-resume
 // Body: { patch: {...}, company: "SAP SE" }
 app.post("/generate-resume", async (req, res) => {
-  const { patch, company, role, language } = req.body;
+  const { patch, company, role, language, jobId } = req.body;
   const rawPatch = patch || req.body;
 
   const validation = validatePatch(rawPatch);
@@ -148,7 +148,9 @@ app.post("/generate-resume", async (req, res) => {
     if (!existsSync(output.fullPath)) {
       throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    res.json({ success: true, file: output.fullPath, fileName: output.fileName });
+    const result = { success: true, file: output.fullPath, fileName: output.fileName };
+    if (jobId) result.jobId = jobId;
+    res.json(result);
   } catch (err) {
     console.error("Resume generation error:", err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -160,7 +162,7 @@ app.post("/generate-resume", async (req, res) => {
 // POST /generate-coverletter
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
-  const { company, role } = req.body;
+  const { company, role, jobId } = req.body;
   const output = buildOutputPath({
     kind: "coverletter",
     company,
@@ -183,7 +185,9 @@ app.post("/generate-coverletter", async (req, res) => {
     if (!existsSync(output.fullPath)) {
       throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    res.json({ success: true, file: output.fullPath, fileName: output.fileName });
+    const result = { success: true, file: output.fullPath, fileName: output.fileName };
+    if (jobId) result.jobId = jobId;
+    res.json(result);
   } catch (err) {
     console.error("Cover letter generation error:", err.message);
     res.status(500).json({ success: false, error: err.message });
