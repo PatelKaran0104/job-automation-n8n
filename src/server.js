@@ -46,6 +46,9 @@ function buildOutputPath({ kind, company, role }) {
   const month = formatDatePart(now.getMonth() + 1);
   const day = formatDatePart(now.getDate());
   const completeDateFolder = `${year}-${month}-${day}`;
+  const hours = formatDatePart(now.getHours());
+  const minutes = formatDatePart(now.getMinutes());
+  const seconds = formatDatePart(now.getSeconds());
 
   const companySlug = toSlug(company || "company");
   const roleSlug = role ? toSlug(role) : "";
@@ -56,7 +59,7 @@ function buildOutputPath({ kind, company, role }) {
   if (roleSlug) {
     baseName = `${companySlug}--${roleSlug}`.slice(0, 100);
   }
-  const fileName = `${filePrefix}-${baseName}.pdf`;
+  const fileName = `${filePrefix}-${baseName}-${hours}${minutes}${seconds}.pdf`;
 
   const directoryPath = resolve(OUTPUT_DIR, completeDateFolder, folderName);
   mkdirSync(directoryPath, { recursive: true });
