@@ -108,6 +108,13 @@ app.get("/context", (_req, res) => {
       skill: e.skill,
       details: stripHtml(e.infoHtml),
     })),
+    currentProjects: (resume.content.project?.entries || []).map((e) => ({
+      id: e.id,
+      name: e.name,
+      techStack: e.techStack,
+      url: e.url || null,
+      description: stripHtmlPreserveBullets(e.description),
+    })),
   });
 });
 

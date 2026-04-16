@@ -9,8 +9,10 @@ const baseResume = JSON.parse(readFileSync(new URL("../data/resume.json", import
  *   jobTitle?: string,
  *   profile?: string,           // HTML string
  *   showCertificates?: false,   // omit section when Salesforce certs are irrelevant
+ *   showProjects?: false,       // omit projects section
  *   work?: [{ id, description }],
- *   skills?: [{ id, skill?, infoHtml }]  // skill renames the category label
+ *   skills?: [{ id, skill?, infoHtml }],  // skill renames the category label
+ *   projects?: [{ id, description?, techStack?, name? }]
  * }
  */
 export function applyPatch(patch) {
@@ -47,9 +49,26 @@ export function applyPatch(patch) {
     }
   }
 
+  if (patch.projects) {
+    for (const projPatch of patch.projects) {
+      const entry = data.content.project?.entries?.find((e) => e.id === projPatch.id);
+      if (entry) {
+        if (projPatch.description) entry.description = projPatch.description;
+        if (projPatch.techStack) entry.techStack = projPatch.techStack;
+        if (projPatch.name) entry.name = projPatch.name;
+        entry.updatedAt = new Date().toISOString();
+      }
+    }
+  }
+
   if (patch.showCertificates === false) {
     data.meta = data.meta || {};
     data.meta.showCertificates = false;
+  }
+
+  if (patch.showProjects === false) {
+    data.meta = data.meta || {};
+    data.meta.showProjects = false;
   }
 
   return data;

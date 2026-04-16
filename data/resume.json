@@ -4,7 +4,7 @@
   },
   "personalDetails": {
     "fullName": "Karan Patel",
-    "jobTitle": "Salesforce Developer",
+    "jobTitle": "Software Developer",
     "displayEmail": "khpatel0104@gmail.com",
     "phone": "+49 15210894179",
     "address": "Hesse, Germany",
@@ -23,7 +23,7 @@
       "displayName": "PROFILE",
       "entries": [
         {
-          "text": "<p>Salesforce Developer and certified Agentforce Specialist with 2+ years of hands-on experience delivering Apex, LWC, and API-driven solutions for SME and startup clients. Comfortable working in an AI-assisted engineering environment: I use AI tools to accelerate development but bring the architectural understanding and code-review discipline to validate, refine, and own every line of output. Certified Platform Developer I (96 pts), Agentforce Specialist, and Data Cloud Consultant. Published a production AppExchange managed package through Salesforce's full security review. Currently pursuing an M.Sc. in Global Software Development in Germany.</p>"
+          "text": "<p>Software Developer with 2+ years of professional experience building production systems across the Salesforce platform (Apex, LWC, Flows, AppExchange) and the modern web stack (React, TypeScript, Node.js). Shipped a managed AppExchange package through Salesforce's full security review. Personal projects include a real-time spatial communication platform (WebRTC, Socket.IO, Phaser.js), a production-grade cloud infrastructure stack (AWS, Terraform), and an AI-driven document generation pipeline (n8n, Playwright, OpenAI). Comfortable in AI-assisted engineering environments: I use AI tools to accelerate development while owning architecture, code review, and quality. Certified Platform Developer I (96 pts), Agentforce Specialist, and Data Cloud Consultant. Pursuing M.Sc. in Global Software Development in Germany.</p>"
         }
       ]
     },
@@ -50,6 +50,61 @@
         }
       ]
     },
+    "project": {
+      "displayName": "PROJECTS",
+      "entries": [
+        {
+          "id": "7abecff6-de39-4af0-9415-c52095dad34d",
+          "name": "AI-Powered Document Generation Pipeline",
+          "techStack": "Node.js, Express, Playwright, n8n, Apify, Gemini API, OpenAI API, Docker",
+          "description": "<ul><li><p>Designed and built a multi-stage automation pipeline that aggregates data from 5 parallel web scrapers, routes items through AI-driven matching (Gemini) and content tailoring (OpenAI), and generates styled PDFs via headless Chromium.</p></li><li><p>Engineered a Node.js/Express REST API with custom HTML-to-PDF rendering using Playwright, embedded web fonts, and HTML sanitization — no external template engines or services required.</p></li><li><p>Orchestrated the full workflow in n8n (33-node DAG) with configurable batch throttling, deduplication, and structured logging to Google Sheets.</p></li><li><p>Implemented patch-based content merging: a deep-clone architecture that preserves an immutable base document while applying AI-generated modifications matched by entry ID.</p></li></ul>"
+        },
+        {
+          "id": "9a2cb027-89ad-4d79-b6d0-2cf3b8be86b7",
+          "name": "Real-Time Spatial Communication Platform",
+          "techStack": "React, TypeScript, Phaser.js, WebRTC, Socket.IO, Supabase, WebAudio API",
+          "description": "<ul><li><p>Built a 2D spatial office environment where users navigate avatars and communicate through proximity-based voice chat with dynamically adjusted volume and stereo panning.</p></li><li><p>Implemented a WebRTC mesh network for peer-to-peer audio streaming with real-time position synchronization via Socket.IO at 20Hz refresh rate.</p></li><li><p>Developed spatial audio using the WebAudio API with quadratic distance attenuation for realistic proximity effects.</p></li><li><p>Designed the frontend with React and Phaser.js for game-like 2D rendering, backed by Supabase (PostgreSQL) for room and user state management.</p></li></ul>"
+        },
+        {
+          "id": "cc6d5648-a1f0-4eca-9216-adda27e62c36",
+          "name": "University Marketplace",
+          "techStack": "JavaScript (Full-Stack), Git/GitHub",
+          "url": "Hochschule Fulda — GDSD 2025",
+          "description": "<ul><li><p>Led development of a marketplace platform for university members to buy, sell, and exchange products and services, as part of a 7-person cross-university team.</p></li><li><p>Served as GitHub Lead: managed the repository, enforced branching strategy, conducted code reviews, and coordinated frontend, backend, and deployment workflows.</p></li></ul>"
+        },
+        {
+          "id": "59a0376c-1b3e-47cd-a4cc-115650724dfb",
+          "name": "Cloud Infrastructure Stack",
+          "techStack": "Terraform, AWS (VPC, EC2, ALB, ASG, RDS, EFS, WAF), SLURM",
+          "description": "<ul><li><p>Architected a production-grade 3-tier AWS infrastructure using Terraform IaC: VPC with public/private subnets, Application Load Balancer, Auto Scaling Groups, RDS MySQL, EFS shared storage, and WAF protection.</p></li><li><p>Implemented multi-AZ deployment for high availability, CloudWatch-triggered auto-scaling policies, and security group isolation following least-privilege principles.</p></li><li><p>Managed ~41 cloud resources with reproducible, version-controlled infrastructure definitions.</p></li></ul>"
+        },
+        {
+          "id": "c209ab25-c79e-4d14-874c-847424ea9db4",
+          "name": "Portfolio Website",
+          "techStack": "React, TypeScript, Vite, Tailwind CSS, EmailJS",
+          "url": "karanpatel.live",
+          "description": "<ul><li><p>Designed and built a responsive portfolio website with neobrutalism design aesthetic, achieving 95+ Lighthouse score on mobile and 98+ on desktop.</p></li><li><p>Implemented SEO optimization with meta tags, sitemap, and structured data; integrated EmailJS for contact form handling and Google Analytics for tracking.</p></li><li><p>Deployed on Netlify with custom domain; sub-1-second load time on 4G with 56.85 KB gzipped bundle size.</p></li></ul>"
+        },
+        {
+          "id": "a26b166c-99b8-4de6-8535-bceae1d0a347",
+          "name": "QR Code Generator",
+          "techStack": "JavaScript, HTML, CSS",
+          "description": "<ul><li><p>Built a feature-rich QR code generator supporting multiple data types: URLs, plain text, vCard contacts, WiFi credentials, and email composition.</p></li><li><p>Implemented customization options including size control, 7+ color themes, dot/square/rounded pattern styles, and PNG/SVG export.</p></li><li><p>Delivered as a zero-dependency vanilla JavaScript application with responsive design and keyboard shortcuts.</p></li></ul>"
+        },
+        {
+          "id": "a2da740b-cffe-4f70-99f0-b47508f9482b",
+          "name": "Parallel Matrix Multiplication (SUMMA)",
+          "techStack": "C, MPI, SLURM, HPC",
+          "description": "<ul><li><p>Implemented the SUMMA (Scalable Universal Matrix Multiply Algorithm) for distributed parallel matrix multiplication using MPI across multi-node HPC clusters.</p></li><li><p>Benchmarked performance across 1–8 nodes with automated SLURM job scheduling and 5-repetition statistical analysis per configuration.</p></li></ul>"
+        },
+        {
+          "id": "5dd88371-c8c5-4965-92d2-44441f810630",
+          "name": "Face Recognition Attendance System",
+          "techStack": "Python, OpenCV",
+          "description": "<ul><li><p>Developed an automated attendance tracking system using facial recognition with Python and OpenCV for real-time face detection and identification.</p></li></ul>"
+        }
+      ]
+    },
     "education": {
       "displayName": "EDUCATION",
       "entries": [
@@ -66,7 +121,7 @@
           "location": "Modasa, India",
           "startDateNew": "2019",
           "endDateNew": "2023",
-          "description": "<p>1.5</p>"
+          "description": "<p>CGPA: 8.83/10 (German equivalent: 1.5)</p>"
         }
       ]
     },
@@ -82,34 +137,34 @@
       "displayName": "SKILLS",
       "entries": [
         {
-          "id": "07d4ce0e-0dcf-4193-8425-06a3e01fe20c",
-          "skill": "Agentforce and AI",
-          "infoHtml": "<p>Agentforce Agent Builder, Custom Actions, Prompt Templates, Einstein Chatbot, AI-Assisted Engineering, Vibe Coding (prompt-driven development with architectural validation)</p>"
-        },
-        {
-          "id": "9a905d12-825c-4090-a90c-3ff010a9d8b4",
-          "skill": "Salesforce Development",
-          "infoHtml": "<p>Apex, Lightning Web Components (LWC), Aura, Visualforce, SOQL/SOSL, Triggers, Flows, Process Builder, Salesforce DX, Governor Limit Optimization</p>"
-        },
-        {
           "id": "7e0af879-e5a3-457e-ab86-634363abf266",
-          "skill": "Low-Code and Automation",
-          "infoHtml": "<p>Salesforce Flows, n8n, Zapier, rapid workflow orchestration for SME and startup environments</p>"
-        },
-        {
-          "id": "c7231132-d4b1-47eb-9bee-a66c7756ce1d",
-          "skill": "Integration and DevOps",
-          "infoHtml": "<p>REST API, SOAP API, HTTP Callouts, Jenkins CI/CD, GitHub Actions, Git/GitHub, Ant Tool, Workbench, Terraform, AWS (EC2, VPC, RDS)</p>"
+          "skill": "Languages",
+          "infoHtml": "<p>JavaScript, TypeScript, Python, C, Apex, SOQL/SOSL, HCL (Terraform)</p>"
         },
         {
           "id": "4e5c9b0d-2b32-48a6-9b61-0c320df13632",
-          "skill": "Salesforce Platform",
-          "infoHtml": "<p>Sales Cloud, Service Cloud, Experience Cloud, Data Cloud, AppExchange Package Development</p>"
+          "skill": "Frontend",
+          "infoHtml": "<p>React, Tailwind CSS, Phaser.js, Lightning Web Components (LWC), Aura, Vite, HTML/CSS</p>"
         },
         {
           "id": "b38fcbc7-ae5a-41f8-87c3-8e1fd55a8445",
-          "skill": "Languages and Tools",
-          "infoHtml": "<p>JavaScript, Python, React, MySQL, MongoDB, JIRA, Confluence, QuickBooks Integration, Bryntum Gantt</p>"
+          "skill": "Backend & APIs",
+          "infoHtml": "<p>Node.js, Express, REST API, SOAP API, WebRTC, Socket.IO, Supabase (PostgreSQL), MySQL, MongoDB</p>"
+        },
+        {
+          "id": "c7231132-d4b1-47eb-9bee-a66c7756ce1d",
+          "skill": "Cloud & DevOps",
+          "infoHtml": "<p>AWS (EC2, VPC, RDS, ALB, EFS), Terraform, Docker, Jenkins CI/CD, GitHub Actions, Git</p>"
+        },
+        {
+          "id": "9a905d12-825c-4090-a90c-3ff010a9d8b4",
+          "skill": "Salesforce Platform",
+          "infoHtml": "<p>Sales Cloud, Service Cloud, Experience Cloud, Data Cloud, Agentforce, Flows, AppExchange Package Development, Salesforce DX</p>"
+        },
+        {
+          "id": "07d4ce0e-0dcf-4193-8425-06a3e01fe20c",
+          "skill": "Automation & AI",
+          "infoHtml": "<p>n8n, Zapier, Agentforce Agent Builder, Prompt Templates, AI-Assisted Engineering, Playwright</p>"
         }
       ]
     },

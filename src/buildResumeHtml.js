@@ -134,6 +134,30 @@ function renderSkills(resume) {
   </div>`;
 }
 
+function renderProjects(resume) {
+  if (resume.meta?.showProjects === false) return "";
+  const entries = resume.content.project?.entries || [];
+  if (!entries.length) return "";
+  const heading = resume.content.project.displayName || "PROJECTS";
+  const items = entries.map(e => {
+    const nameHtml = escapeHtml(e.name || "");
+    const rightParts = [e.techStack ? escapeHtml(e.techStack) : "", e.url ? escapeHtml(e.url) : ""].filter(Boolean);
+    return `
+    <div class="project-entry">
+      <div class="entry-header">
+        <span class="entry-left"><strong>${nameHtml}</strong></span>
+        ${rightParts.length ? `<span class="entry-right">${rightParts.join(" | ")}</span>` : ""}
+      </div>
+      ${e.description ? `<div>${sanitizeHtml(e.description)}</div>` : ""}
+    </div>`;
+  }).join("");
+  return `
+  <div class="section">
+    <div class="section-heading">${escapeHtml(heading)}</div>
+    ${items}
+  </div>`;
+}
+
 function renderLanguages(resume) {
   const entries = resume.content.language?.entries || [];
   if (!entries.length) return "";
@@ -153,6 +177,7 @@ function renderLanguages(resume) {
 const SECTION_RENDERERS = {
   profile:     renderProfile,
   work:        renderWork,
+  project:     renderProjects,
   education:   renderEducation,
   certificate: renderCertificates,
   skill:       renderSkills,
@@ -160,12 +185,13 @@ const SECTION_RENDERERS = {
 };
 
 // Matches the PDF section order
-const DEFAULT_ORDER = ["profile", "work", "education", "certificate", "skill", "language"];
+const DEFAULT_ORDER = ["profile", "work", "project", "education", "certificate", "skill", "language"];
 
 // German overrides for section headings (used when language === "de")
 const DE_HEADINGS = {
   profile:     "PROFIL",
   work:        "BERUFSERFAHRUNG",
+  project:     "PROJEKTE",
   education:   "AUSBILDUNG",
   certificate: "ZERTIFIKATE",
   skill:       "KENNTNISSE",
@@ -250,6 +276,7 @@ export function buildResumeHtml(resume, options = {}) {
     .work-entry { margin-bottom: 10px; page-break-inside: avoid; }
     .edu-entry  { margin-bottom: 10px; page-break-inside: avoid; }
     .edu-desc { font-size: 9.5pt; }
+    .project-entry { margin-bottom: 10px; page-break-inside: avoid; }
     .cert-list {
       display: grid;
       grid-template-columns: 1fr 1fr;

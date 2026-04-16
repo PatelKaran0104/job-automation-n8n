@@ -7,6 +7,9 @@ const resumeData = JSON.parse(
 
 const VALID_WORK_IDS = new Set(resumeData.content.work.entries.map((e) => e.id));
 const VALID_SKILL_IDS = new Set(resumeData.content.skill.entries.map((e) => e.id));
+const VALID_PROJECT_IDS = new Set(
+  (resumeData.content.project?.entries || []).map((e) => e.id)
+);
 
 /**
  * Validates an AI-generated patch before applyPatch() is called.
@@ -38,6 +41,9 @@ export function validatePatch(patch) {
   if (patch.skills !== undefined && !Array.isArray(patch.skills)) {
     errors.push("patch.skills must be an array if present");
   }
+  if (patch.projects !== undefined && !Array.isArray(patch.projects)) {
+    errors.push("patch.projects must be an array if present");
+  }
   if (errors.length > 0) {
     return { valid: false, errors, warnings };
   }
@@ -48,8 +54,9 @@ export function validatePatch(patch) {
     typeof patch.profile === "string" && patch.profile.trim().length > 0;
   const hasWork = Array.isArray(patch.work) && patch.work.length > 0;
   const hasSkills = Array.isArray(patch.skills) && patch.skills.length > 0;
+  const hasProjects = Array.isArray(patch.projects) && patch.projects.length > 0;
 
-  if (!hasTitle && !hasProfile && !hasWork && !hasSkills) {
+  if (!hasTitle && !hasProfile && !hasWork && !hasSkills && !hasProjects) {
     errors.push(
       "patch has no actionable content: all sections are empty or missing"
     );
@@ -94,6 +101,24 @@ export function validatePatch(patch) {
       }
       if (!item.infoHtml) {
         warnings.push(`skill item "${item.id}" has no infoHtml`);
+      }
+    }
+  }
+
+  if (hasProjects) {
+    for (const item of patch.projects) {
+      if (!item || typeof item !== "object") {
+        warnings.push("projects array contains non-object item (skipped)");
+        continue;
+      }
+      if (!item.id) {
+        warnings.push(
+          `project item missing id — will be ignored: ${JSON.stringify(item).slice(0, 80)}`
+        );
+        continue;
+      }
+      if (!VALID_PROJECT_IDS.has(item.id)) {
+        warnings.push(`unknown project id "${item.id}" — will be ignored`);
       }
     }
   }
