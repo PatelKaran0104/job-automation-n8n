@@ -592,3 +592,29 @@ git commit --allow-empty -m "chore: prompt quality upgrade pipeline verified on 
 | 12 | n/a | verification | End-to-end test on 3 JDs |
 
 No server-side (`src/*.js`) changes required — the API already accepts `patch.projects[]` and `showProjects`.
+
+---
+
+## Follow-ups
+
+End-to-end run on 2026-04-17 against three representative JDs (SF Developer & Architect @ EMEA Company, Cloud DevOps Engineer @ MVTec Software, Working Student Full-Stack @ SAP). All 6 PDFs generated successfully and the prompts did not crash, but the following quality issues surfaced — candidates for a second-pass iteration.
+
+1. **`showProjects: false` over-applied across all three JDs.** Every run returned `projects: []` and `showProjects: false`, including DevOps-MVTec (where `Cloud Infrastructure Stack` is directly relevant) and SAP-WorkingStudent (where `AI-Powered Document Generation Pipeline`, `Real-Time Spatial Communication Platform`, and `University Marketplace` are strong matches). Task 1's intent — "hide entire section only if truly nothing relates" — is not being honored. Consider tightening the PROJECTS rule with an explicit positive instruction ("if ANY project aligns with the JD tech stack or domain, include the top 1–3; `showProjects: false` is reserved for niche non-tech roles only").
+
+2. **`showCertificates: false` wrongly set for the Salesforce role.** SF-EMEA returned `showCertificates: false`, which hides `Platform Developer I`, `Administrator`, and `Platform App Builder` — precisely the signals an SF hiring manager looks for. The current prompt likely inherits certificate-hiding from a non-SF branch. Add an explicit rule: "for Salesforce roles, certificates MUST be visible."
+
+3. **Cover letter P2 consistently under word budget.** All three P2's came in at ~57–58 words versus the 80–110 target: SF-EMEA ≈ 58, DevOps ≈ 57, SAP ≈ 57. Budgets are being interpreted as a soft ceiling instead of a floor. Consider rephrasing Task 5 as "P2 MUST be between 80 and 110 words; fewer than 80 words is invalid and will be rejected."
+
+4. **Cover letter P3 under budget for non-Werkstudent roles.** SF-EMEA P3 ≈ 38 words, DevOps P3 ≈ 38 words (target 40–60). Only SAP-WorkingStudent P3 hit the range (~56 words) because it carried the mandatory Werkstudent hours clause. Tighten Task 5 with the same floor-enforcement language.
+
+5. **"Ich bewerbe mich um die Position..." opener appears in all three P1's.** Task 7 banned "Ich bewerbe mich hiermit" but the prompt evidently treats "Ich bewerbe mich um die Position…" as acceptable. This phrasing is still textbook application-letter cliché and tells the reader nothing JD-specific. Extend the DE banned-openers list: "Ich bewerbe mich", "Hiermit bewerbe ich mich", "mit großem Interesse habe ich Ihre Stellenausschreibung gelesen", "ich möchte mich um die Position bewerben".
+
+6. **SAP English JD was classified as `language: de`.** The SAP Working Student posting was written in English and does not require German per the JD text (German is a "plus"). Task 8 priority rules should have produced `language: en`. The rule "JD in English but German-market company AND German required" is being loosened to "JD in English AND German-market company" — too aggressive. Make the German-required clause a hard AND, not an implicit one.
+
+7. **Profile first 80 chars does not mention MSc / Hochschule Fulda.** All three profiles open with the role title and years of experience only. Task 2 added MSc context to the CANDIDATE PROFILE block inside the match prompt, but the tailor prompt evidently does not enforce MSc surfacing in the rewritten `profile`. Add an explicit instruction to the PROFILE rewrite rule: "the profile MUST name the M.Sc. in Global Software Development at Hochschule Fulda within the first sentence."
+
+None of these block shipping — the pipeline is functional and the outputs are a meaningful upgrade over the previous version. Treat them as a batched second-pass refinement.
+
+### Step 12.5: Commit the plan as completed — DONE
+
+Follow-ups captured above on 2026-04-17 after verifying the pipeline against all three JDs.
