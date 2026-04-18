@@ -92,7 +92,7 @@ Expected: `OK`
 - [ ] Run JSON validity check (same command as Step 1.1).
 
 ### Step 1.3: Add `projects[]` + `showProjects` to the output schema
-
+ 
 - [ ] Find this anchor inside the STRICT JSON OUTPUT FORMAT block:
 
 ```
@@ -599,22 +599,33 @@ No server-side (`src/*.js`) changes required — the API already accepts `patch.
 
 End-to-end run on 2026-04-17 against three representative JDs (SF Developer & Architect @ EMEA Company, Cloud DevOps Engineer @ MVTec Software, Working Student Full-Stack @ SAP). All 6 PDFs generated successfully and the prompts did not crash, but the following quality issues surfaced — candidates for a second-pass iteration.
 
-1. **`showProjects: false` over-applied across all three JDs.** Every run returned `projects: []` and `showProjects: false`, including DevOps-MVTec (where `Cloud Infrastructure Stack` is directly relevant) and SAP-WorkingStudent (where `AI-Powered Document Generation Pipeline`, `Real-Time Spatial Communication Platform`, and `University Marketplace` are strong matches). Task 1's intent — "hide entire section only if truly nothing relates" — is not being honored. Consider tightening the PROJECTS rule with an explicit positive instruction ("if ANY project aligns with the JD tech stack or domain, include the top 1–3; `showProjects: false` is reserved for niche non-tech roles only").
+**Update 2026-04-18:** A second-pass iteration was applied (3 sub-iterations). Resolved items are marked ✅ below; residual items are marked ⚠ with the underlying cause.
 
-2. **`showCertificates: false` wrongly set for the Salesforce role.** SF-EMEA returned `showCertificates: false`, which hides `Platform Developer I`, `Administrator`, and `Platform App Builder` — precisely the signals an SF hiring manager looks for. The current prompt likely inherits certificate-hiding from a non-SF branch. Add an explicit rule: "for Salesforce roles, certificates MUST be visible."
+1. ✅ **`showProjects: false` over-applied across all three JDs.** RESOLVED. Flipped the default from suppress to include and added HARD MAPPINGS (SF → AI-Powered Document Generation Pipeline; Cloud/DevOps → Cloud Infrastructure Stack; React/Full-stack → University Marketplace + Real-Time Spatial Communication Platform). Verified: all 3 JDs now return 2–3 projects with `showProjects: true`.
 
-3. **Cover letter P2 consistently under word budget.** All three P2's came in at ~57–58 words versus the 80–110 target: SF-EMEA ≈ 58, DevOps ≈ 57, SAP ≈ 57. Budgets are being interpreted as a soft ceiling instead of a floor. Consider rephrasing Task 5 as "P2 MUST be between 80 and 110 words; fewer than 80 words is invalid and will be rejected."
+2. ✅ **`showCertificates: false` wrongly set for the Salesforce role.** RESOLVED. Added explicit rule: SF roles (JD mentions Salesforce/Apex/Lightning/LWC/CRM/SOQL/Cloud/Agentforce/Flow/AppExchange) MUST keep `showCertificates: true`; non-SF technical roles set false. Verified: SF-EMEA now returns true, DevOps + SAP return false.
 
-4. **Cover letter P3 under budget for non-Werkstudent roles.** SF-EMEA P3 ≈ 38 words, DevOps P3 ≈ 38 words (target 40–60). Only SAP-WorkingStudent P3 hit the range (~56 words) because it carried the mandatory Werkstudent hours clause. Tighten Task 5 with the same floor-enforcement language.
+3. ⚠ **Cover letter P2 still ~60–80 words vs 80–110 target.** PARTIALLY RESOLVED. Added MUST-be-X-Y phrasing, sentence+element requirements, and worked DE+EN examples hitting 94/93 words. gpt-4o-mini still produces 4-sentence ~70-word P2's regardless of prompt strength. Quality content is correct (metrics retained, crown-jewel projects surfaced), only length falls short. **Fundamental cause:** instruction-following limit of gpt-4o-mini on long prompts. **Real fixes:** (a) upgrade tailor model from `gpt-4o-mini` to `gpt-4o` in node 1 (~10× cost), or (b) add server-side word-count validation in node 14 that triggers regeneration. Neither is a prompt-only fix.
 
-5. **"Ich bewerbe mich um die Position..." opener appears in all three P1's.** Task 7 banned "Ich bewerbe mich hiermit" but the prompt evidently treats "Ich bewerbe mich um die Position…" as acceptable. This phrasing is still textbook application-letter cliché and tells the reader nothing JD-specific. Extend the DE banned-openers list: "Ich bewerbe mich", "Hiermit bewerbe ich mich", "mit großem Interesse habe ich Ihre Stellenausschreibung gelesen", "ich möchte mich um die Position bewerben".
+4. ⚠ **P3 still 29–30 words vs 40–60 target.** PARTIALLY RESOLVED. The atomic-sentence rule (3 separate sentences for availability / location / close) IS working — P3 is now correctly 3 sentences across all 3 JDs (was 2 before). But each sentence stays terse. Same root cause as item 3. P3 content quality is correct (concrete availability, on-site city named, professional close).
 
-6. **SAP English JD was classified as `language: de`.** The SAP Working Student posting was written in English and does not require German per the JD text (German is a "plus"). Task 8 priority rules should have produced `language: en`. The rule "JD in English but German-market company AND German required" is being loosened to "JD in English AND German-market company" — too aggressive. Make the German-required clause a hard AND, not an implicit one.
+5. ✅ **"Ich bewerbe mich um die Position..." opener appears in all three P1's.** RESOLVED. Lifted `Ich bewerbe mich` (any form) into a top-of-prompt ABSOLUTE BANS section with concrete replacement guidance. Verified: all 3 P1's now open with JD-specific concrete hooks ("Die Verantwortung für…", "Die Entwicklung maßgeschneiderter Salesforce-Lösungen…", "Supporting the design and enhancement of UI features…"). Note: `bringe ich` regression in iter-2 also caught and fixed in iter-3 with the same lifted-ban approach.
 
-7. **Profile first 80 chars does not mention MSc / Hochschule Fulda.** All three profiles open with the role title and years of experience only. Task 2 added MSc context to the CANDIDATE PROFILE block inside the match prompt, but the tailor prompt evidently does not enforce MSc surfacing in the rewritten `profile`. Add an explicit instruction to the PROFILE rewrite rule: "the profile MUST name the M.Sc. in Global Software Development at Hochschule Fulda within the first sentence."
+6. ✅ **SAP English JD was classified as `language: de`.** RESOLVED. Tightened LANGUAGE DETECTION rule 2 to require an explicit hard German-skill phrase ("fluent German", "C1", "Verhandlungssicheres Deutsch", "sehr gute Deutschkenntnisse", etc.); explicitly downgraded "German is a plus / nice to have / wünschenswert" to language="en". Verified: SAP-WorkingStudent now correctly returns `language: en`.
 
-None of these block shipping — the pipeline is functional and the outputs are a meaningful upgrade over the previous version. Treat them as a batched second-pass refinement.
+7. ✅ **Profile first 80 chars does not mention MSc / Hochschule Fulda.** RESOLVED. Added mandate to PROFILE rule: first sentence MUST name the M.Sc. in Global Software Development at Hochschule Fulda. Verified: all 3 profiles now open with this anchor (DE: "M.Sc. Global Software Development an der Hochschule Fulda…", EN: "M.Sc. in Global Software Development at Hochschule Fulda…").
+
+8. ⚠ **Banned-substring scanning unreliable for "dynamic environment".** New regression observed in iter-3 SAP P2. Despite "dynamic environment" being on the English banned list since Task 7, gpt-4o-mini emitted "I am eager to apply my skills in a dynamic environment at SAP." Same model-instruction-following limit as items 3-4. The SELF-CHECK gate is in the prompt but not always honored. **Real fix:** add programmatic substring rejection in node 14 (Parse AI Patch) that triggers regeneration on hit.
+
+### What's left
+
+Items 3, 4, 8 are the three residual issues. All share one root cause: gpt-4o-mini cannot reliably enforce numeric or substring constraints inside its own output. The right next move is **not** another prompt revision — it's one of two architecture changes:
+
+- **Option A (cheap, more code):** add a word-count + banned-substring validator in node 14, triggering up to one regeneration call when the patch fails. Cost: marginal (~1 extra OpenAI call on ~20% of jobs). Implementation: ~30 lines in node 14's existing parse logic.
+- **Option B (no code, more cost):** swap `openaiModel` in node 1 from `gpt-4o-mini` to `gpt-4o`. Cost: ~10× per tailor call. Quality lift on long-form instructions is significant in our experience.
+
+For a personal job-application pipeline where every callback matters more than every cent, Option A is preferred — defer Option B unless A still leaves residual issues after a second observation window.
 
 ### Step 12.5: Commit the plan as completed — DONE
 
-Follow-ups captured above on 2026-04-17 after verifying the pipeline against all three JDs.
+Follow-ups captured 2026-04-17 after the initial verification run; second-pass resolution applied 2026-04-18 (3 sub-iterations against the same 3 JDs).
