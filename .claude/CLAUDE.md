@@ -322,7 +322,7 @@ To add a new job board: add one entry to `BOARD_CONFIG` and wire its Apify node 
 - Google Sheets OAuth credential — used by `2f`, `17`, `18b`
 
 Models are parametrized in `1. Manual Configuration`:
-- `geminiModel` = `gemini-3.1-flash-lite:preview` (primary match)
+- `geminiModel` = `gemini-3.1-flash-lite-preview` (primary match)
 - `fallbackFilteringModel` = `gemini-2.0-flash-lite` (fallback match)
 - `openaiModel` = `gpt-4o-mini` (tailor)
 

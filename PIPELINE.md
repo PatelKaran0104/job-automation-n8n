@@ -190,7 +190,7 @@ All tunable values live in specific nodes. Edit them directly in the n8n workflo
 |------|----------------|
 | Search URLs per board | `1. Manual Configuration` → `linkedInUrl`, `indeedUrl`, `stepstoneUrl`, `XingUrl` |
 | Jobs scraped per board | `1. Manual Configuration` → `jobCount` (default: `5`) |
-| Primary match model | `1. Manual Configuration` → `geminiModel` (default: `gemini-3.1-flash-lite:preview`) |
+| Primary match model | `1. Manual Configuration` → `geminiModel` (default: `gemini-3.1-flash-lite-preview`) |
 | Fallback match model | `1. Manual Configuration` → `fallbackFilteringModel` (default: `gemini-2.0-flash-lite`) |
 | Tailor model | `1. Manual Configuration` → `openaiModel` (default: `gpt-4o-mini`) |
 | Glassdoor URL | Hardcoded in `2d. Scrape Glassdoor` (not parametrized — city/country filter inside actor) |
@@ -227,7 +227,7 @@ To add a new board: add one entry to `BOARD_CONFIG` and wire its Apify node into
 `10a. Build Match Prompt` → `10a1. Skip Gemini?` → (`10b. Wait` →) `10c. Gemini API Call` → `10d. Gemini OK?` → (`10e. Fallback Gemini Call` →) `11. Parse Match Result`.
 
 - **Pre-filter (in `10a`):** regex-based hard reject of fundamentally misaligned titles (Sales, HR, Customer Service, Logistics, Accounting, Gastronomie, …). A `TECH_SAFEGUARD` regex lets borderline titles like "DevOps Engineer - Recruiting Platform" pass through to Gemini. Rejected items carry `_preFilterReject: true` and `10a1. Skip Gemini?` routes them directly to `18a. Prepare Skip Log` — no Gemini call, no `10a2` node.
-- **Primary call (`10c`):** Gemini `gemini-3.1-flash-lite:preview`, via direct REST to `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`.
+- **Primary call (`10c`):** Gemini `gemini-3.1-flash-lite-preview`, via direct REST to `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`.
 - **Fallback (`10e`):** If `10c` returns no `candidates` array, `10d. Gemini OK?` routes to `10e. Fallback Gemini Call` (model: `gemini-2.0-flash-lite`). Both paths converge at `11. Parse Match Result`.
 - **Match gate (`12`):** requires `match === true` AND `confidence >= 45` AND `_apiError !== true`.
 

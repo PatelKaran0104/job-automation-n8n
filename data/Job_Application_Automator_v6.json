@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "f043d3f7-ea4b-467a-a5c9-5d9bbca467fe",
+      "id": "d6208ab6-2c28-4ce8-8e09-3c86031fb0d4",
       "name": "Run Workflow",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        60784,
-        15856
+        65296,
+        18560
       ]
     },
     {
@@ -49,7 +49,7 @@
             {
               "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
               "name": "geminiModel",
-              "value": "gemini-3.1-flash-lite:preview",
+              "value": "gemini-3.1-flash-lite-preview",
               "type": "string"
             },
             {
@@ -68,13 +68,13 @@
         },
         "options": {}
       },
-      "id": "59d90cbf-b31c-409f-b2eb-1d5d0eaefc72",
+      "id": "53a968de-2dd7-4af1-ab8c-4dea26eec2dd",
       "name": "1. Manual Configuration",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        61008,
-        15856
+        65520,
+        18560
       ]
     },
     {
@@ -91,10 +91,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        61232,
-        15280
+        65744,
+        17984
       ],
-      "id": "7a3e3076-da43-4614-bd8a-9b9245fb1187",
+      "id": "980df254-e2e7-4fbe-ab19-b99eea39b52a",
       "name": "2a. Scrape LinkedIn",
       "credentials": {
         "apifyApi": {
@@ -118,10 +118,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        61232,
-        15472
+        65744,
+        18176
       ],
-      "id": "1c5b84bc-ba94-45c6-a8aa-5a08d166ab7a",
+      "id": "205dc0d5-0c11-4fdb-bf26-023ed950b921",
       "name": "2b. Scrape Indeed",
       "credentials": {
         "apifyApi": {
@@ -135,26 +135,26 @@
       "parameters": {
         "numberInputs": 5
       },
-      "id": "db6eaf46-3f39-45d8-baa4-349b4eeaf71a",
+      "id": "62d2df4e-47dc-4005-8de9-545c0fc4a66c",
       "name": "3. Wait for All Scrapers",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
       "position": [
-        61456,
-        15616
+        65968,
+        18320
       ]
     },
     {
       "parameters": {
         "jsCode": "// ═══════════════════════════════════════════════════════════════\n// NORMALIZE & DEDUP — Config-based adapter for any job board\n// To add a new board: add an entry to BOARD_CONFIG, wire the\n// Apify node to this Code node, done. Nothing else changes.\n// ═══════════════════════════════════════════════════════════════\n\nconst BOARD_CONFIG = {\n  '2a. Scrape LinkedIn': {\n    source: 'LinkedIn',\n    fields: {\n      id:          'id',\n      title:       ['title', 'jobTitle'],\n      company:     ['companyName', 'company'],\n      location:    'location',\n      description: ['descriptionText', 'description'],\n      url:         ['link', 'url'],\n      applyUrl:    ['applyUrl', 'link'],\n      postedAt:    'postedAt',\n      salary:      'salary',\n      remote:      'workRemoteAllowed',\n      seniority:   ['seniorityLevel', 'seniority'],\n      country:     'country',\n    }\n  },\n  '2b. Scrape Indeed': {\n    source: 'Indeed',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     'employer.name',\n      location:    ['location.formattedLocation', 'location.city'],\n      description: 'description.text',\n      url:         ['url', 'jobUrl'],\n      applyUrl:    ['url', 'jobUrl'],\n      postedAt:    'datePublished',\n      salary:      null,\n      remote:      null,\n      seniority:   null,\n      country:     'location.countryCode',\n    }\n  },\n  '2c. Scrape StepStone': {\n    source: 'StepStone',\n    fields: {\n      id:          'id',\n      title:       'title',\n      company:     'company_details.company_name',\n      location:    'workplace_details.job_location',\n      description: 'content_details.full_description',\n      url:         'source.url',\n      applyUrl:    'detail_page.applying_details.applying_url',\n      postedAt:    'posting_details.published_at',\n      salary:      'compensation_details.detail_salary',\n      remote:      'workplace_details.work_arrangement',\n      seniority:   null,\n      country:     null,  // StepStone.de is DACH-only — skip code filter\n    }\n  },\n  '2d. Scrape Glassdoor': {\n    source: 'Glassdoor',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     ['company.companyName', 'company.name', 'companyName', 'employer_name', 'employer'],\n      location:    ['location_city', 'location', 'location_country'],\n      description: 'description_text',\n      url:         'jobUrl',\n      applyUrl:    'applyUrl',\n      postedAt:    'datePublished',\n      salary:      null,  // flat baseSalary_min/max handled in extractSalary\n      remote:      'remoteWorkTypes',\n      seniority:   null,\n      country:     null,  // location_country is \"Germany\" not a code; Glassdoor.de is DACH-only\n    }\n  },\n  '2e. Scrape Xing': {\n    source: 'Xing',\n    fields: {\n      id:          'job_id',\n      title:       'title',\n      company:     'company',\n      location:    'location',\n      description: 'description_text',\n      url:         'url',\n      applyUrl:    'apply_url',\n      postedAt:    'date_posted',\n      salary:      'salary',\n      remote:      'remote',\n      seniority:   null,\n      country:     'location_country_code',\n    }\n  },\n};\n\nconst ALLOWED_COUNTRIES = new Set(['DE', 'AT', 'CH', 'NL', 'BE', '']);\n\nfunction getNestedValue(obj, path) {\n  if (!path) return undefined;\n  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);\n}\n\nfunction resolveField(obj, mapping) {\n  if (mapping === null || mapping === undefined) return '';\n  if (Array.isArray(mapping)) {\n    for (const path of mapping) {\n      const val = getNestedValue(obj, path);\n      if (val !== undefined && val !== null && val !== '') return val;\n    }\n    return '';\n  }\n  return getNestedValue(obj, mapping) || '';\n}\n\nfunction extractSalary(obj, config) {\n  const raw = resolveField(obj, config.fields.salary);\n  // Already a string (Xing, LinkedIn)\n  if (raw && typeof raw === 'string' && raw.length > 0) return raw;\n  // StepStone: { min, max, currency, period }\n  if (raw && typeof raw === 'object' && raw.min) {\n    const { min, max, currency, currencyIso, period } = raw;\n    return `${currency || currencyIso || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  // LinkedIn: baseSalary nested object\n  if (obj.baseSalary && obj.baseSalary.min) {\n    const { min, max, currencyCode, unitOfWork } = obj.baseSalary;\n    return `${currencyCode || ''} ${min}-${max}/${unitOfWork || ''}`.trim();\n  }\n  // Glassdoor: flat baseSalary_min / baseSalary_max fields\n  if (obj.baseSalary_min) {\n    const { baseSalary_min: min, baseSalary_max: max, salary_currency: cur, salary_period: period } = obj;\n    return `${cur || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  return '';\n}\n\nfunction extractCompanyFromUrl(url) {\n  if (!url) return '';\n  // Glassdoor pattern: /job-listing/...-at-COMPANY-NAME-JV_...\n  const glassdoorMatch = String(url).match(/-at-([\\w-]+?)-JV_/i);\n  if (glassdoorMatch) {\n    return glassdoorMatch[1].replace(/-/g, ' ').trim();\n  }\n  return '';\n}\n\nconst jobs = [];\n\nfor (const [nodeName, config] of Object.entries(BOARD_CONFIG)) {\n  let items;\n  try {\n    items = $(nodeName).all();\n  } catch (e) {\n    continue;\n  }\n  if (!items || items.length === 0) continue;\n\n  for (const item of items) {\n    const d = item.json;\n    if (!d || typeof d !== 'object') continue;\n\n    const desc = String(resolveField(d, config.fields.description));\n    if (desc.length < 20) continue;\n\n    const country = String(resolveField(d, config.fields.country) || '').toUpperCase();\n    if (country && !ALLOWED_COUNTRIES.has(country)) continue;\n\n    const rawCompany = String(resolveField(d, config.fields.company));\n    jobs.push({\n      source:      config.source,\n      id:          String(resolveField(d, config.fields.id)),\n      title:       String(resolveField(d, config.fields.title)),\n      company:     rawCompany || extractCompanyFromUrl(resolveField(d, config.fields.url)) || 'Unknown Company',\n      location:    String(resolveField(d, config.fields.location)),\n      description: desc,\n      url:         String(resolveField(d, config.fields.url)),\n      applyUrl:    String(resolveField(d, config.fields.applyUrl)),\n      postedAt:    String(resolveField(d, config.fields.postedAt)),\n      salary:      extractSalary(d, config),\n      remote:      !!resolveField(d, config.fields.remote),\n      seniority:   String(resolveField(d, config.fields.seniority)),\n    });\n  }\n}\n\nconst seen = new Set();\nconst unique = [];\nfor (const job of jobs) {\n  const key = job.url || job.applyUrl || `${job.company}::${job.title}`;\n  if (seen.has(key)) continue;\n  seen.add(key);\n  unique.push(job);\n}\n\nif (unique.length === 0) {\n  return [{ json: { error: 'No valid jobs after normalize + dedup. Check Apify outputs and country filter.', rawCount: jobs.length } }];\n}\n\nreturn unique.map(j => ({ json: j }));"
       },
-      "id": "a18d1ea4-12ab-4b6d-9109-509032f65c2e",
+      "id": "08a293e5-c8f7-4e7f-8a5d-ddb11bcd629f",
       "name": "4. Normalize & Merge Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        61680,
-        15664
+        66192,
+        18368
       ]
     },
     {
@@ -173,13 +173,13 @@
         },
         "options": {}
       },
-      "id": "dec5a7cf-bdf1-478e-ac01-6b0eae307cef",
+      "id": "8101ddc7-e788-42d7-91c9-d5592c4451f0",
       "name": "2f. Read Applied Jobs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        61456,
-        16192
+        65968,
+        18896
       ],
       "executeOnce": true,
       "credentials": {
@@ -193,37 +193,37 @@
       "parameters": {
         "jsCode": "const rows = $input.all();\nif (rows.length === 0) {\n  return [{ json: { _emptySheet: true } }];\n}\nreturn rows;"
       },
-      "id": "84e85799-03bd-4ea0-a343-867e3b97a50a",
+      "id": "9b78ccf1-fcfe-470d-a6e9-7d62072b41ce",
       "name": "2f.1. Ensure Not Empty",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        61680,
-        16192
+        66192,
+        18896
       ]
     },
     {
       "parameters": {},
-      "id": "d55216ca-0d61-491a-bde8-c43962167a79",
+      "id": "b86781ec-be3b-4332-bfdb-8ab0b7df814e",
       "name": "5. Sync Jobs + Sheet",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
       "position": [
-        61904,
-        15880
+        66416,
+        18584
       ]
     },
     {
       "parameters": {
         "jsCode": "// Get all scraped jobs from normalize step\nconst jobs = $('4. Normalize & Merge Jobs').all();\n\n// Pass through error sentinel from node 4 — don't mask it as 'skipped'\nif (jobs.length === 1 && jobs[0].json.error) {\n  return [{ json: { error: jobs[0].json.error, message: jobs[0].json.error, totalScraped: 0 } }];\n}\n\n// Build set of already-seen job URLs from Sheets\nconst seenUrls = new Set();\nconst seenSheetCompanyRole = new Set();\ntry {\n  const sheetRows = $('2f. Read Applied Jobs').all();\n  for (const row of sheetRows) {\n    // Only suppress URLs for jobs that were actually processed (not skipped)\n    // Skipped rows (Applied = 'N/A') should remain eligible for re-evaluation\n    if ((row.json['Applied'] || '').trim() === 'N/A') continue;\n    const url = (row.json['Raw URL'] || row.json['Job URL'] || '').trim();\n    if (url) seenUrls.add(url);\n    const co = (row.json['Company'] || '').toLowerCase().trim();\n    const ro = (row.json['Role'] || '').toLowerCase().trim();\n    if (co && ro) seenSheetCompanyRole.add(`${co}::${ro}`);\n  }\n} catch (e) {\n  // Sheet is empty on first run — that's fine\n}\n\n// Filter to only new jobs not yet in Sheets (by URL or company+role)\nconst urlFiltered = jobs.filter(job => {\n  const url = (job.json.url || job.json.applyUrl || '').trim();\n  if (!url) return false;\n  if (seenUrls.has(url)) return false;\n  const crKey = `${(job.json.company || '').toLowerCase().trim()}::${(job.json.title || '').toLowerCase().trim()}`;\n  if (seenSheetCompanyRole.has(crKey)) return false;\n  return true;\n});\n\nif (urlFiltered.length === 0) {\n  return [{ json: { skipped: true, message: 'No new jobs — all already logged in Sheets', totalScraped: jobs.length } }];\n}\n\nconsole.log(`New jobs to process: ${urlFiltered.length} / ${jobs.length} scraped`);\nreturn urlFiltered;"
       },
-      "id": "ff4d0a6a-1fcf-467b-af27-0ca6be2371eb",
+      "id": "3dcd4c92-46a2-416a-86ce-8098e5fac7d3",
       "name": "6. Filter Duplicates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        62128,
-        15880
+        66640,
+        18584
       ]
     },
     {
@@ -233,13 +233,13 @@
           "timeout": 10000
         }
       },
-      "id": "624c6cff-b458-40b7-a159-716ab551a6c3",
+      "id": "3f5cfeaa-614e-4c25-a97e-1de4f64a8596",
       "name": "7. GET Resume Context",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        62352,
-        15880
+        66864,
+        18584
       ],
       "continueOnFail": true
     },
@@ -247,13 +247,13 @@
       "parameters": {
         "jsCode": "const resumeItem = $('7. GET Resume Context').first();\n// If the resume server is down, continueOnFail gives us an error item.\n// Fall back to an empty resume object so the pipeline can still run and log jobs.\nconst resumeContext = (resumeItem.json && !resumeItem.json.error)\n  ? resumeItem.json\n  : {};\n\nconst jobs = $('6. Filter Duplicates').all();\n\n// Short-circuit: no new jobs today — pass sentinel through without attaching resume.\n// This prevents a wasted Gemini API call and a misleading Sheet row.\nif (jobs.length === 1 && (jobs[0].json.skipped || jobs[0].json.error)) {\n  return [{ json: jobs[0].json }];\n}\n\nconst resumeFallback = Object.keys(resumeContext).length === 0;\n\nif (resumeFallback) {\n  return [{ json: { error: true, message: 'Resume server unavailable — skipping all jobs to avoid blind processing', skipped: true } }];\n}\n\nreturn jobs.map(job => ({\n  json: {\n    ...job.json,\n    resume: resumeContext,\n    _resumeFallback: false\n  }\n}));"
       },
-      "id": "63482bdb-f656-40bd-8bb1-c3f7d39eb5e3",
+      "id": "2636a6ea-2013-4204-b2c4-c9069f03933d",
       "name": "8. Attach Resume to Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        62576,
-        15880
+        67088,
+        18584
       ]
     },
     {
@@ -261,13 +261,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const item = $json;\n\n// Skip non-job sentinels (scraper errors, no-new-jobs) — pass through as-is\nif (item.skipped || item.error) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n      _pipelineSentinel: true,\n    },\n  };\n}\n\n// ===== Role-Type Pre-Filter =====\n// Reject fundamentally misaligned roles BEFORE burning a Gemini API call.\nconst ROLE_REJECT_PATTERNS = [\n  /\\b(au(?:ß|ss)endienst|verkauf|sales\\s*rep)\\b/i,\n  /\\b(kundenberater|kundenbetreuer|kundenservice|customer\\s*service)\\b/i,\n  /\\b(disponent|logistik|versand|spedition|lagerlogistik|supply\\s*chain)\\b/i,\n  /\\b(personal(?:referent|leiter|manager|wesen)|recruiting|recruiter|human\\s*resource|hr\\s*manager|talent\\s*acquisition)\\b/i,\n  /\\b(marketing\\s*manager|communications|public\\s*relations|pr\\s*manager)\\b/i,\n  /\\b(buchhalter|accounting|finanzbuchhalter|steuerberater)\\b/i,\n  /\\b(linienf(?:ü|ue)hrer|produktionsleiter|schichtf(?:ü|ue)hrer|maschinenf(?:ü|ue)hrer|anlagenf(?:ü|ue)hrer)\\b/i,\n  /\\b(inbetriebnahme(?:leiter|ingenieur)?|instandsetzung|instandhaltung)\\b/i,\n  /\\b(sachbearbeiter|kaufmann|kauffrau|verwaltung(?:sfachangestellte)?)\\b/i,\n  /\\b(eventmanager|eventdekoration|veranstaltung|gastronomie|k(?:ü|ue)chenleiter)\\b/i,\n];\n\nconst jobTitle = (item.title || '').trim();\nconst TECH_SAFEGUARD = /developer|engineer|architect|entwickl|informatik|consultant|berater|programm|software|cloud|devops|salesforce|sap\\b|data\\s*engineer|platform/i;\nconst rawReject = ROLE_REJECT_PATTERNS.some(pattern => pattern.test(jobTitle))\n  || (/\\bvertrieb\\b/i.test(jobTitle) && !TECH_SAFEGUARD.test(jobTitle));\n// If the title ALSO contains a tech-role keyword, let Gemini decide instead of hard-rejecting.\n// Unambiguous non-tech patterns (gastronomie, sachbearbeiter, etc.) rarely co-occur with tech terms,\n// so the safeguard primarily rescues borderline titles like \\\"DevOps Engineer - Recruiting Platform\\\".\nconst rejected = rawReject && !TECH_SAFEGUARD.test(jobTitle);\n\nif (rejected) {\n  return {\n    json: {\n      ...item,\n      _skip: true,\n      _preFilterReject: true,\n      _skipReason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: `Role type \"${jobTitle}\" is fundamentally misaligned with developer profile (pre-filter reject)`,\n        jobType: 'unknown',\n        _preFilterReject: true,\n      },\n    },\n  };\n}\n\n// MUST include \"JSON\" for Gemini response_format\nconst systemPrompt = `You are a job-match filter for a Salesforce Developer / Software Developer seeking tech roles in Germany.\n\nReturn ONLY valid JSON. No explanation, no text outside JSON.\n\nOutput format:\n{\n  \"match\": true or false,\n  \"confidence\": number (0-100),\n  \"reason\": \"one short line explaining WHY this confidence score\",\n  \"jobType\": \"internship|werkstudent|full-time|contract|unknown\"\n}\n\nCONFIDENCE CALIBRATION (use the full 0-100 range):\n- 90-100: Core match — Salesforce Developer, Salesforce Consultant, or closely related CRM/platform role\n- 75-89: Strong match — software development role where candidate skills are directly applicable (backend, full-stack, integration, DevOps)\n- 60-74: Moderate match — tech-adjacent role where some skills transfer but significant gaps exist (e.g., pure frontend, QA/testing, data engineering)\n- 40-59: Weak match — tech role but poor skill alignment (e.g., embedded systems, C++/low-level, pure ML research)\n- 20-39: Very weak — role has some IT connection but is not a developer position (e.g., IT project management, tech sales, system admin)\n- 0-19: No match — completely unrelated field\n\nMATCH RULES:\n- match=true if confidence >= 45\n- match=false if confidence < 45\n\nEXAMPLES (use these to calibrate your confidence scores):\n- \"Salesforce Developer\" at SAP: {\"match\":true,\"confidence\":95,\"reason\":\"Core Salesforce platform role\",\"jobType\":\"full-time\"}\n- \"Junior Backend Developer (Python/Node.js)\" at Zalando: {\"match\":true,\"confidence\":78,\"reason\":\"Software dev role with overlapping JS/Python stack\",\"jobType\":\"full-time\"}\n- \"IT Project Manager\" at Siemens: {\"match\":false,\"confidence\":28,\"reason\":\"Management role, not hands-on development\",\"jobType\":\"full-time\"}\n- \"Werkstudent Softwareentwicklung\" at BMW: {\"match\":true,\"confidence\":68,\"reason\":\"Entry-level tech role, transferable development skills\",\"jobType\":\"werkstudent\"}\n- \"Senior DevOps Engineer\" at Delivery Hero: {\"match\":true,\"confidence\":72,\"reason\":\"Infrastructure role, candidate has CI/CD and AWS experience\",\"jobType\":\"full-time\"}\n- \"Werkstudent Cloud / DevOps\" at N26: {\"match\":true,\"confidence\":80,\"reason\":\"Direct match for AWS/Terraform project experience, student-friendly hours\",\"jobType\":\"werkstudent\"}\n- \"Remote Full-Stack Engineer (EU)\" at a Berlin startup: {\"match\":true,\"confidence\":75,\"reason\":\"React + Node stack matches, fully remote\",\"jobType\":\"full-time\"}\n- \"Software Engineering Intern\" at SAP: {\"match\":true,\"confidence\":72,\"reason\":\"Tech internship, skill overlap, eligible via student visa\",\"jobType\":\"internship\"}\n- \"Part-time Salesforce Developer (20h/week)\" at a consultancy: {\"match\":true,\"confidence\":90,\"reason\":\"Core expertise, matches Werkstudent hour cap\",\"jobType\":\"werkstudent\"}\n- \"Sachbearbeiter Vertriebsinnendienst\" at Bosch: {\"match\":false,\"confidence\":5,\"reason\":\"Administrative sales support, no tech component\",\"jobType\":\"full-time\"}\n\nIMPORTANT DISTINCTIONS:\n- \"Salesforce\" in a role title means CRM platform development — this is the candidate PRIMARY expertise. High confidence.\n- \"Sales\" in a role title (without \"force\") means selling products/services — this is NOT the candidate field. Low confidence.\n- \"Business Development Manager\", \"Account Executive\", \"Sales Manager\" = sales roles, NOT tech roles. Confidence 0-20.\n- \"Projektleiter\" / \"Project Manager\" without \"IT\" or \"Software\" qualifier = generic management. Confidence 10-30.\n- \"Sachbearbeiter\" / \"Clerk\" = administrative role. Confidence 0.\n- \"Linienführer\" / \"Line Leader\" = manufacturing/production. Confidence 0.\n- \"Inbetriebnahme\" / \"Commissioning\" = industrial engineering. Confidence 0.\n- Internship / Werkstudent / part-time in ANY tech field: confidence 60+ (be lenient — candidate is explicitly open to all these formats)\n- Junior roles in software/IT: confidence 65+ (transferable skills)\n- Remote tech roles based anywhere in DACH or EU: do NOT penalize for being remote — candidate is open to remote\n- Roles with \"Werkstudent\", \"Praktikum\", \"Intern\", \"Teilzeit\", or \"part-time\" in the title: these are HIGH-priority matches for this candidate — bias confidence +10 if tech-aligned\n\nCANDIDATE PROFILE (for your reference when judging match):\n- Education: M.Sc. Global Software Development at Hochschule Fulda (Germany, ongoing) + B.E. Information Technology (CGPA 8.83/10 ≈ German 1.5).\n- Visa status: Student visa — eligible for Werkstudent (20h/week during semester, 40h/week during breaks), internships, and full-time after graduation.\n- Open to: internship, Werkstudent, part-time, full-time, and remote roles across DACH + EU — be LENIENT on role type when tech alignment is strong.\n- Core Salesforce: Apex, LWC, Aura, Flows, Sales/Service/Experience/Data Cloud, Agentforce, Salesforce DX, AppExchange managed package shipped through full security review, 85%+ Apex test coverage. Certified Platform Developer I, Agentforce Specialist, Data Cloud Consultant.\n- Software engineering: JavaScript, TypeScript, Python, C, Node.js, Express, React, Tailwind CSS, Phaser.js, REST/SOAP APIs, WebRTC, Socket.IO, Supabase (PostgreSQL), MySQL, MongoDB.\n- Cloud & DevOps: AWS (VPC, EC2, ALB, ASG, RDS, EFS, WAF), Terraform (IaC, ~41 resources), Docker, Jenkins CI/CD, GitHub Actions, Git, HPC/SLURM, MPI.\n- Automation & AI: n8n, Zapier, Agentforce Agent Builder, Prompt Templates, Playwright, AI-assisted engineering.\n- Notable hands-on projects: real-time spatial communication platform (WebRTC + Socket.IO), production AWS/Terraform stack, AI document generation pipeline (n8n + OpenAI + Playwright), distributed SUMMA matrix-multiply in C+MPI, LWC-based Custom Form Builder.\n- Languages: English C1, German active learner.\n`;\n\n// ===== Helper =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\n\n// ===== Resume Data =====\nconst skills = (item.resume?.currentSkills || [])\n  .map(s => s?.skill || '')\n  .filter(Boolean)\n  .join(', ');\n\nconst education = (item.resume?.education || [])\n  .map(e =>\n    `${e.degree || ''} ${e.field || ''} at ${e.institution || ''} (${e.year || ''})`.trim()\n  )\n  .join('; ');\n\nconst recentWork = (item.resume?.currentWork || [])\n  .slice(0, 2)\n  .map(w =>\n    `${w.jobTitle || ''} at ${w.employer || ''}: ${(w.description || '').slice(0, 120)}`\n  )\n  .join(' | ');\n\nconst projectsDigest = (item.resume?.currentProjects || [])\n  .slice(0, 5)\n  .map(p => `${p.name} (${p.techStack || 'n/a'})`)\n  .join(' | ');\n\n// ===== Smart JD Extraction (EN + DE aware) =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\n// Split by important sections (English + German)\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\n// Pick best section or fallback\nconst hasRequirements = parts.length > 1 && parts[1].trim().length > 120;\nlet jdImportant = hasRequirements ? parts[1] : jd;\n\nif (hasRequirements && jd.length > 400) {\n  jdImportant = `${jd.slice(0, 300)}\\n\\n${jdImportant}`;\n}\n\n// Filter out benefits/offer sections that waste tokens\njdImportant = jdImportant.replace(/(?:^|\\n)\\s*(?:was wir bieten|what we offer|benefits|unsere leistungen|unser angebot|wir bieten dir|das bieten wir|your benefits|perks)\\s*[\\s\\S]{0,800}/gi, '');\n\n// Remove HTML tags if present\njdImportant = jdImportant.replace(/<[^>]+>/g, '');\n\n// Final cap for token safety\njdImportant = jdImportant.slice(0, 1500);\n\n// ===== Build User Prompt =====\nconst userMsg = `Candidate:\nTitle: ${item.resume?.currentJobTitle || 'Software Developer'}\nLocation: Germany\n\nEducation:\n${education || 'MSc Global Software Development, Hochschule Fulda Germany'}\n\nRecent Work:\n${recentWork || 'N/A'}\n\nSkills:\n${skills || 'N/A'}\n\nKey Projects:\n${projectsDigest || 'N/A'}\n\nJob:\n${item.title} at ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\n\nJob Description:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _geminibody: {\n      contents: [\n        {\n          role: 'user',\n          parts: [\n            {\n              text: `${systemPrompt}\\n\\n${userMsg}`\n            }\n          ]\n        }\n      ],\n      generationConfig: {\n        temperature: 0.3,\n        responseMimeType: 'application/json'\n      }\n    },\n  },\n};"
       },
-      "id": "4663c25d-1359-4019-ac80-5c5003dac165",
+      "id": "6160bae5-c9ce-4298-93f2-bd684304f793",
       "name": "10a. Build Match Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        63024,
-        15808
+        67536,
+        18512
       ]
     },
     {
@@ -275,13 +275,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// 8. Parse Match Result\n\nconst aiResponse = $json;\nconst jobData = $('10a. Build Match Prompt').item.json;\nconst { _geminibody, ...cleanJobData } = jobData;\n\n// Short-circuit: item was pre-filter rejected (no Gemini call made)\nif (cleanJobData.matchResult && cleanJobData.matchResult._preFilterReject) {\n  return {\n    json: cleanJobData,\n  };\n}\n\n// Handle rate limit or API error from 10c. Gemini API Call\nif (aiResponse.error) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'Gemini API error: ' + (aiResponse.error.message || 'unknown'),\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}\n\ntry {\n  const content = aiResponse.candidates[0].content.parts[0].text;\n  const result = JSON.parse(content);\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: { ...result, _apiError: false },\n    },\n  };\n} catch (err) {\n  return {\n    json: {\n      ...cleanJobData,\n      matchResult: {\n        match: false,\n        confidence: 0,\n        reason: 'AI parse error – skipped: ' + err.message,\n        jobType: 'unknown',\n        _apiError: true,\n      },\n    },\n  };\n}"
       },
-      "id": "f2a4a006-82c9-43f0-ba3e-30025921e37c",
+      "id": "9a186f27-8aa0-449e-b70a-dbde840d4c85",
       "name": "11. Parse Match Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        64368,
-        15736
+        68880,
+        18440
       ]
     },
     {
@@ -329,13 +329,13 @@
         },
         "options": {}
       },
-      "id": "f36f9bf5-f174-44b4-8109-8f595de80586",
+      "id": "df305432-66c4-4d43-84c9-b1a2f8170760",
       "name": "12. Is Match?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        64592,
-        15736
+        69104,
+        18440
       ]
     },
     {
@@ -343,19 +343,19 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// 10a. Build Tailor Prompt — production-grade version\n\nconst item = $json;\n\n// ===== Helpers =====\nconst clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();\nconst stripHtml = (s) => (s || '').replace(/<[^>]+>/g, '').replace(/\\s+/g, ' ').trim();\n\n// ===== Smart JD extraction =====\nconst jdRaw = item.description || '';\nconst jd = clean(jdRaw);\n\nconst parts = jd.split(\n  /requirements|qualifications|your profile|anforderungen|qualifikationen|profil|was Sie mitbringen|was du mitbringst/i\n);\n\nconst hasRequirements = parts.length > 1 && parts[1].trim().length > 120;\nlet jdImportant = hasRequirements ? parts[1] : jd;\n\nif (hasRequirements && jd.length > 400) {\n  jdImportant = `${jd.slice(0, 300)}\\n\\n${jdImportant}`;\n}\n\n// Filter out benefits/offer sections that waste tokens\njdImportant = jdImportant.replace(/(?:^|\\n)\\s*(?:was wir bieten|what we offer|benefits|unsere leistungen|unser angebot|wir bieten dir|das bieten wir|your benefits|perks)\\s*[\\s\\S]{0,800}/gi, '');\n\njdImportant = jdImportant.replace(/<[^>]+>/g, '').slice(0, 2200).trim();\n\n// ===== Strip HTML from resume input =====\n// Prevents model from confusing input HTML with output format instructions\n// Descriptions are already plain text from /context — preserve newlines for bullet structure\nconst workClean = item.resume?.currentWork || [];\n\nconst skillsClean = (item.resume?.currentSkills || []).map(s => ({\n  ...s,\n  details: stripHtml(s.details),\n}));\n\n// ===== System Prompt =====\nconst systemPrompt = `You are an expert resume and cover letter writer for tech jobs in Germany.\n\nYour goal is NOT to write nicely — your goal is to maximize interview callback rate.\n\nPRINCIPLE: tailoring exists to MAXIMIZE relevant signal, not to minimize content or hedge. Hiding a section, omitting a project, or shortening a paragraph requires explicit justification by these rules. When a rule is ambiguous, choose the option that surfaces MORE relevant evidence, not less.\n\n========================\nABSOLUTE BANS (ZERO TOLERANCE — checked first, before everything else)\n========================\n\nThese substrings MUST NOT appear anywhere in the generated text — not in profile, not in work bullets, not in any cover letter paragraph. If you catch one in your draft, REWRITE the offending sentence before emitting:\n\n  • \"bringe ich\" — banned in ALL forms (\"bringe ich mit\", \"bringe ich über X mit\", \"bringe ich Erfahrung mit\", \"bringe ich Kenntnisse mit\"). REPLACEMENTS: \"Ich habe …\", \"Ich verfüge über …\", \"Mit X habe ich …\", \"Bei MV Clouds habe ich …\".\n  • \"Ich bewerbe mich\" — banned in ALL forms. REPLACEMENTS: open the cover letter with a JD-specific concrete fact (\"Die Verantwortung für …\", \"Skalierbare Salesforce-Architekturen für …\", \"Die Weiterentwicklung der Cloud-Infrastruktur bei …\").\n  • \"Ich möchte mich … bewerben\" — banned. Same replacement guidance as above.\n  • \"Hiermit bewerbe ich mich\" / \"Hiermit …\" — banned.\n  • \"hands-on\" — banned in BOTH languages, in any compound (Hands-on-Mentalität, hands-on experience, hands-on development, hands-on work). REPLACEMENTS: \"praktische Erfahrung\", \"production work\", \"applied work\", or just name the specific tech.\n  • \"I am writing to apply\" / \"I would like to apply\" / \"With great interest\" — banned.\n  • \"passionate\" / \"excited\" / \"team player\" / \"fast learner\" / \"driven\" / \"self-starter\" / \"synergy\" / \"hochmotiviert\" / \"Teamplayer\" — banned.\n\nThis is the FIRST thing to verify before emitting. If any banned substring appears, you have failed and must rewrite.\n\nThe output MUST be strictly valid JSON.\n- No text before or after the JSON object\n- No comments\n- No trailing commas\n- No additional keys beyond the schema\n\n========================\nRESUME PATCH RULES\n========================\n\nGENERAL:\n- You MUST update work bullets AND skills in every response — patching only jobTitle/profile is not acceptable.\n- DO NOT invent tools, skills, or experience not present in the resume.\n- Reordering, trimming, and re-emphasis of existing content is always allowed and encouraged.\n- Each sentence must add new information — no filler, no repetition.\n- Avoid generic statements that could apply to any company or role.\n\nPROFILE (3–4 sentences):\n- The first sentence MUST name the M.Sc. in Global Software Development at Hochschule Fulda (DE: \"M.Sc. Global Software Development an der Hochschule Fulda\"). This is a non-negotiable credibility anchor for German employers — never push it to a later sentence.\n- Align current title to the job role\n- Highlight core tech stack matching the job description\n- Clearly state target role\n- The profile MUST only reference skills, experience, and domains present in the resume.\n  NEVER claim experience in domains like \"technical sales\", \"customer relationship management\",\n  \"market penetration\", \"logistics\", \"supply chain\", or \"business development\" unless these appear in the resume data.\n  If the role requires such experience and the resume has none, write a profile that honestly\n  frames the developer's transferable technical skills — do not fabricate domain experience.\n\nWORK EXPERIENCE:\n- REORDER bullets so the most JD-relevant ones appear FIRST.\n- DROP bullets with zero relevance to this specific JD.\n- Bullet count should reflect actual relevance: 6–8 for a highly matched role, 3–4 for a partial match, 1–2 if the entry is barely relevant.\n- Incorporate JD keywords ONLY when natural — prefer exact tool/tech wording for ATS.\n- Focus on technologies used and measurable impact.\n- Use action verbs: Built, Implemented, Optimized, Designed, Automated, Reduced, Delivered.\n- NEVER use: \"worked on\", \"responsible for\", \"helped with\", \"assisted\", \"was involved in\"\n- When adapting bullets for non-Salesforce roles, translate technical OUTCOMES, not domain experience.\n  Good: \"Designed system integrations reducing manual workflows by 40%\" (outcome-focused)\n  Bad: \"Developed customer relationship strategies resulting in client retention\" (fabricated domain)\n  If a bullet has no relevance to the target role, DROP it rather than rewriting it into a false narrative.\n  But make sure to have enough content in experience section so that recruiters see a strong technical background — do not fabricate non-technical experience.\n\nCROWN-JEWEL BULLETS FOR SALESFORCE ROLES:\n- If the JD is Salesforce-related (CRM, Apex, LWC, Agentforce, AppExchange, Sales Cloud, Service Cloud, Data Cloud, Experience Cloud), these two bullets from the MV Clouds entry MUST appear in the top 3 of the reordered description:\n  1. The AppExchange managed package bullet (\"Built and published a production package through Salesforce's full security review cycle...\")\n  2. The Agentforce and AI integration bullet (\"Configured Agentforce AI agents with custom actions and REST API interfaces...\")\n- You may slightly rewrite wording to emphasize JD-aligned terms, but the substance and metrics (85%+ test coverage, security review, real-time REST) must remain.\n- For non-Salesforce roles these bullets may be dropped or de-prioritized per the standard REORDER/DROP rules.\n\nMETRICS (German recruiters weight numbers heavily):\n- PRESERVE every quantitative metric that already exists in the resume (percentages, test coverage %, time reductions, resource counts, refresh rates, scores, file sizes). Never drop an existing number when rewriting a bullet.\n- If a kept bullet does not currently contain a metric but a credible one exists in nearby context (e.g., \"85%+ Apex test coverage\", \"~40% deployment time reduction\"), you MAY re-surface it — ONLY if it is factually present elsewhere in the resume. Never invent numbers.\n- Aim for at least one quantitative metric in the Work section, at least one in Projects, and at least one in the cover letter P2.\n- If no credible metric exists for a bullet, leave it qualitative — do not fabricate.\n\nSKILLS:\n- For Salesforce roles: reorder entries so the most JD-relevant categories appear first; update infoHtml content to match the JD.\n- For non-Salesforce TECHNICAL roles (DevOps, backend, cloud, full-stack):\n  - You MAY rename skill category labels ONLY if you can authentically map existing skills to the new domain.\n    ALLOWED renames (same technical domain):\n      \"Salesforce Development\" -> \"Backend Development\" (both are coding)\n      \"Integration and DevOps\" -> \"Infrastructure & DevOps\" (related domain)\n      \"Agentforce and AI\" -> \"AI & Automation\" (related domain)\n    FORBIDDEN renames (different domain entirely):\n      \"Salesforce Development\" -> \"Sales Strategies\" (NEVER — developer has no sales background)\n      \"Low-Code and Automation\" -> \"Customer Relationship Management\" (NEVER — unrelated domain)\n      Any rename to: \"Sales\", \"Marketing\", \"Logistics\", \"HR\", \"Finance\", \"Business Development\"\n  - infoHtml items MUST come from the resume. You may reorder and emphasize, but do NOT invent tools or skills not present in the original resume data.\n- infoHtml MUST be a comma-separated list of 4-8 specific tools/technologies — never a single vague phrase.\n  Good: \"Jenkins CI/CD, GitHub Actions, Terraform, AWS (EC2, VPC, RDS), Docker\"\n  Bad: \"Cloud Infrastructure Management\"\n- If the role requires fundamentally different skills not present in the resume (e.g., sales, logistics, HR):\n  - Keep skill category labels as-is (do not rename them)\n  - You may still reorder skill entries and update infoHtml content based on JD emphasis\n  - Do NOT invent new domains\n  - This signals the role is a poor fit — the match filter should have caught it\n- Keep the same number of skill entries.\n- Return the skills array in the display ORDER you want (most JD-relevant first). The base resume preserves the order of IDs you provide in the patch for entries that are renamed or updated.\n\nPROJECTS:\n- REORDER projects so the most JD-relevant ones appear FIRST.\n- DROP irrelevant projects by omitting them from the patch (only include projects you want updated — unlisted projects keep their base description).\n- For highly relevant projects: rewrite bullets to emphasize JD-aligned tech and outcomes. Preserve existing metrics — never drop numbers like \"95+ Lighthouse score\", \"41 cloud resources\", \"20Hz refresh rate\".\n- You MAY update \"techStack\" to reorder technologies so JD-relevant ones appear first, but NEVER invent tools not in the original techStack.\n- You MAY rename a project only if the rename is a closer description of the same work (e.g., \"Cloud Infrastructure Stack\" stays as-is for DevOps roles). Do NOT rename into a different domain.\n- DEFAULT: include the top 1–3 projects whose tech stack OR domain overlaps the JD. Setting \\`showProjects: false\\` is RESERVED for non-tech roles or for cases where ZERO projects share any keyword with the JD. When unsure → INCLUDE projects.\n- HARD MAPPINGS (always include the named project for the matching role family):\n  • Salesforce role → \"AI-Powered Document Generation Pipeline\" (it ships Karan's only public AI/automation project)\n  • Cloud / DevOps / Infra role → \"Cloud Infrastructure Stack\" (Terraform + AWS, 41 resources)\n  • React / Full-stack / Frontend role → \"University Marketplace\" AND \"Real-Time Spatial Communication Platform\"\n  • AI / ML / Automation role → \"AI-Powered Document Generation Pipeline\" AND \"Face Recognition Attendance System\"\n  • Distributed systems / HPC role → \"Parallel Matrix Multiplication (SUMMA)\"\n- For SF roles specifically: projects are NOT a distraction — they show range beyond the CRM stack. Do not hide them just because the role is SF-heavy.\n- NEVER invent new projects or tech stacks.\n\nCERTIFICATES:\n- For Salesforce roles (JD mentions Salesforce, Apex, Lightning, LWC, CRM, SOQL, Sales/Service/Data/Experience Cloud, Agentforce, Flow, AppExchange): \\`showCertificates\\` MUST be true (or omit the field — true is the base default). The Platform Developer I, Administrator, and Platform App Builder certifications are critical signals for SF hiring managers and MUST remain visible.\n- For non-Salesforce TECHNICAL roles (DevOps, cloud, backend, full-stack, AI/ML): set \"showCertificates\": false — SF certs distract from the relevant signal.\n- For mixed/ambiguous roles where Salesforce is one of several stacks listed: keep showCertificates true (default) — surface the breadth.\n\nSTRICT:\n- Keep all entry IDs exactly as given — never modify or omit them\n- Do not create new entries or sections\n- Do not remove existing entries\n- HTML formatting ONLY where required by schema\n\n========================\nLANGUAGE DETECTION\n========================\n\nDecide the output language using this strict priority. When in doubt → language=\"en\".\n\n1. If the majority of the JD body text is in German → language=\"de\".\n2. If the JD body is in English AND contains a HARD German requirement phrase — exact patterns like \"fluent German\", \"C1 German\", \"C2 German\", \"native German\", \"verhandlungssicheres Deutsch\", \"sehr gute Deutschkenntnisse\", \"Deutsch auf Muttersprachniveau\", \"Deutsch zwingend erforderlich\" — then language=\"en\" AND P3 must include ONE sentence acknowledging openness to working in German environments (no overclaiming — candidate is an active learner, not C1).\n3. If the JD is in English AND German is described only as \"a plus\", \"nice to have\", \"beneficial\", \"of advantage\", \"wünschenswert\", or any soft-want phrasing → language=\"en\". A soft want is NEVER a hard requirement, regardless of the company's location.\n4. If the JD is bilingual (English summary + German requirements section, both substantive): use whichever language dominates the REQUIREMENTS section. If tied, default to German.\n5. A German-headquartered company (SAP, Siemens, BMW, Deutsche Bahn, etc.) posting in English does NOT alone trigger language=\"de\". The JD text itself must require German per rule 1 or 2.\n\nWrite ALL text content (profile, work bullets, cover letter) in the detected language.\nResume section headings are handled separately — only the content you write needs to match.\n\n========================\nCOVER LETTER RULES\n========================\n\n- EXACTLY 3 paragraphs, returned as separate fields in the coverLetter object (paragraph1, paragraph2, paragraph3)\n- 180–220 words total\n- Plain text only\n- Write the cover letter in the detected language (German or English)\n\nP1 (4–5 full sentences; target 50–70 words; below 4 sentences is INVALID — regenerate):\n- Sentence 1 — JD-specific concrete hook: name a product, team, technology, or paraphrased mission from the JD. NEVER open with self-introduction.\n- Sentence 2 — anchor: tie that hook to Karan's M.Sc. in Global Software Development at Hochschule Fulda (DE: \"M.Sc. Global Software Development an der Hochschule Fulda\"). This anchor MUST appear in P1.\n- Sentence 3 — bridge: name ONE specific tech, project, or outcome from Karan's resume that maps to the JD. Use a concrete name (e.g., \"Apex managed package\", \"Terraform-basierte AWS-Infrastruktur\", \"WebRTC mesh network\").\n- Sentence 4 — relevance: state in one line WHY this experience fits the JD's stated need (refer back to a JD requirement).\n- Optional sentence 5 only if needed to reach the 50-word floor — never pad with filler.\n- BANNED openers: \"Ich bewerbe mich…\", \"Ich möchte mich…\", \"Hiermit…\", \"I am writing to apply\", \"I would like to apply\", \"With great interest…\".\n\nP2 (5–7 full sentences; target 80–110 words; below 5 sentences OR below 80 words is INVALID — regenerate):\n- Sentence 1–2: ONE concrete production achievement with a NUMERIC METRIC drawn from the resume — pick from this list when relevant:\n  • \"85%+ Apex test coverage\" (SF/MV Clouds work)\n  • \"~40% deployment time reduction\" (CI/CD)\n  • \"41 AWS resources via Terraform\" (Cloud Infrastructure Stack)\n  • \"95+ Lighthouse score\" (Portfolio Website)\n  • \"20 Hz refresh rate\" (Real-Time Spatial Communication Platform)\n- Sentence 3–4: a SECOND achievement in a DIFFERENT skill area, also with a number when one exists in the resume.\n- Sentence 5: tie one of the above directly back to a SPECIFIC JD requirement, naming the JD's technology or system.\n- Optional sentence 6–7 only if needed to reach the 80-word floor — add a third resume-grounded outcome or a German-context detail (regulated environment, DSGVO, compliance audit) when authentic.\n- REQUIRED ELEMENTS — verify ALL present before emitting:\n  • At least 2 named technologies (e.g., \"Terraform\", \"AWS VPC\", \"React\", \"Apex\").\n  • At least 2 numeric metrics (percentages, counts, time reductions) — not 1.\n  • At least one bullet drawn from the Crown-Jewel projects when role-relevant: AppExchange managed package, Agentforce/REST API, Cloud Infrastructure Stack (41 resources), AI-Powered Document Generation Pipeline.\n- Each sentence MUST add NEW information — no paraphrased repeats of P1 or other P2 sentences.\n\nP3 — EXACTLY 3 OR 4 ATOMIC SENTENCES (target 40–60 words). Do NOT collapse multiple ideas into one sentence — each idea gets its own sentence:\n- Sentence 1 (availability — REQUIRED, MUST stand alone): one full sentence stating WHEN you can start with a concrete number or date. DE examples: \"Ich bin ab sofort für eine Vollzeitstelle verfügbar.\", \"Als Werkstudent kann ich 20 Stunden/Woche während des Semesters und bis zu 40 Stunden/Woche in den Semesterferien einbringen.\", \"Ich bin ab Oktober 2026 für eine Vollzeitstelle verfügbar.\", \"Für ein 3–6-monatiges Praktikum stehe ich kurzfristig zur Verfügung.\". Pick what fits.\n- Sentence 2 (location — REQUIRED, MUST stand alone): one full sentence about working location, naming the JD city if known. DE example: \"Mein Wohnsitz in Hessen ermöglicht sowohl Vor-Ort-Arbeit in München als auch Remote-Tätigkeit.\" EN example: \"I am open to on-site work in [JD city] as well as remote collaboration within Germany.\". Do NOT combine sentence 1 and 2 into one.\n- Sentence 3 (close — REQUIRED, MUST stand alone): one full sentence inviting next steps. DE: \"Über die Möglichkeit eines persönlichen Gesprächs würde ich mich freuen.\" or \"Gerne bespreche ich mit Ihnen die nächsten Schritte.\" or \"Ich freue mich auf Ihre Rückmeldung.\"  EN: \"I look forward to discussing how my background fits your team.\" Acceptable variants are short and direct.\n- Optional sentence 4 ONLY for special cases: notice period requested in JD, German-skill acknowledgement when language=\"en\" but German is required, salary expectation if asked.\n- COLLAPSE-CHECK: if your draft has only 2 sentences, you have collapsed availability+location or location+close into one sentence. Split them. Three atomic sentences naturally produce 40+ words.\n\nWORKED EXAMPLES (these hit the target lengths — match this density and structure, never copy verbatim):\n\nDE example for a Cloud/DevOps role —\nP1 (62 words, 4 sentences):\n\"Die Verantwortung für eine Terraform-basierte AWS-Infrastruktur in der CIAM-Domäne deckt sich exakt mit meiner aktuellen Praxis. Mein M.Sc. Global Software Development an der Hochschule Fulda fokussiert auf verteilte Cloud-Architekturen und liefert die methodische Grundlage. Bei MV Clouds betreibe ich eine produktionsreife AWS-Umgebung mit 41 Terraform-verwalteten Ressourcen und einer Jenkins-CI/CD-Pipeline. Diese Erfahrung passt direkt zu Ihrer Stellenausschreibung, da Skalierbarkeit und Betriebsstabilität meine täglichen Aufgaben sind.\"\n\nP2 (94 words, 6 sentences):\n\"Bei MV Clouds habe ich eine Terraform-basierte AWS-Architektur mit 41 verwalteten Ressourcen produktiv aufgebaut, inklusive VPC, RDS und EC2-Komponenten. Parallel habe ich eine Jenkins-CI/CD-Pipeline implementiert, die die durchschnittliche Bereitstellungszeit um etwa 40% reduziert hat. Für Salesforce-Integrationen habe ich REST-APIs entworfen, über die Agentforce-Agenten in Echtzeit mit externen Systemen kommunizieren. Mein AppExchange-Paket erreicht über 85% Apex-Testabdeckung im vollständigen Sicherheitsreview-Zyklus. Diese Skalierungs- und Automatisierungserfahrung deckt sich direkt mit Ihrer Anforderung an stabile, hochverfügbare Cloud-Services. Ergänzend habe ich Docker-Container für lokale Reproduzierbarkeit und Test-Coverage-Reports in den Build integriert.\"\n\nP3 (52 words, 4 sentences):\n\"Ich bin ab sofort für eine Vollzeitstelle verfügbar und kann zum nächstmöglichen Termin beginnen. Mein Wohnsitz in Hessen ermöglicht sowohl Vor-Ort-Arbeit in München als auch Remote-Tätigkeit. Über die Möglichkeit eines persönlichen Gesprächs würde ich mich freuen. Gerne bespreche ich mit Ihnen die konkreten nächsten Schritte im Bewerbungsprozess.\"\n\nEN example for a React/Full-stack Werkstudent role —\nP1 (61 words, 4 sentences):\n\"Designing customer-facing UI features for the GTM Planning Solution maps directly to my recent React and TypeScript work. My M.Sc. in Global Software Development at Hochschule Fulda emphasises production-grade frontend systems within distributed teams. At MV Clouds I have built and shipped Lightning Web Components running in regulated enterprise environments. The role's emphasis on scalable UI in an agile team mirrors what I have been delivering.\"\n\nP2 (93 words, 6 sentences):\n\"At MV Clouds I built and published a managed AppExchange package, enforcing 85%+ Apex test coverage through automated CI gates. In parallel I owned a Jenkins CI/CD pipeline that reduced average deployment time by approximately 40% for the team. For my University Marketplace project I implemented React with TypeScript end-to-end, delivering responsive interfaces and real-time updates. The Real-Time Spatial Communication Platform shipped a WebRTC mesh network running at a 20 Hz refresh rate. These projects map directly to the GTM Planning Solution's UI scalability and React/TypeScript stack requirements.\"\n\nP3 (49 words, 4 sentences):\n\"I am available 20 hours per week during the semester and up to 40 hours per week during semester breaks. I am open to on-site work in Walldorf as well as remote collaboration within Germany. I look forward to discussing how my background fits your team. I can start within two weeks.\"\n\nThese examples meet the targets without padding. Match this density.\n\nSTRICT:\n- No clichés. Hard-banned English phrases: \"passionate\", \"excited\", \"team player\", \"fast learner\", \"driven\", \"I am writing to apply\", \"I would like to apply\", \"dynamic environment\", \"cutting-edge\", \"proven track record\", \"hit the ground running\", \"think outside the box\", \"results-oriented\", \"self-starter\", \"synergy\".\n- Hard-banned German phrases (substring match — the ban applies even when the phrase is embedded in a longer sentence): \"hochmotiviert\", \"bringe ich\" (in any form including \"bringe ich mit\", \"bringe ich über X mit\", \"bringe ich Erfahrung mit\"; rephrase as \"Ich habe…\" or \"Mit X verfüge ich über…\"), \"dynamisches Umfeld\", \"Herausforderung\" as filler, \"Teamplayer\", \"Hands-on-Mentalität\", \"hands-on experience\" (English equivalent — also banned in EN letters), \"Ich bewerbe mich\" (in any form: \"Ich bewerbe mich hiermit\", \"Ich bewerbe mich um die Position/Stelle\", \"Ich bewerbe mich auf die Position/Stelle\"), \"Hiermit bewerbe ich mich\", \"Ich möchte mich\" (when followed by \"um/auf die Position/Stelle bewerben\"), \"mit großem Interesse\", \"Quereinsteiger\" as filler.\n- DE COVER LETTER OPENERS: P1 MUST open with a JD-specific concrete hook — a product name, team, technology, problem, or quoted mission phrase — never with a generic self-application sentence (\"Ich bewerbe mich…\", \"Ich möchte mich…\", \"Hiermit…\"). Examples of good openers: \"Skalierbare Salesforce-Architekturen für ein wachsendes EMEA-Team — genau hier setze ich an, weil…\", \"AWS-Infrastruktur für CIAM auf Enterprise-Niveau zu betreuen, deckt sich exakt mit meiner aktuellen Praxis bei MV Clouds.\", \"Die GTM Planning Solution mit React und TypeScript weiterzuentwickeln, passt direkt zu meinem laufenden M.Sc.-Projekt an der Hochschule Fulda.\"\n- If you catch yourself writing one of these, rewrite the sentence with a concrete detail instead.\n- No greetings, no date, no subject line, no sign-off\n- No repetition of resume bullets\n- Avoid generic statements\n- Each sentence must add value\n- If job requires German and resume does not show it → do NOT claim German skills\n\nTONE & REGISTER:\n- If language=\"de\": use formal \"Sie\" throughout. Restrained, precise, confident. Avoid colloquialisms. Do not translate English idioms literally.\n- If language=\"en\" AND the company reads like a startup (small team, fast-paced, product-led, YC/Series A wording in JD): warmer, more direct voice. First-person \"I\" is fine. One sentence may show personality.\n- If language=\"en\" AND the company reads like enterprise (DAX/Fortune-style, formal JD, compliance/governance mentions, \"we are seeking\"): measured, professional register. No contractions. Keep personality restrained.\n- If unsure which English register: default to enterprise/professional.\n- NEVER mix registers inside one letter.\n\n========================\nOUTPUT FORMAT (STRICT JSON)\n========================\n\n{\n  \"language\": \"de or en — based on JD language detection\",\n  \"patch\": {\n    \"jobTitle\": \"string (omit if unchanged)\",\n    \"profile\": \"<p>...</p> (omit if no improvement)\",\n    \"showCertificates\": false,\n    \"work\": [\n      {\n        \"id\": \"existing-id\",\n        \"description\": \"<ul><li><p>...</p></li></ul>\"\n      }\n    ],\n    \"skills\": [\n      {\n        \"id\": \"existing-id\",\n        \"skill\": \"renamed category label (omit if Salesforce role or label is still appropriate)\",\n        \"infoHtml\": \"<p>Tool A, Tool B, Tool C, Tool D</p>\"\n      }\n    ],\n    \"showProjects\": false,\n    \"projects\": [\n      {\n        \"id\": \"existing-id\",\n        \"name\": \"optional rename (omit if unchanged)\",\n        \"techStack\": \"optional reorder of existing techStack (omit if unchanged)\",\n        \"description\": \"<ul><li><p>...</p></li></ul>\"\n      }\n    ]\n  },\n  \"coverLetter\": {\n    \"paragraph1\": \"Opening paragraph: state role, company, MSc Hochschule Fulda, strong hook\",\n    \"paragraph2\": \"Evidence paragraph: 2-3 concrete skills/outcomes with technologies and results\",\n    \"paragraph3\": \"Closing paragraph: availability, job type fit, confident direct closing\"\n  }\n}\n\nCRITICAL: coverLetter MUST be an object with exactly 3 keys: paragraph1, paragraph2, paragraph3.\nEach value is a plain text string (one paragraph). Do NOT return coverLetter as a single string.\n\n========================\nSELF-CHECK BEFORE EMITTING JSON\n========================\n\nBefore you output, silently verify:\n1. Every \\`id\\` in \\`patch.work\\`, \\`patch.skills\\`, and \\`patch.projects\\` appears in the input RESUME block.\n2. No tool, technology, or domain appears in the output that is not present in the input resume.\n3. \\`coverLetter\\` is an OBJECT with exactly three keys: \\`paragraph1\\`, \\`paragraph2\\`, \\`paragraph3\\` — each a non-empty string.\n4. \\`language\\` is exactly \"de\" or \"en\" and matches the detected JD language per the LANGUAGE DETECTION rules.\n5. No banned cliché phrase from the anti-cliché list appears in any paragraph.\n6. At least one quantitative metric appears in the Work section (if any work entries are present in the patch) and in cover letter P2.\n7. For Salesforce JDs: AppExchange + Agentforce bullets are in the top 3 of the relevant work entry.\n8. JSON is valid and parseable — no trailing commas, no comments, no text outside the JSON object.\n9. Word counts: P1 ∈ [50,70], P2 ∈ [80,110], P3 ∈ [40,60]. Count each paragraph's words. If any paragraph is below the floor, expand it per the regeneration guidance in the COVER LETTER RULES — never emit a short paragraph.\n10. Projects gate: if \\`showProjects\\` is false, verify that ZERO projects in the resume share ANY tech stack keyword OR domain word with the JD. If even one match exists, set \\`showProjects: true\\` and include the top 1–3 in \\`patch.projects\\` per the HARD MAPPINGS.\n11. Certificates gate: if the JD mentions any of {Salesforce, Apex, Lightning, LWC, CRM, SOQL, Sales Cloud, Service Cloud, Data Cloud, Experience Cloud, Agentforce, Flow, AppExchange}, then \\`showCertificates\\` MUST be true (or omitted). It is NEVER false for a Salesforce role.\n12. Language gate: if language=\"de\" was chosen from an English-written JD, verify the JD body contains at least one HARD German requirement phrase from the LANGUAGE DETECTION rule 2 list. A \"German is a plus / nice to have / wünschenswert\" clause is NOT enough — in that case set language=\"en\".\n13. Profile MSc gate: the first sentence of \\`patch.profile\\` MUST contain \"Hochschule Fulda\" (or \"M.Sc. Global Software Development\"). If the patched profile omits this anchor, rewrite the first sentence to include it before emitting.\n14. Cover-letter opener gate: P1 must NOT start with any banned application opener (\"Ich bewerbe mich…\", \"Ich möchte mich…\", \"Hiermit…\", \"I am writing to apply\", \"I would like to apply\"). If it does, rewrite the first sentence into a JD-specific concrete hook before emitting.\n15. Sentence count gate: P1 has 4–5 sentences, P2 has 5–7 sentences, P3 has 3–4 sentences. Count by terminal punctuation (.!?). If a paragraph has fewer sentences than the floor, add another concrete content sentence per the COVER LETTER RULES — never emit a short paragraph.\n16. Banned-substring gate: scan all three paragraphs for any banned-phrase substring (e.g., \"bringe ich\", \"Ich bewerbe mich\", \"hochmotiviert\", \"passionate\", \"excited\", \"team player\"). If ANY hit, rewrite the offending sentence with a concrete claim instead.\n17. Metric retention gate: every numeric metric present in the relevant work entry of the input RESUME (percentages, counts like \"41\", time reductions like \"40%\", scores like \"95+\", refresh rates like \"20Hz\") MUST appear either in patch.work OR in coverLetter.p2 — not be silently dropped. For Cloud/DevOps roles specifically, \"41\" (resources) AND \"40%\" (deployment time) MUST both surface in p2 or work bullets when the JD touches AWS/Terraform/CI-CD.\n\nIf any check fails, fix silently before emitting.\n\n========================\nFINAL RULES\n========================\n\n- Always make at least one meaningful improvement if possible\n- Only return an empty patch if absolutely no improvement can be made\n- Ensure JSON is valid and parseable\n- Do not include any text outside the JSON object`;\n\n// ===== User Message =====\nconst workFormatted = workClean.map(w =>\n  `[ID: ${w.id}]\\n${w.employer} — ${w.jobTitle} (${w.startDate}–${w.endDate})\\n` +\n  w.description.split(/\\n+/).filter(s => s.trim()).map(b => `  • ${b.trim()}`).join('\\n')\n).join('\\n\\n');\n\nconst skillsFormatted = skillsClean.map(s =>\n  `[ID: ${s.id}] ${s.skill}: ${s.details}`\n).join('\\n');\n\nconst projectsClean = (item.resume?.currentProjects || []).map(p => ({\n  ...p,\n  description: stripHtml(p.description),\n}));\n\nconst projectsFormatted = projectsClean.map(p =>\n  `[ID: ${p.id}] ${p.name} — ${p.techStack || 'n/a'}\\n` +\n  p.description.split(/\\n+/).filter(s => s.trim()).map(b => `  • ${b.trim()}`).join('\\n')\n).join('\\n\\n');\n\nconst userMsg = `RESUME:\nTitle: ${item.resume?.currentJobTitle || ''}\nProfile: ${stripHtml(item.resume?.currentProfile || '')}\n\nWork Experience:\n${workFormatted}\n\nSkills:\n${skillsFormatted}\n\nProjects:\n${projectsFormatted}\n\nJOB DETAILS:\nRole: ${item.title}\nCompany: ${item.company}\nLocation: ${item.location}\nSeniority: ${item.seniority || 'unspecified'}\nType: ${item.matchResult?.jobType || 'unknown'}\n\nJOB DESCRIPTION:\n${jdImportant}`;\n\n// ===== Final Output =====\nreturn {\n  json: {\n    ...item,\n    _openAIBody: {\n      model: $('1. Manual Configuration').first().json.openaiModel || 'gpt-4o-mini',\n      temperature: 0.3,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg },\n      ],\n    },\n  },\n};"
       },
-      "id": "981a1320-56e2-4293-930f-e2d5a8ab8930",
+      "id": "fa549e1b-a6d6-4206-b638-6c63092d781c",
       "name": "13a. Build Tailor Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        64816,
-        15688
+        69328,
+        18392
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions/",
+        "url": "https://api.openai.com/v1/chat/completions",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "openAiApi",
         "sendBody": true,
@@ -365,7 +365,7 @@
           "timeout": 90000
         }
       },
-      "id": "ebb32fae-2cde-4414-83b6-cc53f7eddb8e",
+      "id": "25e439ac-d10f-47e9-bc50-5fa5895e3a2b",
       "name": "13b. OpenAI API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -373,8 +373,8 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        65264,
-        15688
+        69776,
+        18392
       ],
       "credentials": {
         "openAiApi": {
@@ -389,13 +389,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// Single combined AI call returns both patch and coverLetter\n\n// Current item = OpenAI HTTP response for this job\nconst aiResponse = $json;\n\n// Original job from 13a, matched by index\nconst jobData = $('13a. Build Tailor Prompt').item.json;\n\nlet patch = {};\nlet coverLetter = '';\nlet language = 'de';\n\ntry {\n  if (!aiResponse?.choices?.[0]?.message?.content) {\n    throw new Error('No choices in AI response — possible rate limit or API error');\n  }\n  const result = JSON.parse(aiResponse.choices[0].message.content);\n  patch = result.patch || {};\n  coverLetter = result.coverLetter || '';\n  language = result.language === 'en' ? 'en' : 'de';\n\n  // ===== Structural Validation =====\n  // Reject patches that will produce weak resumes — catch before wasting PDF generation\n  const validationErrors = [];\n\n  // Must have work AND skills — profile-only patches produce generic resumes\n  const hasWork = Array.isArray(patch.work) && patch.work.length > 0;\n  const hasSkills = Array.isArray(patch.skills) && patch.skills.length > 0;\n  if (!hasWork) validationErrors.push('patch.work is missing or empty');\n  if (!hasSkills) validationErrors.push('patch.skills is missing or empty');\n\n  // Work entries must have id and non-empty description\n  if (hasWork) {\n    for (const w of patch.work) {\n      if (!w || typeof w !== 'object') {\n        validationErrors.push('work contains non-object entry');\n        continue;\n      }\n      if (!w.id) validationErrors.push('work entry missing id');\n      if (!w.description || w.description.trim().length < 20) {\n        validationErrors.push('work entry ' + (w.id || '?') + ' has empty/trivial description');\n      }\n    }\n  }\n\n  // Skill entries must have id and non-empty infoHtml\n  if (hasSkills) {\n    for (const s of patch.skills) {\n      if (!s || typeof s !== 'object') {\n        validationErrors.push('skills contains non-object entry');\n        continue;\n      }\n      if (!s.id) validationErrors.push('skill entry missing id');\n      if (!s.infoHtml || s.infoHtml.trim().length < 5) {\n        validationErrors.push('skill entry ' + (s.id || '?') + ' has empty/trivial infoHtml');\n      }\n    }\n  }\n\n  if (validationErrors.length > 0) {\n    patch._error = 'Structural validation failed: ' + validationErrors.join('; ');\n  }\n} catch (err) {\n  patch = { _error: 'AI parse failed: ' + err.message };\n  coverLetter = '';\n}\n\nlet paragraph1 = '';\nlet paragraph2 = '';\nlet paragraph3 = '';\nlet _coverLetterWarning = '';\n\nif (typeof coverLetter === 'object' && coverLetter !== null) {\n  // New structured format: { paragraph1, paragraph2, paragraph3 }\n  paragraph1 = (coverLetter.paragraph1 || '').trim();\n  paragraph2 = (coverLetter.paragraph2 || '').trim();\n  paragraph3 = (coverLetter.paragraph3 || '').trim();\n\n  if (!paragraph1 || !paragraph2 || !paragraph3) {\n    _coverLetterWarning = 'Cover letter object missing one or more paragraph fields';\n  }\n} else if (typeof coverLetter === 'string' && coverLetter.length > 0) {\n  // Legacy fallback: single string with \\n\\n separators\n  const rawParts = coverLetter\n    .split(/\\n\\n+/)\n    .map(p => p.trim())\n    .filter(p => p.length > 0);\n\n  paragraph1 = rawParts[0] || '';\n  paragraph2 = rawParts[1] || '';\n  paragraph3 = rawParts[2] || '';\n\n  if (rawParts.length < 3) {\n    _coverLetterWarning = `Cover letter has ${rawParts.length} paragraph(s), expected 3`;\n    // Sentence-split recovery for legacy single-block responses\n    if (rawParts.length === 1 && rawParts[0].length > 100) {\n      const sentences = rawParts[0].split(/(?<=[.!?])\\s+(?=[A-Z\\u00C4\\u00D6\\u00DC])/);\n      if (sentences.length >= 3) {\n        const third = Math.floor(sentences.length / 3);\n        const p1 = sentences.slice(0, third).join(' ');\n        const p2 = sentences.slice(third, third * 2).join(' ');\n        const p3 = sentences.slice(third * 2).join(' ');\n        if (p1.length >= 40 && p2.length >= 40 && p3.length >= 40) {\n          paragraph1 = p1;\n          paragraph2 = p2;\n          paragraph3 = p3;\n          _coverLetterWarning += ' — recovered via sentence split (legacy format)';\n        }\n      }\n    }\n  }\n} else {\n  _coverLetterWarning = 'AI returned empty cover letter';\n}\n\n\n// ===== Quality Flag =====\n// Detect signs of weak fit based on patch content\nlet _qualityFlag = 'Good Fit';\n\nif (patch._error) {\n  _qualityFlag = 'Error';\n} else {\n  // Check if skill categories were renamed to non-tech domains\n  const NON_TECH_DOMAINS = /\\bsales\\b|\\bmarketing\\b|\\blogistics\\b|\\bhr\\b|\\bhuman\\s*resource\\b|\\bcustomer\\s*service\\b|\\baccounting\\b|\\bfinance\\b|\\bbusiness\\s*development\\b/i;\n  const SALESFORCE_PATTERN = /salesforce/i;\n  const renamedSkills = (patch.skills || [])\n    .filter(s => s.skill)\n    .map(s => s.skill);\n  const hasFabricatedSkills = renamedSkills.some(name =>\n    NON_TECH_DOMAINS.test(name) && !SALESFORCE_PATTERN.test(name)\n  );\n\n  if (hasFabricatedSkills) {\n    _qualityFlag = 'Bad Fit';\n  } else if (_coverLetterWarning && _coverLetterWarning.includes('sentence split')) {\n    _qualityFlag = 'Review';\n  }\n\n  // Check if AI actually tailored work and skills (not just title/profile)\n  const hasWorkChanges = Array.isArray(patch.work) && patch.work.length > 0;\n  const hasSkillChanges = Array.isArray(patch.skills) && patch.skills.length > 0;\n  if (_qualityFlag === 'Good Fit' && (!hasWorkChanges || !hasSkillChanges)) {\n    _qualityFlag = 'Review';\n  }\n}\n\nreturn {\n  json: {\n    patch,\n    coverLetter,\n    language,\n    paragraph1,\n    paragraph2,\n    paragraph3,\n    _coverLetterWarning,\n    _qualityFlag,\n    job: {\n      source:          jobData.source || '',\n      title:           jobData.title || '',\n      company:         jobData.company || '',\n      location:        jobData.location || '',\n      url:             jobData.url || '',\n      applyUrl:        jobData.applyUrl || '',\n      postedAt:        jobData.postedAt || '',\n      salary:          jobData.salary || '',\n      jobType:         jobData.matchResult?.jobType || 'unknown',\n      matchConfidence: jobData.matchResult?.confidence || 0,\n      matchReason:     jobData.matchResult?.reason || '',\n    },\n  },\n};"
       },
-      "id": "8d5c0e32-e475-4f4c-8ac3-bb1229ba14de",
+      "id": "fffd66d2-c420-41e0-aae3-0b9eee3d5a34",
       "name": "14. Parse AI Patch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        65488,
-        15688
+        70000,
+        18392
       ]
     },
     {
@@ -409,13 +409,13 @@
           "timeout": 60000
         }
       },
-      "id": "e0bf79af-50ff-425f-a390-e700d7924adf",
+      "id": "82e4c44a-faec-45bb-983b-83562935d2da",
       "name": "15a. POST Generate Resume PDF",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        65712,
-        15520
+        70224,
+        18224
       ],
       "continueOnFail": true
     },
@@ -423,13 +423,13 @@
       "parameters": {
         "jsCode": "const patchItems = $('14. Parse AI Patch').all();\nconst inputs = $input.all();\n\n// Capture error details from failed PDF calls\nconst errorItems = inputs.filter(i => i.json.error || (i.json.statusCode && i.json.statusCode >= 400));\nconst pdfErrorMsg = errorItems.map(e => e.json.error?.message || e.json.message || JSON.stringify(e.json.error || '')).filter(Boolean).join('; ');\n\n// Build lookup maps by jobId — immune to index shifts from failed PDF calls\nconst resumeByJobId = new Map();\nconst coverByJobId = new Map();\nfor (const item of inputs) {\n  const fn = item.json.fileName || '';\n  const jid = item.json.jobId || '';\n  if (!jid) continue;\n  if (fn.startsWith('resume')) resumeByJobId.set(jid, item);\n  else if (fn.startsWith('coverletter')) coverByJobId.set(jid, item);\n}\n\nconst now = new Date();\nconst dateStr = now.toISOString().slice(0, 10);\n\nreturn patchItems.map((item) => {\n  const patchData = item.json;\n  const jobUrl = patchData.job?.url || '';\n  const resumeItem = resumeByJobId.get(jobUrl) || { json: {} };\n  const coverItem = coverByJobId.get(jobUrl) || { json: {} };\n\n  return {\n    json: {\n      Date:                dateStr,\n      Company:             patchData.job?.company          || '',\n      Role:                patchData.job?.title            || '',\n      'Job Type':          patchData.job?.jobType          || '',\n      Location:            patchData.job?.location         || '',\n      Source:              patchData.job?.source           || '',\n      'Job URL':           patchData.job?.url ? '=HYPERLINK(\"' + patchData.job.url.replace(/\"/g, '\"\"') + '\",\"View Job\")' : '',\n      'Apply URL':         patchData.job?.applyUrl ? '=HYPERLINK(\"' + patchData.job.applyUrl.replace(/\"/g, '\"\"') + '\",\"Apply\")' : '',\n      'Raw URL':           patchData.job?.url || '',\n      'Match Confidence':  patchData.job?.matchConfidence  || 0,\n      'Match Reason':      patchData.job?.matchReason      || '',\n      'Resume File':       resumeItem.json.file            || '',\n      'Cover Letter File': coverItem.json.file             || '',\n      Status:              (resumeItem.json.success && coverItem.json.success) ? 'Generated' : 'PDF Failed',\n      Applied:             'No',\n      Response:            '',\n      Interview:           '',\n      Notes:               patchData.patch?._error || pdfErrorMsg || patchData._coverLetterWarning || '',\n      Quality:             patchData._qualityFlag  || 'Unknown',\n    },\n  };\n});"
       },
-      "id": "12fc484a-aa05-4b36-af27-29b9e1a97825",
+      "id": "92eaed13-f97e-4965-87a4-c32cf0b117e0",
       "name": "16. Prepare Sheet Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        66160,
-        15688
+        70672,
+        18392
       ]
     },
     {
@@ -629,13 +629,13 @@
         },
         "options": {}
       },
-      "id": "3f820058-e72e-4e70-b85a-c95c7ccf6ac0",
+      "id": "3a5ee8bf-bb80-42ff-a515-ed54309e83e2",
       "name": "17. Log to Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        66384,
-        15880
+        70896,
+        18584
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -649,13 +649,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const jobData = $json;\nconst now = new Date();\n\n// Sentinel: no new jobs today\nif (jobData.skipped) {\n  return {\n    json: {\n      Date:               now.toISOString().slice(0, 10),\n      Company:            '',\n      Role:               '',\n      'Job Type':         '',\n      Location:           '',\n      Source:             '',\n      'Job URL':          '',\n      'Apply URL':        '',\n      'Match Confidence': 0,\n      'Match Reason':     '',\n      'Resume File':      '',\n      'Cover Letter File': '',\n      Status:             'No New Jobs',\n      Applied:            'N/A',\n      Response:           '',\n      Interview:          '',\n      Notes:              jobData.message || '',\n      Quality:            'N/A',\n    }\n  };\n}\n\nconst isPreFilter = !!jobData._preFilterReject;\nconst isApiError = !!jobData.matchResult?._apiError;\nconst isSentinel = !!jobData._pipelineSentinel;\n\nif (isSentinel) {\n  return {\n    json: {\n      Date:               now.toISOString().slice(0, 10),\n      Company:            '',\n      Role:               '',\n      'Job Type':         '',\n      Location:           '',\n      Source:             '',\n      'Job URL':          '',\n      'Apply URL':        '',\n      'Match Confidence': 0,\n      'Match Reason':     '',\n      'Resume File':      '',\n      'Cover Letter File': '',\n      Status:             jobData.error ? 'Pipeline Error' : 'No New Jobs',\n      Applied:            'N/A',\n      Response:           '',\n      Interview:          '',\n      Notes:              jobData.message || '',\n      Quality:            'N/A',\n    }\n  };\n}\n\nreturn {\n  json: {\n    Date:               now.toISOString().slice(0, 10),\n    Company:            jobData.company || '',\n    Role:               jobData.title || '',\n    'Job Type':         jobData.matchResult?.jobType || '',\n    Location:           jobData.location || '',\n    Source:             jobData.source || '',\n    'Job URL':          jobData.url ? '=HYPERLINK(\"' + jobData.url.replace(/\"/g, '\"\"') + '\",\"View Job\")' : '',\n    'Apply URL':        jobData.applyUrl ? '=HYPERLINK(\"' + jobData.applyUrl.replace(/\"/g, '\"\"') + '\",\"Apply\")' : '',\n    'Raw URL':          jobData.url || '',\n    'Match Confidence': jobData.matchResult?.confidence || 0,\n    'Match Reason':     jobData.matchResult?.reason || (isPreFilter ? 'Pre-filter reject' : ''),\n    'Resume File':      '',\n    'Cover Letter File': '',\n    Status:             isApiError ? 'Manual Review - API Error' : isPreFilter ? 'Skipped - Pre-Filter Reject' : 'Skipped - No Match',\n    Applied:            isApiError ? '' : 'N/A',\n    Response:           '',\n    Interview:          '',\n    Notes:              jobData._skipReason || jobData.matchResult?.reason || '',\n    Quality:            isApiError ? 'Manual Review' : isPreFilter ? 'Pre-Filter Reject' : 'Skipped',\n  }\n};"
       },
-      "id": "f28b27b9-c216-46de-ba25-1f086c38bfe6",
+      "id": "238cc0d4-d875-4b9a-b438-edba6abade10",
       "name": "18a. Prepare Skip Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        64816,
-        15904
+        69328,
+        18608
       ]
     },
     {
@@ -855,13 +855,13 @@
         },
         "options": {}
       },
-      "id": "4777e983-f679-4ade-a9cd-3a159f7490c6",
+      "id": "2a79cc91-a8f2-4727-ae1c-11775fb2d529",
       "name": "18b. Log Skipped to Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        65040,
-        15904
+        69552,
+        18608
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -884,10 +884,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        61232,
-        15664
+        65744,
+        18368
       ],
-      "id": "9e50d63d-d0f2-4b94-bcdb-9ba5a7a72a7c",
+      "id": "e22b3d07-7e69-4f10-a75d-ce88eb821497",
       "name": "2c. Scrape StepStone",
       "credentials": {
         "apifyApi": {
@@ -911,10 +911,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        61232,
-        15856
+        65744,
+        18560
       ],
-      "id": "9bb24910-9eb9-487e-8b9c-d1d546aa32f9",
+      "id": "b30fd7e8-a397-41e8-bd1f-c99c49fcaaf0",
       "name": "2d. Scrape Glassdoor",
       "credentials": {
         "apifyApi": {
@@ -938,10 +938,10 @@
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
       "position": [
-        61232,
-        16048
+        65744,
+        18752
       ],
-      "id": "78f8a361-5b17-4cff-8b6d-47bb24feb31e",
+      "id": "8ff2d637-a22b-4378-a659-88c7f716bed7",
       "name": "2e. Scrape Xing",
       "credentials": {
         "apifyApi": {
@@ -962,13 +962,13 @@
           "timeout": 60000
         }
       },
-      "id": "76b811cf-828b-4c65-a818-0c689dbaf812",
+      "id": "309c4b28-9242-4213-9210-f212672ea913",
       "name": "15b. POST Generate Cover Letter PDF",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        65712,
-        15712
+        70224,
+        18416
       ],
       "continueOnFail": true
     },
@@ -979,10 +979,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        62800,
-        15880
+        67312,
+        18584
       ],
-      "id": "5ee3f24e-9e4c-4b5a-bd53-164c6759fb2e",
+      "id": "d32bc06e-bc67-4a3f-a290-5f6197c85792",
       "name": "9. Loop Over Items"
     },
     {
@@ -992,10 +992,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        63472,
-        15736
+        67984,
+        18440
       ],
-      "id": "44657114-3be5-448c-a914-fd427c89ab01",
+      "id": "84c84b2a-807a-4af1-b93c-2be0a62afe13",
       "name": "10b. Wait",
       "webhookId": "4798fc68-5ccc-4194-8beb-8cf9be816efc"
     },
@@ -1015,7 +1015,7 @@
           "timeout": 30000
         }
       },
-      "id": "81a38278-3448-4713-9a43-a1bc26cfb05e",
+      "id": "12456185-895c-4d14-983c-e28d21f2c6cd",
       "name": "10c. Gemini API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -1023,8 +1023,8 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        63696,
-        15736
+        68208,
+        18440
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -1058,13 +1058,13 @@
         },
         "options": {}
       },
-      "id": "c53cbdeb-880e-43e6-97bf-2d3dbd79a7bb",
+      "id": "037390e4-90d0-4aa2-a0e3-b336d6e43196",
       "name": "10a1. Skip Gemini?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        63248,
-        15808
+        67760,
+        18512
       ]
     },
     {
@@ -1074,22 +1074,22 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        65040,
-        15688
+        69552,
+        18392
       ],
-      "id": "a3642fd4-0979-4127-88c1-a1795d56b015",
+      "id": "c284602d-723c-4bb2-b68f-1abe010c02d8",
       "name": "13a1. Wait",
       "webhookId": "26c2d16c-1183-47cb-ba60-9d1e1c290f07"
     },
     {
       "parameters": {},
-      "id": "b7c6c369-ac54-4c32-ace6-56114b4d6485",
+      "id": "ad0d3122-c6d5-48b8-85d0-0c2a47b6662a",
       "name": "15c. Wait for PDFs",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
       "position": [
-        65936,
-        15688
+        70448,
+        18392
       ]
     },
     {
@@ -1116,13 +1116,13 @@
         },
         "options": {}
       },
-      "id": "12f03442-9593-42e2-bf26-94ec90f798a4",
+      "id": "e06d0aa7-4a71-4b23-aa00-874433ed251a",
       "name": "10d. Gemini OK?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        63920,
-        15736
+        68432,
+        18440
       ]
     },
     {
@@ -1141,7 +1141,7 @@
           "timeout": 30000
         }
       },
-      "id": "36ce7ae1-a4e9-4696-9a03-d55c00e44ad9",
+      "id": "513f7814-b6e1-4f05-a637-88369a48e9f4",
       "name": "10e. Fallback Gemini Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -1149,8 +1149,8 @@
       "maxTries": 3,
       "waitBetweenTries": 4000,
       "position": [
-        64144,
-        15808
+        68656,
+        18512
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -1606,7 +1606,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "7c8fb98b-477a-49e3-a790-b77d4e32effd",
+  "versionId": "f269ea01-bac5-49e8-af3b-35ac33d0bb75",
   "meta": {
     "instanceId": "ab1d9b83a326652825b037e9a6d1c825d6bec27701f2a3cac612c5b257bccc08"
   },
