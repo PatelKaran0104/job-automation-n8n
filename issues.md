@@ -54,3 +54,11 @@ Since the workflow was converted to a manual `Run Workflow` trigger, `active: fa
 | 19 | PDF filename collisions on same-day reruns | Resolved — filenames include `HHMMSS` timestamp |
 | 20 | Index-based PDF pairing broke on failure | Resolved — `16. Prepare Sheet Log` uses jobId Map lookup (echoed through `15a/15b` response) |
 | 21 | Tech roles falsely pre-filtered (e.g. "DevOps Engineer - Recruiting Platform") | Resolved — `TECH_SAFEGUARD` regex in `10a` rescues borderline titles |
+
+
+
+Add a manual retry mechanism for failed items:
+1. Create a new node `20. Manual Retry` connected to the error output of `9. Loop Over Items`.
+2. This node will log failed items to a "Retry Queue" tab in the Google Sheet with details (jobId, company, title, error message).
+3. Provide instructions in the sheet for how to trigger retries (e.g. select rows and run a separate n8n workflow that processes the "Retry Queue" items).
+4. This allows manual intervention to reprocess failed items without needing to rerun the entire workflow or fix underlying issues first.
