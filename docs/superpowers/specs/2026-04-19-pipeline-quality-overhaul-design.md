@@ -1,10 +1,11 @@
 # Pipeline Quality Overhaul — Design Spec
 
-**Date:** 2026-04-19
+**Date:** 2026-04-19 (lean revision 2026-04-20)
 **Author:** Brainstorming session with Claude (Opus 4.7)
 **Target pipeline version:** v7
-**Budget:** ~$140–170/month (OpenRouter, ~25 jobs/day)
-**Directive:** Ultra-high-quality output to maximize callback/interview rates. No cost/time/effort constraints.
+**Target audience:** Karan — Salesforce Developer seeking ANY relevant role in Germany (internship / Werkstudent / full-time / remote). 25 jobs/day.
+**Budget:** ~$60–90/month (OpenRouter, ~25 jobs/day).
+**Directive:** Maximize interview callbacks at minimum complexity. Cut anything that doesn't move the needle for a recruiter's 8-second skim at a mid-tier German firm.
 
 ---
 
@@ -25,20 +26,26 @@ Medium failures (banned phrases slipping through, missing skills, generic letter
 
 Each goal below is measurable and has a corresponding acceptance criterion in §12.
 
-- **G1 — Zero hard-fail shipped output.** No letter ships with empty paragraphs, wrong-language bullets, banned-phrase matches, missing skill entries, or unused template seeds, as checked by the pre-critic validator and LLM critic. Measured on the golden set and on the first 25 live jobs.
-- **G2 — Company-awareness.** Every shipped cover letter contains at least one verifiable fact drawn from `evidence_json.safe_facts_to_cite` (high confidence, ≤18 months old, substring-verified against raw scraped text). Measured on every shipped letter.
+- **G1 — Zero hard-fail shipped output.** No letter ships with empty paragraphs, wrong-language bullets, banned-phrase matches, or missing skill entries, as checked by the pre-critic validator and LLM critic. Measured on the golden set and on the first 25 live jobs.
+- **G2 — Keyword-targeted tailoring.** Every shipped resume patch covers ≥80% of hard requirements (weight ≥0.7) identified by the Planner. Measured by pre-critic validator keyword check.
 - **G3 — Full skills coverage with role-fit ordering.** `patch.skills` contains all 6 skill entries (ids preserved verbatim) on every shipped output, reordered such that the most role-relevant group is first. Measured by pre-critic validator.
-- **G4 — Template diversity by construction.** Template uniqueness score ≥70 against the last-5 same-language corpus (see §4.4). Enforced by register-partitioned pools + LRU selection.
-- **G5 — Auto-ship majority.** ≥70% of jobs ship without human review at steady state; the remainder land in the review queue tagged with actionable reason codes (§7.3).
-- **G6 — Measurable interview impact.** v7 must establish a non-zero interview-invite rate within 60 days of cutover. Outcomes tracked per application (§12).
+- **G4 — Auto-ship majority.** ≥70% of jobs ship on pass 1 (no retries needed); the remainder land in the review queue tagged with actionable reason codes (§7.3).
+- **G5 — Measurable interview impact.** v7 must establish a non-zero interview-invite rate within 60 days of cutover. Outcomes tracked per application (§12).
+
+**Explicitly NOT a goal** (dropped from the aggressive v7 draft — see "What we cut and why" below): template-uniqueness scoring across different companies, multi-pass qualitative refinement, voice-consistency scoring, deep company research (GitHub/News), evidenceQuality tag sidecar files. These target a recruiter audience that doesn't exist for the Werkstudent/internship/entry-level German market.
 
 ## Non-Goals
 
 - Switching off n8n orchestration (keep it; extend v6).
 - Writing a custom web UI for the review step (Google Sheet tab suffices).
-- Re-architecting the Express server beyond adding an empty-body guard, an `evidenceQuality` field on `/context`, and serving the pre-critic validator.
-- Agentic web-browsing research (evaluated and rejected — deterministic scraping wins at this volume).
+- Re-architecting the Express server beyond adding an empty-body guard.
+- Agentic web-browsing research (evaluated and rejected).
 - Cloud-based observability (single-user tool; local JSONL logs suffice).
+- Enriched company research (Google News, GitHub org fetch, /about page fetch). Existing Apify scrapers already provide enough company context at zero marginal cost.
+- Template pools / LRU rotation / cosine-similarity uniqueness. Repetition across 25 different employers is invisible; the real risk is *model tics*, which are solved cheaply via 2-3 negative exemplars in the Tailor prompt.
+- Multi-pass qualitative revision. One pass + one mechanical retry + review queue is the ship path.
+- `evidenceQuality` sidecar tag file. Audit is valuable; the tag scaffolding isn't.
+- `voice_consistency` / `template_uniqueness` / composite Critic score. Hard-fails + keyword coverage is all the Critic needs to gate on.
 
 ---
 
@@ -56,7 +63,7 @@ Terms used throughout this spec with precise meaning:
   - `07d4ce0e-0dcf-4193-8425-06a3e01fe20c` — Automation & AI
 - **Banned phrase** — a string or regex in `data/banned-phrases.json` (§6.3). Applies to all languages specified in that file.
 - **Hard-fail** — any of the 6 deterministic checks in §4.3 returning `false`. A hard-failing output cannot ship; it enters revise (pass 1–2) or review (pass 3 or plateau).
-- **Crown-jewel bullet** — a work/project bullet flagged as `tag: "strong"` in `data/evidenceQuality.json` (§5) AND listed in the top 5 of the base-resume audit's "Crown-Jewel Bullets" section. These are pinned-priority evidence for the Tailor.
+- **Crown-jewel bullet** — one of the top 5 bullets identified in the base-resume audit's "Crown-Jewel Bullets" section (§5). These are pinned-priority evidence for the Tailor, embedded directly in the Tailor system prompt as a small list.
 - **Acceptance criterion** — a measurable condition that must hold before the corresponding stage (§10) or KPI (§12) is considered met. Distinct from a "goal" which is aspirational prose.
 
 ---
@@ -73,32 +80,30 @@ Terms used throughout this spec with precise meaning:
          ↓
 [LOOP OVER MATCHED ITEMS — node 9]
          ↓
-[NEW: RESEARCH ENRICHMENT]
-  A. Optional /about page fetch (if companyData thin)
-  B. Google News RSS (last 90d)
-  C. Opportunistic GitHub org fetch
-         ↓
 [NEW: RESEARCH EXTRACTOR — Sonnet 4.6]
+  Input: Apify companyData only (no new enrichment fetches)
   Outputs: evidence_json (structured, provenance-tagged) + evidence_brief (≤200w)
          ↓
-[NEW: PLANNER — Sonnet 4.6 + extended thinking]
+[NEW: PLANNER — Sonnet 4.6]
   Outputs: language_decision, role_classification, ranked_requirements,
-           evidence_mapping, story_angles, must_use_keywords,
-           company_hooks, tone_profile, show_cert/show_proj,
-           risks_to_avoid, plan_confidence
+           evidence_mapping, must_use_keywords, company_hooks,
+           tone_profile, show_cert/show_proj, plan_confidence
          ↓
-[UPGRADED: TAILOR — Opus 4.7, prompt-cached]
-  Inputs: plan + evidence + JD + base_resume + exemplars + pools + seeds + (prior draft + critic feedback on revise)
-  Outputs: resume_patch + 3 paragraphs + requirement_to_evidence_map
-           + structured self_check + coverage_gaps_remaining + template_seeds_used
+[UPGRADED: TAILOR — Opus 4.7, prompt-cached, single-pass]
+  Inputs: plan + evidence + JD + base_resume + 1 exemplar per language + crown-jewel bullets
+  Outputs: resume_patch + 3 paragraphs + requirement_to_evidence_map + self_check
          ↓
-[NEW: CRITIC — Sonnet 4.6]
-  Evaluates 6 hard-fails + 4 soft scores
-  Verdict: ship | revise | review
-  If revise: structured revision_instructions → back to Tailor (max 3 passes, plateau-stop)
+[NEW: PRE-CRITIC VALIDATOR — deterministic code]
+  If FAIL on pass 1 → one auto-retry with surgical instructions → re-run Pre-Critic
+  If FAIL on pass 2 → route to review queue
+  If PASS → Critic
+         ↓
+[NEW: CRITIC — Sonnet 4.6, single-pass]
+  Evaluates 6 hard-fails + requirement_coverage
+  Verdict: ship | review (no revise path; qualitative issues → review)
          ↓
 [GATE ON CRITIC VERDICT]
-  ├ ship → [Resume PDF + Cover Letter PDF] → Log "Generated" row
+  ├ ship → [Resume PDF + Cover Letter PDF] → Log to main tracker (Outcome="No Response")
   └ review → [Log to Review Queue tab with reason_codes — NO PDF]
                          ↓
               [USER edits + Approves in sheet]
@@ -112,12 +117,11 @@ Terms used throughout this spec with precise meaning:
 | Module | Responsibility | Interface in | Interface out |
 |---|---|---|---|
 | Normalize & Merge (v7) | Unify scraper outputs; preserve company data | Raw scraper JSON per source | `{jd, company, url, location, companyData}` |
-| Research Enrichment | Fill gaps in companyData from public sources | `companyData` | Enriched raw-text bundle |
-| Research Extractor | Turn raw text into structured evidence | Raw bundle | `evidence_json`, `evidence_brief` |
+| Research Extractor | Turn raw scraped company data into structured evidence | `companyData` | `evidence_json`, `evidence_brief` |
 | Planner | Decide strategy (what to write) | JD + base_resume + evidence_json | `plan` JSON |
-| Tailor | Write the resume patch + cover letter | plan + evidence + JD + base_resume + [prior + feedback] | `tailor_output` JSON |
-| Critic | Score and verdict | plan + evidence + tailor_output + prior-outputs corpus | `critic_output` JSON |
-| Retry Controller | Enforce pass limits + plateau rule | Critic verdict | `ship` / `revise+feedback` / `review` |
+| Tailor | Write the resume patch + cover letter (single pass) | plan + evidence + JD + base_resume + [prior draft + pre-critic fails on mechanical retry] | `tailor_output` JSON |
+| Pre-Critic Validator | Deterministic mechanical checks; at most one auto-retry | `tailor_output`, `plan` | `pre_critic_ok` + `pre_critic_fails[]` |
+| Critic | Hard-fail + keyword coverage verdict | plan + evidence + tailor_output | `ship` or `review + reason_codes` |
 | Review Queue | Human correction surface | Tailor output + reason codes | Approved edits → PDF trigger |
 | PDF Renderer | Existing Express `/generate-resume` + `/generate-coverletter` | patch + paragraphs + meta | PDF files |
 
@@ -172,20 +176,11 @@ Extend `BOARD_CONFIG` in node 4's Code step to map each source's native fields i
 
 Missing fields become `null`. No new scrapes or API calls at this stage.
 
-#### 1.2 Research Enrichment layer
+#### 1.2 Research Extractor (Sonnet 4.6)
 
-Only fills gaps left by `companyData`:
+**No new enrichment fetches.** The Apify scrapers already provide enough company signal for a recruiter's 8-second skim. Extractor consumes only `companyData` + JD text.
 
-- **A. Domain resolution** — if `companyData.domain` missing, perform a DuckDuckGo query on `company.name` and take the first non-social-media result's domain.
-- **B. About-page fetch** — if `companyData.raw_about_text` is null AND domain is known, fetch `https://{domain}/about` (fallback: `/company`, `/about-us`, homepage). Strip HTML. Cap at 4KB. 15s timeout. Stored on `companyData.raw_about_text`.
-- **C. Google News RSS** — `https://news.google.com/rss/search?q={encodeURI(company.name)}&when:90d`. Parse RSS, keep top 10 items (title + link + published date + snippet). 15s timeout. Stored on `companyData.recent_news_raw`.
-- **D. GitHub org (opportunistic)** — infer org slug from domain. GET `https://api.github.com/orgs/{slug}/repos?sort=updated&per_page=10`. If 404 or empty, skip. Stored on `companyData.github_repos`.
-
-All four sub-steps are parallel HTTP nodes with independent timeouts. Any failure → field stays null, error logged to `companyData._enrichmentErrors`. The pipeline never blocks on research failures.
-
-#### 1.3 Research Extractor (Sonnet 4.6)
-
-Consumes the enriched `companyData` + JD text. Outputs:
+Outputs:
 
 **`evidence_json`** (strict schema):
 
@@ -237,21 +232,20 @@ Consumes the enriched `companyData` + JD text. Outputs:
 
 **Rules hard-coded into the extractor's system prompt:**
 
-- A fact may only appear in `safe_facts_to_cite` if its source `confidence === "high"` AND it is not older than 18 months.
+- A fact may only appear in `safe_facts_to_cite` if it has a concrete Apify-sourced basis AND is not older than 18 months.
 - `soft_signals` must NEVER be quoted directly in cover letters — they inform tone only.
-- If fewer than 3 items land in `safe_facts_to_cite`, set `research_confidence: "low"`.
+- If fewer than 2 items land in `safe_facts_to_cite`, set `research_confidence: "low"` (and the pipeline accepts a generic letter — not every job has enough public signal).
 
-**Model config:** Sonnet 4.6, temperature 0, JSON mode via tool-use. ~3K input + ~800 output tokens per call.
+**Model config:** Sonnet 4.6, temperature 0, JSON mode via tool-use. ~2K input + ~500 output tokens per call (~$0.01).
 
-#### 1.4 Substring verification pass (deterministic, post-extractor)
+#### 1.3 Substring verification pass (deterministic, post-extractor)
 
 After the Sonnet 4.6 extractor returns, a deterministic code step runs **before** the Planner:
 
 ```
-raw_text_corpus := concat(companyData.raw_about_text,
-                          companyData.recent_news_raw.map(n => n.title + n.snippet),
-                          companyData.github_repos.map(r => r.name + r.description),
-                          any other scraped strings on companyData)
+raw_text_corpus := concat of all string fields on companyData
+                   (name, industry, tech_attributes joined, keywords joined,
+                    raw_about_text if present, any description fields)
 
 For each fact in evidence_json.safe_facts_to_cite:
    normalize(fact) := lowercase, strip punctuation, collapse whitespace
@@ -260,11 +254,11 @@ For each fact in evidence_json.safe_facts_to_cite:
       Move fact from safe_facts_to_cite → rejected with reason: "unverified_substring"
       Log warning: { fact, company, extractor_source }
 
-IF safe_facts_to_cite.length < 3 after pruning:
+IF safe_facts_to_cite.length < 2 after pruning:
    Set research_confidence = "low"
 ```
 
-Rationale: the LLM extractor can paraphrase or hallucinate. Substring verification is the cheapest, most reliable guardrail against citing invented company facts in a cover letter — the single most interview-killing failure mode.
+Rationale: the LLM extractor can paraphrase or hallucinate. Substring verification is the cheapest, most reliable guardrail against citing invented company facts — the single most interview-killing failure mode.
 
 Implementation: a small Code node in n8n between the extractor call and the Planner.
 
@@ -279,7 +273,7 @@ The Planner is plan-then-execute for application writing. It pre-chews the JD + 
 #### 2.2 Inputs
 
 - JD full text (from matched job)
-- Base resume context (from `/context`, which now includes `evidenceQuality` tags — see §5)
+- Base resume context (from `/context`)
 - `evidence_json` (from extractor)
 
 #### 2.3 Output schema
@@ -328,10 +322,6 @@ The Planner is plan-then-execute for application writing. It pre-chews the JD + 
     "register": "formal" | "semi-formal" | "startup-casual",
     "rationale": "Glassdoor + careers page signal enterprise formality"
   },
-  "template_sub_pool": {
-    "p1": "formal_de",
-    "p3": "formal_de"
-  },
   "show_certificates": true,
   "show_projects": true,
   "risks_to_avoid": [
@@ -348,14 +338,13 @@ The Planner is plan-then-execute for application writing. It pre-chews the JD + 
 - `ranked_requirements[].weight` drives critic `requirement_coverage` math.
 - `evidence_mapping` binds JD requirements to actual base-resume IDs. Tailor is forbidden from citing evidence outside this list.
 - `must_use_keywords` are ATS-critical. Tailor must include all of them in output.
-- `company_hooks` are drawn exclusively from `evidence_json.safe_facts_to_cite` — never from `soft_signals`.
-- `template_sub_pool` selects which pool partition (by register) Tailor will pick P1/P3 variants from. See §3.3.
+- `company_hooks` are drawn exclusively from `evidence_json.safe_facts_to_cite` — never from `soft_signals`. If research_confidence is "low", company_hooks may be empty (accepted).
 - `risks_to_avoid` are hard negative constraints the Tailor must respect.
 - `plan_confidence: "low"` triggers stricter Critic thresholds and lower auto-ship probability.
 
 #### 2.5 Model config
 
-Claude Sonnet 4.6 with **extended thinking enabled** (`reasoning.effort: "medium"`, ~8–10K reasoning tokens). Temperature 0. Strict JSON output via tool-use.
+Claude Sonnet 4.6. No extended thinking — the schema is structured enough that standard output suffices. Temperature 0. Strict JSON output via tool-use.
 
 #### 2.6 Failure handling
 
@@ -365,7 +354,7 @@ Claude Sonnet 4.6 with **extended thinking enabled** (`reasoning.effort: "medium
 
 #### 2.7 Cost estimate
 
-~5K input + ~1.2K output + ~8K reasoning tokens per plan ≈ $0.04–0.06 per job.
+~4K input + ~1K output per plan ≈ $0.02 per job.
 
 ---
 
