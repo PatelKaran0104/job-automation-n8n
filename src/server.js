@@ -173,6 +173,16 @@ app.post("/generate-resume", async (req, res) => {
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
   const { company, role, jobId } = req.body;
+  const { paragraph1 = "", paragraph2 = "", paragraph3 = "" } = req.body;
+  const bodyText = stripHtml(paragraph1 + paragraph2 + paragraph3);
+  if (bodyText.length === 0) {
+    console.error("[/generate-coverletter] Empty body rejected for", company, role);
+    return res.status(422).json({
+      success: false,
+      error: "Empty cover letter body",
+      reason_code: "EMPTY_BODY",
+    });
+  }
   const output = buildOutputPath({
     kind: "coverletter",
     company,

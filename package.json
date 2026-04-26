@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "test": "node scripts/test.js",
     "test:coverletter": "node scripts/test-coverletter.js",
-    "test:unit": "node --test tests/validatePatch.test.js"
+    "test:unit": "node --test tests/validatePatch.test.js tests/coverletterEmptyBody.test.js"
   },
   "dependencies": {
     "@fontsource/source-serif-pro": "^5.2.5",
