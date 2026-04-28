@@ -1,0 +1,713 @@
+{
+  "name": "Skill Extraction & Demand Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2747b24b-a64c-474c-846e-ed048766c4c9",
+      "name": "Run Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        376
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "se-cfg-01",
+              "name": "linkedInUrl",
+              "value": "https://www.linkedin.com/jobs/search/?keywords=Salesforce%20Developer%20OR%20Software%20Developer%20OR%20Werkstudent%20Softwareentwicklung%20OR%20Junior%20Developer%20OR%20Backend%20Developer%20OR%20Frontend%20Developer%20OR%20Full%20Stack%20Developer%20OR%20DevOps%20Engineer%20OR%20Software%20Engineer&location=Germany&geoId=101282230&f_JT=F%2CP%2CC%2CI&f_E=1%2C2%2C3%2C4&f_TPR=r86400&f_WT=1%2C3%2C2&sortBy=DD&position=1&pageNum=0",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-02",
+              "name": "indeedUrl",
+              "value": "https://de.indeed.com/jobs?q=salesforce+developer+OR+software+developer+OR+werkstudent+softwareentwicklung+OR+junior+developer+OR+backend+developer+OR+frontend+developer+OR+full+stack+developer+OR+devops+engineer+OR+software+engineer&l=Deutschland&fromage=1&sort=date",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-03",
+              "name": "stepstoneUrl",
+              "value": "https://www.stepstone.de/jobs/salesforce-developer",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-04",
+              "name": "XingUrl",
+              "value": "https://www.xing.com/jobs/search?id=4921caec981101172481e48214f3f948&sort=date&employmentType=PART_TIME.58889d*INTERN.dc571c*FULL_TIME.ef2fe9&careerLevel=1.795d28*3.2ebf16",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-05",
+              "name": "jobCount",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "se-cfg-06",
+              "name": "skillExtractionModel",
+              "value": "gpt-5.4-nano",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-07",
+              "name": "openaiModel",
+              "value": "gpt-5.4-mini",
+              "type": "string"
+            },
+            {
+              "id": "se-cfg-08",
+              "name": "outputDir",
+              "value": "/home/node/output/skill-reports",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc5e0d86-9197-467a-b994-bdd1bf08fbfc",
+      "name": "1. Manual Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        376
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/hKByXkMQaC5Qt9UMN/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"count\": {{ $json.jobCount }},\n  \"scrapeCompany\": true,\n  \"urls\": [\"{{ $json.linkedInUrl }}\"]\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        64
+      ],
+      "id": "9f8700bf-8d90-4d12-9f08-64c48cb1b6f9",
+      "name": "2a. Scrape LinkedIn",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/TrtlecxAsNRbKl1na/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"country\": \"de\",\n  \"limit\": {{ $json.jobCount }},\n  \"location\": \"Germany\",\n  \"title\": \"Salesforce Developer OR Software Developer OR Werkstudent Entwickler OR Junior Developer OR Backend Developer OR Frontend Developer OR Full Stack Developer OR DevOps Engineer OR Software Engineer\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        256
+      ],
+      "id": "20ae6954-329f-4bc6-a650-66e397e39913",
+      "name": "2b. Scrape Indeed",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/IGjzUXKHqlsJaT58u/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"employmentType\": [\n    \"PERMANENT_POSITION\",\n    \"FIXED_TERM_CONTRACT\",\n    \"ENTRY_LEVEL_TRAINEE\",\n    \"STUDENT_JOB_WORKING_STUDENT\",\n    \"INTERNSHIP\"\n  ],\n  \"limit\": {{ $json.jobCount }},\n  \"startUrls\": [\n    \"{{ $json.stepstoneUrl }}\"\n  ],\n  \"domain\": \"stepstone.de\",\n  \"distanceFromSource\": \"30\",\n  \"workRemote\": [],\n  \"ApplicationType\": [],\n  \"listingLanguage\": [],\n  \"WorkingHours\": [],\n  \"experience\": [],\n  \"publishedDate\": \"\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        448
+      ],
+      "id": "53c37c5c-a3f5-45eb-9e47-aad29d0a3770",
+      "name": "2c. Scrape StepStone",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/bYSAbQqxwImLaf2nb/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"keywords\": [\n    \"Salesforce Developer\",\n    \"Software Developer\",\n    \"Backend Developer\",\n    \"Frontend Developer\",\n    \"Full Stack Developer\",\n    \"DevOps Engineer\",\n    \"Software Engineer\",\n    \"Junior Developer\",\n    \"Werkstudent Softwareentwicklung\",\n    \"Web Developer\",\n    \"Cloud Engineer\",\n    \"Java Developer\",\n    \"Python Developer\",\n    \"JavaScript Developer\"\n  ],\n  \"location\": \"Germany\",\n  \"country\": \"Germany\",\n  \"datePosted\": \"1\",\n  \"saveOnlyUniqueItems\": true,\n  \"includeNoSalaryJob\": true,\n  \"deepSearch\": true,\n  \"maxItems\": {{ $json.jobCount }}\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        640
+      ],
+      "id": "7686b26f-a1f5-4ce9-972f-d63fb3c3c7ac",
+      "name": "2d. Scrape Glassdoor",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "https://console.apify.com/actors/YGO6eh6ICQXnan9L4/input",
+          "mode": "url"
+        },
+        "customBody": "={\n  \"keyword\": \"Salesforce Developer OR Software Developer OR Backend Developer OR Frontend Developer OR Full Stack Developer OR DevOps Engineer OR Software Engineer OR Junior Developer OR Werkstudent Softwareentwicklung OR Web Developer OR Cloud Engineer OR Java Developer OR Python Developer OR JavaScript Developer\",\n  \"location\": \"Germany\",\n  \"results_wanted\": {{ $json.jobCount }},\n  \"max_pages\": 20\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        832
+      ],
+      "id": "77d8e8e6-78da-4f5f-8a02-b18b97cf0510",
+      "name": "2e. Scrape Xing",
+      "credentials": {
+        "apifyApi": {
+          "id": "A8rjgHHUrR4qejQ1",
+          "name": "Apify account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "71ea5a8c-e0ba-49af-b3a2-fcae5908c0d5",
+      "name": "3. Wait for All Scrapers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// NORMALIZE & DEDUP — copied verbatim from Job_Application_Automator_v6.json\n// To add a new board: add an entry to BOARD_CONFIG, wire the\n// Apify node to this Code node, done. Nothing else changes.\n// ═══════════════════════════════════════════════════════════════\n\nconst BOARD_CONFIG = {\n  '2a. Scrape LinkedIn': {\n    source: 'LinkedIn',\n    fields: {\n      id:          'id',\n      title:       ['title', 'jobTitle'],\n      company:     ['companyName', 'company'],\n      location:    'location',\n      description: ['descriptionText', 'description'],\n      url:         ['link', 'url'],\n      applyUrl:    ['applyUrl', 'link'],\n      postedAt:    'postedAt',\n      salary:      'salary',\n      remote:      'workRemoteAllowed',\n      seniority:   ['seniorityLevel', 'seniority'],\n      country:     'country',\n    }\n  },\n  '2b. Scrape Indeed': {\n    source: 'Indeed',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     'employer.name',\n      location:    ['location.formattedLocation', 'location.city'],\n      description: 'description.text',\n      url:         ['url', 'jobUrl'],\n      applyUrl:    ['url', 'jobUrl'],\n      postedAt:    'datePublished',\n      salary:      null,\n      remote:      null,\n      seniority:   null,\n      country:     'location.countryCode',\n    }\n  },\n  '2c. Scrape StepStone': {\n    source: 'StepStone',\n    fields: {\n      id:          'id',\n      title:       'title',\n      company:     'company_details.company_name',\n      location:    'workplace_details.job_location',\n      description: 'content_details.full_description',\n      url:         'source.url',\n      applyUrl:    'detail_page.applying_details.applying_url',\n      postedAt:    'posting_details.published_at',\n      salary:      'compensation_details.detail_salary',\n      remote:      'workplace_details.work_arrangement',\n      seniority:   null,\n      country:     null,\n    }\n  },\n  '2d. Scrape Glassdoor': {\n    source: 'Glassdoor',\n    fields: {\n      id:          'key',\n      title:       'title',\n      company:     ['company.companyName', 'company.name', 'companyName', 'employer_name', 'employer'],\n      location:    ['location_city', 'location', 'location_country'],\n      description: 'description_text',\n      url:         'jobUrl',\n      applyUrl:    'applyUrl',\n      postedAt:    'datePublished',\n      salary:      null,\n      remote:      'remoteWorkTypes',\n      seniority:   null,\n      country:     null,\n    }\n  },\n  '2e. Scrape Xing': {\n    source: 'Xing',\n    fields: {\n      id:          'job_id',\n      title:       'title',\n      company:     'company',\n      location:    'location',\n      description: 'description_text',\n      url:         'url',\n      applyUrl:    'apply_url',\n      postedAt:    'date_posted',\n      salary:      'salary',\n      remote:      'remote',\n      seniority:   null,\n      country:     'location_country_code',\n    }\n  },\n};\n\nconst ALLOWED_COUNTRIES = new Set(['DE', 'AT', 'CH', 'NL', 'BE', '']);\n\nfunction getNestedValue(obj, path) {\n  if (!path) return undefined;\n  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);\n}\n\nfunction resolveField(obj, mapping) {\n  if (mapping === null || mapping === undefined) return '';\n  if (Array.isArray(mapping)) {\n    for (const path of mapping) {\n      const val = getNestedValue(obj, path);\n      if (val !== undefined && val !== null && val !== '') return val;\n    }\n    return '';\n  }\n  return getNestedValue(obj, mapping) || '';\n}\n\nfunction extractSalary(obj, config) {\n  const raw = resolveField(obj, config.fields.salary);\n  if (raw && typeof raw === 'string' && raw.length > 0) return raw;\n  if (raw && typeof raw === 'object' && raw.min) {\n    const { min, max, currency, currencyIso, period } = raw;\n    return `${currency || currencyIso || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  if (obj.baseSalary && obj.baseSalary.min) {\n    const { min, max, currencyCode, unitOfWork } = obj.baseSalary;\n    return `${currencyCode || ''} ${min}-${max}/${unitOfWork || ''}`.trim();\n  }\n  if (obj.baseSalary_min) {\n    const { baseSalary_min: min, baseSalary_max: max, salary_currency: cur, salary_period: period } = obj;\n    return `${cur || ''} ${min}${max ? `-${max}` : ''}/${period || ''}`.trim();\n  }\n  return '';\n}\n\nfunction extractCompanyFromUrl(url) {\n  if (!url) return '';\n  const glassdoorMatch = String(url).match(/-at-([\\w-]+?)-JV_/i);\n  if (glassdoorMatch) {\n    return glassdoorMatch[1].replace(/-/g, ' ').trim();\n  }\n  return '';\n}\n\nconst jobs = [];\n\nfor (const [nodeName, config] of Object.entries(BOARD_CONFIG)) {\n  let items;\n  try {\n    items = $(nodeName).all();\n  } catch (e) {\n    continue;\n  }\n  if (!items || items.length === 0) continue;\n\n  for (const item of items) {\n    const d = item.json;\n    if (!d || typeof d !== 'object') continue;\n\n    const desc = String(resolveField(d, config.fields.description));\n    if (desc.length < 20) continue;\n\n    const country = String(resolveField(d, config.fields.country) || '').toUpperCase();\n    if (country && !ALLOWED_COUNTRIES.has(country)) continue;\n\n    const rawCompany = String(resolveField(d, config.fields.company));\n    jobs.push({\n      source:      config.source,\n      id:          String(resolveField(d, config.fields.id)),\n      title:       String(resolveField(d, config.fields.title)),\n      company:     rawCompany || extractCompanyFromUrl(resolveField(d, config.fields.url)) || 'Unknown Company',\n      location:    String(resolveField(d, config.fields.location)),\n      description: desc,\n      url:         String(resolveField(d, config.fields.url)),\n      applyUrl:    String(resolveField(d, config.fields.applyUrl)),\n      postedAt:    String(resolveField(d, config.fields.postedAt)),\n      salary:      extractSalary(d, config),\n      remote:      !!resolveField(d, config.fields.remote),\n      seniority:   String(resolveField(d, config.fields.seniority)),\n    });\n  }\n}\n\nconst seen = new Set();\nconst unique = [];\nfor (const job of jobs) {\n  const key = job.url || job.applyUrl || `${job.company}::${job.title}`;\n  if (seen.has(key)) continue;\n  seen.add(key);\n  unique.push(job);\n}\n\nif (unique.length === 0) {\n  return [{ json: { error: 'No valid jobs after normalize + dedup. Check Apify outputs and country filter.', rawCount: jobs.length } }];\n}\n\nreturn unique.map(j => ({ json: j }));"
+      },
+      "id": "4731f05c-7378-4be4-a5c4-e87337617e5d",
+      "name": "4. Normalize & Merge Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3000/context",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e52ecee0-124c-4dc3-b1f7-435167398eda",
+      "name": "5. GET Resume Context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        448
+      ],
+      "executeOnce": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        448
+      ],
+      "id": "470b7b7d-9bf0-41dc-ac4e-d504dabeab61",
+      "name": "6. Loop Over Jobs"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $json;\n\nif (item.skipped || item.error) {\n  return { json: { ...item, _skip: true } };\n}\n\nconst systemPrompt = \"You are a senior tech-recruiting analyst extracting REQUIRED SKILLS from a single job posting.\\n\\nReturn ONLY valid JSON. No prose, no markdown.\\n\\nOutput schema:\\n{\\n  \\\"skills\\\": [\\n    { \\\"name\\\": \\\"...\\\", \\\"tier\\\": 1, \\\"evidence\\\": \\\"verbatim phrase from JD\\\", \\\"category\\\": \\\"language|framework|tool|platform|cloud|database|methodology|soft\\\" }\\n  ]\\n}\\n\\nTIER DEFINITIONS:\\n- Tier 1 (Core): The most common / must-have skills for this role family - listed under explicit hard requirements (\\\"required\\\", \\\"must have\\\", \\\"expert in\\\", \\\"strong knowledge of\\\"), or skills mentioned multiple times across the JD.\\n- Tier 2 (Strong): Less common but clearly valuable - listed under \\\"nice to have\\\", \\\"plus\\\", \\\"preferred\\\", \\\"wuenschenswert\\\", \\\"von Vorteil\\\", or mentioned once but tied to a major responsibility.\\n- Tier 3 (Edge): Rare differentiator - niche tools, certifications, domain-specific terms, or skills mentioned only in passing that signal sophistication.\\n\\nEXTRACTION RULES:\\n- Normalize names: \\\"ReactJS\\\" -> \\\"React\\\", \\\"AWS Cloud\\\" -> \\\"AWS\\\", \\\"K8s\\\" -> \\\"Kubernetes\\\", \\\"Node\\\" -> \\\"Node.js\\\", \\\"TypeScript (TS)\\\" -> \\\"TypeScript\\\".\\n- One entry per distinct skill. Do NOT duplicate.\\n- Skip generic adjectives (\\\"strong\\\", \\\"good\\\", \\\"experienced\\\"); skip company names, benefits, perks, salary.\\n- Skip pure soft skills (\\\"team player\\\", \\\"motivated\\\") UNLESS they are explicitly central to the role - in which case put them in Tier 3.\\n- evidence MUST be a verbatim phrase (<=120 chars) from the JD that triggered the inference. If the JD is in German, evidence stays German.\\n- Cap at 25 skills total per job. Prefer fewer high-quality entries over noise.\\n- If JD is too short or empty, return { \\\"skills\\\": [] }.\";\n\nconst jd = (item.description || '').replace(/<[^>]+>/g, '').replace(/\\s+/g, ' ').trim();\n\nconst userMsg = [\n  'JOB:' ,\n  'Title: ' + (item.title || ''),\n  'Company: ' + (item.company || ''),\n  'Location: ' + (item.location || ''),\n  '',\n  'JOB DESCRIPTION:',\n  jd\n].join('\\n');\n\nreturn {\n  json: {\n    ...item,\n    _openAISkillBody: {\n      model: $('1. Manual Configuration').first().json.skillExtractionModel || 'gpt-5.4-nano',\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ],\n      temperature: 0.2,\n      response_format: { type: 'json_object' }\n    }\n  }\n};"
+      },
+      "id": "edbc11fc-45e1-4080-b3e9-3d26fd689086",
+      "name": "7. Build Skill Extraction Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        208
+      ],
+      "id": "8df369a3-ff77-41c8-8d03-a794a25c6160",
+      "name": "8. Wait (Rate Limit)",
+      "webhookId": "skill-ext-wait-01"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json._openAISkillBody) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "fc48c62a-9e5f-4a92-bf19-c46ec6a4a31e",
+      "name": "9. OpenAI Skill Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 10000,
+      "position": [
+        1024,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wwjiHkXU7KZB6LWb",
+          "name": "OpenAi account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const aiResponse = $json;\nconst jobData = $('7. Build Skill Extraction Prompt').item.json;\nconst { _openAISkillBody, ...cleanJob } = jobData;\n\nif (cleanJob._skip) {\n  return { json: { ...cleanJob, skills_extracted: [], _extractError: false } };\n}\n\nlet skills = [];\nlet extractError = false;\nlet errorMsg = '';\n\ntry {\n  if (aiResponse.error) {\n    extractError = true;\n    errorMsg = 'OpenAI API error: ' + (aiResponse.error.message || 'unknown');\n  } else {\n    const content = aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message && aiResponse.choices[0].message.content;\n    if (!content) throw new Error('No content in OpenAI response');\n    const parsed = JSON.parse(content);\n    skills = (parsed.skills || [])\n      .map(s => ({\n        name: String(s.name || '').trim(),\n        tier: Number(s.tier) || 3,\n        evidence: String(s.evidence || '').slice(0, 200),\n        category: String(s.category || 'tool')\n      }))\n      .filter(s => s.name.length > 1 && [1, 2, 3].includes(s.tier));\n  }\n} catch (err) {\n  extractError = true;\n  errorMsg = 'Parse error: ' + err.message;\n}\n\nreturn {\n  json: {\n    title: cleanJob.title,\n    company: cleanJob.company,\n    location: cleanJob.location,\n    url: cleanJob.url,\n    source: cleanJob.source,\n    skills_extracted: skills,\n    _extractError: extractError,\n    _extractErrorMsg: errorMsg\n  }\n};"
+      },
+      "id": "b757e80f-4dd1-4e7c-9e39-0faa2f0a58ba",
+      "name": "10. Parse Skills",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// The Split in Batches done output contains all parsed skill items.\nconst allItems = $input.all();\n\nconst TIER_WEIGHT = { 1: 3, 2: 2, 3: 1 };\nconst skillStats = {};\n\nlet jobsWithSkills = 0;\nlet jobsErrored = 0;\n\nfor (const it of allItems) {\n  const data = it.json;\n  if (data._extractError) jobsErrored += 1;\n  if (!Array.isArray(data.skills_extracted) || data.skills_extracted.length === 0) continue;\n  jobsWithSkills += 1;\n\n  for (const sk of data.skills_extracted) {\n    const key = sk.name.toLowerCase().trim();\n    if (!skillStats[key]) {\n      skillStats[key] = {\n        name: sk.name,\n        count: 0,\n        weighted: 0,\n        tiers: { 1: 0, 2: 0, 3: 0 },\n        category: sk.category,\n        job_titles: new Set(),\n        sample_evidence: []\n      };\n    }\n    const e = skillStats[key];\n    e.count += 1;\n    e.weighted += TIER_WEIGHT[sk.tier] || 1;\n    e.tiers[sk.tier] = (e.tiers[sk.tier] || 0) + 1;\n    if (data.title) e.job_titles.add(data.title);\n    if (e.sample_evidence.length < 3 && sk.evidence) e.sample_evidence.push(sk.evidence);\n  }\n}\n\nconst ranked = Object.values(skillStats)\n  .map(e => {\n    const t1 = e.tiers[1], t2 = e.tiers[2], t3 = e.tiers[3];\n    const dominantTier = (t1 >= t2 && t1 >= t3) ? 1 : (t2 >= t3 ? 2 : 3);\n    return {\n      ...e,\n      job_titles: Array.from(e.job_titles),\n      dominantTier\n    };\n  })\n  .sort((a, b) => b.weighted - a.weighted || b.count - a.count);\n\nconst top10 = ranked.slice(0, 10);\n\nconst tierBuckets = { 1: [], 2: [], 3: [] };\nfor (const r of ranked) {\n  if (tierBuckets[r.dominantTier].length < 8) {\n    tierBuckets[r.dominantTier].push({\n      name: r.name,\n      count: r.count,\n      weighted: r.weighted,\n      sample_titles: r.job_titles.slice(0, 5)\n    });\n  }\n}\n\nreturn [{\n  json: {\n    total_jobs_analyzed: jobsWithSkills,\n    total_jobs_errored: jobsErrored,\n    total_skills_unique: ranked.length,\n    top10,\n    tierBuckets,\n    fullRanking: ranked.slice(0, 40)\n  }\n}];"
+      },
+      "id": "59b52c73-f032-41c4-8194-4bd47ee43a2b",
+      "name": "11. Aggregate Skills",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const agg = $json;\nconst resumeItem = $('5. GET Resume Context').first();\nconst resume = (resumeItem && resumeItem.json && !resumeItem.json.error) ? resumeItem.json : {};\n\nconst systemPrompt = `You are a senior tech career strategist for a Salesforce / Software Developer based in Germany.\n\nYou will receive (1) the most in-demand skills extracted from a real batch of fresh job postings, ranked by frequency and tier weight, and (2) the candidate's base resume. Produce an actionable upskilling report.\n\nReturn ONLY valid JSON in this EXACT shape (no prose outside the JSON):\n\n{\n  \"top10_recommendations\": [\n    {\n      \"skill\": \"name as it appears in the demand list\",\n      \"why_it_matters\": \"1-2 sentence justification grounded in the demand data\",\n      \"how_to_acquire\": \"CONCRETE plan: name actual courses, certifications, or projects. Include rough time/cost where possible.\"\n    }\n  ],\n  \"tier_summaries\": {\n    \"tier1\": \"1-2 sentence summary describing what kind of must-have skills appear in Tier 1 and which job-title clusters require them\",\n    \"tier2\": \"1-2 sentence summary of strong-but-less-common Tier 2 skills and example titles\",\n    \"tier3\": \"1-2 sentence summary of edge / differentiator Tier 3 skills and example titles\"\n  },\n  \"skills_i_have\": [ \"matching skill names from the demand list\" ],\n  \"skills_im_missing\": [ \"skill names from the demand list NOT covered by the resume\" ],\n  \"gap_closing_plan\": [\n    {\n      \"skill\": \"...\",\n      \"priority\": \"high\",\n      \"reason\": \"market demand × tier rationale (e.g. 'count=12, dominant tier 1 — top-3 skill in the batch')\",\n      \"first_step\": \"the single concrete action to take this week (be specific)\"\n    }\n  ]\n}\n\nPRIORITIZATION FOR gap_closing_plan: order by (market frequency × tier weight). 'high' = appears in top 10 missing and dominant tier ≤ 2. 'medium' = appears top 11–25 OR tier 2/3 but high frequency. 'low' = niche differentiator.\n\nFor how_to_acquire and first_step, be SPECIFIC. Vague advice is worthless. Examples of GOOD answers:\n- \"AWS Solutions Architect Associate certification (3-4 weeks self-study, ~$150 exam, use Adrian Cantrill's course)\"\n- \"Build a CRUD app with Next.js App Router + Prisma + Postgres, deploy to Vercel — commit weekly to GitHub\"\n- \"Coursera 'Deep Learning Specialization' by Andrew Ng + reproduce 1 paper from Papers With Code\"\n- \"Trailhead Salesforce Data Cloud Specialist superbadge + Data Cloud Consultant cert (~$200)\"\n\nDo NOT recommend a skill the candidate already has. Do NOT invent skills not in the demand list.`;\n\nconst skillsList = (resume.currentSkills || []).flatMap(c => {\n  const details = (c.details || c.infoHtml || '').replace(/<[^>]+>/g, '');\n  return [c.skill, ...details.split(/[,;|]/)];\n}).map(s => (s || '').trim()).filter(Boolean);\n\nconst workSummary = (resume.currentWork || []).slice(0, 3).map(w =>\n  `- ${w.jobTitle || ''} at ${w.employer || ''}: ${(w.description || '').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').slice(0, 250)}`\n).join('\\n');\n\nconst projectSummary = (resume.currentProjects || []).slice(0, 6).map(p =>\n  `- ${p.name || ''} (${p.techStack || 'n/a'})`\n).join('\\n');\n\nconst topLines = agg.top10.map((s, i) =>\n  `${i + 1}. ${s.name} — count=${s.count}, weighted=${s.weighted}, T1=${s.tiers[1]} T2=${s.tiers[2]} T3=${s.tiers[3]}, sample titles: ${(s.job_titles || []).slice(0, 3).join(' | ')}`\n).join('\\n');\n\nconst fullLines = agg.fullRanking.map(s =>\n  `- ${s.name} (count=${s.count}, weighted=${s.weighted}, dominantTier=${s.dominantTier}, category=${s.category || 'n/a'})`\n).join('\\n');\n\nconst userMsg = `MARKET DEMAND SUMMARY (${agg.total_jobs_analyzed} jobs analyzed)\n\nTOP 10 SKILLS BY WEIGHTED FREQUENCY:\n${topLines}\n\nFULL RANKING (top 40):\n${fullLines}\n\n=========================\nCANDIDATE RESUME\n=========================\nTitle: ${resume.currentJobTitle || 'Software Developer'}\nProfile (raw): ${(resume.currentProfile || '').replace(/<[^>]+>/g, ' ').slice(0, 400)}\n\nSkills already on resume:\n${skillsList.join(', ')}\n\nRecent Work:\n${workSummary || '(none)'}\n\nProjects:\n${projectSummary || '(none)'}\n\nNow produce the JSON report described in the system instructions.`;\n\nreturn {\n  json: {\n    ...agg,\n    _resumePresent: Object.keys(resume).length > 0,\n    _openAIBody: {\n      model: $('1. Manual Configuration').first().json.openaiModel || 'gpt-5.4-mini',\n      temperature: 0.4,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMsg }\n      ]\n    }\n  }\n};"
+      },
+      "id": "9e620da9-5e29-420f-86fb-12890bfc98d2",
+      "name": "12. Build Final Analysis Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json._openAIBody) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "515127bd-a695-47cf-8b19-703c4454f768",
+      "name": "13. OpenAI Final Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 10000,
+      "position": [
+        1024,
+        400
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wwjiHkXU7KZB6LWb",
+          "name": "OpenAi account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ai = $json;\nconst agg = $('12. Build Final Analysis Prompt').first().json;\nconst cfg = $('1. Manual Configuration').first().json;\n\nlet report = null;\nlet parseError = '';\ntry {\n  const content = ai.choices && ai.choices[0] && ai.choices[0].message && ai.choices[0].message.content;\n  if (!content) throw new Error('No content in OpenAI response');\n  report = JSON.parse(content);\n} catch (e) {\n  parseError = 'Failed to parse OpenAI output: ' + e.message;\n  report = {\n    top10_recommendations: [],\n    tier_summaries: { tier1: '', tier2: '', tier3: '' },\n    skills_i_have: [],\n    skills_im_missing: [],\n    gap_closing_plan: []\n  };\n}\n\nconst now = new Date();\nconst pad = n => String(n).padStart(2, '0');\nconst dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;\nconst timeStr = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;\nconst fileBase = `skill-report-${dateStr}-${timeStr}`;\n\nconst tierTitleList = (bucket) => (bucket || []).map(t =>\n  `- **${t.name}** (count ${t.count}): ${t.sample_titles.join(' | ')}`\n).join('\\n');\n\nconst recList = (report.top10_recommendations || []).map((r, i) =>\n  `### ${i + 1}. ${r.skill}\\n\\n**Why it matters:** ${r.why_it_matters}\\n\\n**How to acquire:** ${r.how_to_acquire}\\n`\n).join('\\n');\n\nconst gapList = (report.gap_closing_plan || []).map((g, i) =>\n  `${i + 1}. **${g.skill}** — \\`${(g.priority || 'medium').toUpperCase()}\\` priority\\n   - **Reason:** ${g.reason}\\n   - **Start this week:** ${g.first_step}`\n).join('\\n\\n');\n\nconst topTable = agg.top10.map((s, i) =>\n  `| ${i + 1} | ${s.name} | ${s.count} | ${s.weighted} | ${s.tiers[1]} | ${s.tiers[2]} | ${s.tiers[3]} |`\n).join('\\n');\n\nconst markdown = `# Skill Demand Report\\n\\n**Generated:** ${now.toISOString()}\\n**Jobs analyzed:** ${agg.total_jobs_analyzed}\\n**Jobs with extraction errors:** ${agg.total_jobs_errored}\\n**Unique skills found:** ${agg.total_skills_unique}\\n${parseError ? `\\n> ⚠️ Final-analysis parse warning: ${parseError}\\n` : ''}\\n## Top 10 In-Demand Skills\\n\\n| Rank | Skill | Mentions | Weighted | Tier 1 | Tier 2 | Tier 3 |\\n|------|-------|----------|----------|--------|--------|--------|\\n${topTable}\\n\\n## Recommendations: How to Acquire the Top 10\\n\\n${recList || '_(none returned)_'}\\n\\n## Skill Tiers — What the Market Wants\\n\\n### Tier 1 — Core (must-have)\\n\\n${report.tier_summaries?.tier1 || ''}\\n\\nRepresentative job titles requiring Tier 1 skills:\\n${tierTitleList(agg.tierBuckets[1]) || '_(none)_'}\\n\\n### Tier 2 — Strong (less common but valuable)\\n\\n${report.tier_summaries?.tier2 || ''}\\n\\nRepresentative job titles:\\n${tierTitleList(agg.tierBuckets[2]) || '_(none)_'}\\n\\n### Tier 3 — Edge (differentiators)\\n\\n${report.tier_summaries?.tier3 || ''}\\n\\nRepresentative job titles:\\n${tierTitleList(agg.tierBuckets[3]) || '_(none)_'}\\n\\n## Resume Gap Analysis\\n\\n### Skills you HAVE (matching market demand)\\n\\n${(report.skills_i_have || []).map(s => `- ${s}`).join('\\n') || '_(none identified)_'}\\n\\n### Skills you're MISSING\\n\\n${(report.skills_im_missing || []).map(s => `- ${s}`).join('\\n') || '_(none identified)_'}\\n\\n### Gap-Closing Plan (prioritized by market demand × tier)\\n\\n${gapList || '_(no recommendations returned)_'}\\n\\n---\\n\\n_Generated by skill_extraction n8n workflow_\\n`;\n\nconst rawJson = JSON.stringify({\n  generated_at: now.toISOString(),\n  total_jobs_analyzed: agg.total_jobs_analyzed,\n  total_jobs_errored: agg.total_jobs_errored,\n  total_skills_unique: agg.total_skills_unique,\n  top10: agg.top10,\n  tierBuckets: agg.tierBuckets,\n  fullRanking: agg.fullRanking,\n  analysis: report\n}, null, 2);\n\nconst dirSep = (cfg.outputDir || '').includes('\\\\') ? '\\\\' : '/';\nconst basePath = (cfg.outputDir || 'output/skill-reports').replace(/[\\\\/]+$/, '') + dirSep + fileBase;\n\nreturn {\n  json: {\n    fileBase,\n    markdownPath: basePath + '.md',\n    jsonPath: basePath + '.json',\n    parseError,\n    summary: {\n      jobs: agg.total_jobs_analyzed,\n      uniqueSkills: agg.total_skills_unique,\n      top10: agg.top10.map(s => s.name)\n    }\n  },\n  binary: {\n    markdown: {\n      data: Buffer.from(markdown, 'utf8').toString('base64'),\n      mimeType: 'text/markdown',\n      fileName: fileBase + '.md',\n      fileExtension: 'md'\n    },\n    rawJson: {\n      data: Buffer.from(rawJson, 'utf8').toString('base64'),\n      mimeType: 'application/json',\n      fileName: fileBase + '.json',\n      fileExtension: 'json'\n    }\n  }\n};"
+      },
+      "id": "5a378103-a18f-46d4-a8ed-307b3f840f05",
+      "name": "14. Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        472
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.markdownPath }}",
+        "dataPropertyName": "markdown",
+        "options": {
+          "append": false
+        }
+      },
+      "id": "0bb8ae23-2bbe-4a8a-91cf-a7f57fc3c9e3",
+      "name": "15a. Write Markdown",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.jsonPath }}",
+        "dataPropertyName": "rawJson",
+        "options": {
+          "append": false
+        }
+      },
+      "id": "f162f0a3-c75f-454d-bba4-6dd1c5ca26a6",
+      "name": "15b. Write Raw JSON",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        640
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Workflow": {
+      "main": [
+        [
+          {
+            "node": "1. Manual Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Manual Configuration": {
+      "main": [
+        [
+          {
+            "node": "2a. Scrape LinkedIn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b. Scrape Indeed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2c. Scrape StepStone",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2d. Scrape Glassdoor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2e. Scrape Xing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2a. Scrape LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "3. Wait for All Scrapers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2b. Scrape Indeed": {
+      "main": [
+        [
+          {
+            "node": "3. Wait for All Scrapers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "2c. Scrape StepStone": {
+      "main": [
+        [
+          {
+            "node": "3. Wait for All Scrapers",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "2d. Scrape Glassdoor": {
+      "main": [
+        [
+          {
+            "node": "3. Wait for All Scrapers",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "2e. Scrape Xing": {
+      "main": [
+        [
+          {
+            "node": "3. Wait for All Scrapers",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "3. Wait for All Scrapers": {
+      "main": [
+        [
+          {
+            "node": "4. Normalize & Merge Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Normalize & Merge Jobs": {
+      "main": [
+        [
+          {
+            "node": "6. Loop Over Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "5. GET Resume Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. GET Resume Context": {
+      "main": [
+        []
+      ]
+    },
+    "6. Loop Over Jobs": {
+      "main": [
+        [
+          {
+            "node": "11. Aggregate Skills",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7. Build Skill Extraction Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Build Skill Extraction Prompt": {
+      "main": [
+        [
+          {
+            "node": "8. Wait (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Wait (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "9. OpenAI Skill Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Parse Skills": {
+      "main": [
+        [
+          {
+            "node": "6. Loop Over Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Aggregate Skills": {
+      "main": [
+        [
+          {
+            "node": "12. Build Final Analysis Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. Build Final Analysis Prompt": {
+      "main": [
+        [
+          {
+            "node": "13. OpenAI Final Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. OpenAI Final Analysis": {
+      "main": [
+        [
+          {
+            "node": "14. Format Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. Format Report": {
+      "main": [
+        [
+          {
+            "node": "15a. Write Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "15b. Write Raw JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. OpenAI Skill Extraction": {
+      "main": [
+        [
+          {
+            "node": "10. Parse Skills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "91996bca-8ea8-4ddb-a755-31b27dd38b62",
+  "meta": {
+    "instanceId": "ab1d9b83a326652825b037e9a6d1c825d6bec27701f2a3cac612c5b257bccc08"
+  },
+  "id": "vwmiPKpiTGoiJ0kF",
+  "tags": []
+}

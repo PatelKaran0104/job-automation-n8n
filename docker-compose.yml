@@ -7,6 +7,7 @@ services:
     environment:
       TZ: Europe/Berlin
       N8N_RUNNERS_ENABLED: "true"
+      N8N_RESTRICT_FILE_ACCESS_TO: "/home/node/output;/home/node/.n8n-files"
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -14,6 +15,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./output:/home/node/output
 
 volumes:
   n8n_data:
