@@ -115,6 +115,7 @@ app.get("/context", (_req, res) => {
       url: e.url || null,
       description: stripHtmlPreserveBullets(e.description),
     })),
+    currentCertificates: (resume.content.certificate?.entries || []).map((e) => e.certificate),
   });
 });
 
