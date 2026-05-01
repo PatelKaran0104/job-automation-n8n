@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Node.js/Express automation service that tailors resumes and cover letters for job applications. It exposes a simple HTTP API designed to be driven by an n8n workflow: n8n fetches the base resume, passes it to an AI (Claude/GPT) for tailoring, then posts the AI patch back here to merge it with the base JSON, render a custom HTML page, and export a PDF via Playwright.
+Node.js/Express automation service that tailors resumes and cover letters for job applications. It exposes a simple HTTP API designed to be driven by an n8n workflow: n8n fetches the base resume, passes it to an AI (Gemini for matching + OpenAI for tailoring) and then posts the AI patch back here to merge it with the base JSON, render a custom HTML page, and export a PDF via Playwright.
 
 ---
 
@@ -48,7 +48,9 @@ d:\KARAN\
 │   ├── test.js             ← Manual test (hits /generate-resume with a hardcoded patch)
 │   └── test-coverletter.js ← Manual test (hits /generate-coverletter with sample data)
 ├── tests/
-│   └── validatePatch.test.js ← Unit tests for patch validation (node:test)
+│   ├── validatePatch.test.js        ← Unit tests for patch validation (node:test)
+│   ├── coverletterEmptyBody.test.js ← Unit tests for /generate-coverletter empty-body 422 guard
+│   └── jobIdEcho.test.js            ← Unit tests verifying jobId is echoed in responses
 ├── docs/                   ← Design specs and implementation plans
 ├── output/                 ← Generated PDFs land here (git-ignored, date-organized)
 ├── package.json
@@ -69,7 +71,7 @@ npm test
 # Manual test without n8n — cover letter
 npm run test:coverletter
 
-# Unit tests (validatePatch)
+# Unit tests (validatePatch + coverletterEmptyBody)
 npm run test:unit
 ```
 
@@ -87,7 +89,8 @@ Returns base resume as clean plain text (HTML stripped). Feed directly to AI so 
   "currentProfile": "string (plain text)",
   "currentWork": [{ "id", "employer", "jobTitle", "location", "startDate", "endDate", "description" }],
   "currentSkills": [{ "id", "skill", "details" }],
-  "currentProjects": [{ "id", "name", "techStack", "url", "description" }]
+  "currentProjects": [{ "id", "name", "techStack", "url", "description" }],
+  "currentCertificates": ["string", "..."]
 }
 ```
 
@@ -124,6 +127,8 @@ The `jobId` key is only present if it was sent in the request.
 
 ### `POST /generate-coverletter`
 Injects content into the HTML template and renders a PDF to `output/YYYY-MM-DD/Coverletter/coverletter-{company}--{role}-HHMMSS.pdf` via Playwright.
+
+> **Empty-body guard:** If `paragraph1 + paragraph2 + paragraph3` strip to an empty string, the request is rejected with `422` and `{ success: false, error: "Empty cover letter body", reason_code: "EMPTY_BODY" }` before any PDF work begins.
 
 **Request body:**
 ```json
@@ -274,7 +279,7 @@ These IDs are hardcoded in `data/resume.json` and must be used verbatim in API p
 
 ## n8n Workflow Architecture
 
-The full automation lives in `data/Job_Application_Automator_v6.json` (35 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
+The full automation lives in `data/Job_Application_Automator_v6.json` (36 nodes). Claude Code only touches the Express server (`src/`) — n8n orchestrates everything else.
 
 **Trigger:** `Run Workflow` (manual). `workflow.active: false` — executed on demand, not on a schedule.
 
@@ -292,7 +297,7 @@ The full automation lives in `data/Job_Application_Automator_v6.json` (35 nodes)
 10. `10a. Build Match Prompt` — builds prompt with role-type pre-filter (rejects sales, HR, customer service, logistics, accounting; `TECH_SAFEGUARD` regex rescues borderline titles like "DevOps Engineer – Recruiting Platform")
     `10a1. Skip Gemini?` — routes pre-filtered rejects directly to `18a. Prepare Skip Log`; rest to `10b. Wait`
     `10b. Wait` (3s) → `10c. Gemini API Call` — primary match filter (`geminiModel`)
-    `10d. Gemini OK?` — if `candidates` missing, routes to `10e. Fallback Gemini Call` (`fallbackFilteringModel`); both paths converge at `11`
+    `10d. Gemini OK?` — if `candidates` missing, routes to `10d1. Wait Before Fallback` → `10e. Fallback Gemini Call` (`fallbackFilteringModel`); both paths converge at `11`
 11. `11. Parse Match Result` → `12. Is Match?` — requires `match === true` AND `confidence >= 45` AND `_apiError !== true`
 12. `13a. Build Tailor Prompt` → `13a1. Wait` (2s) → `13b. OpenAI API Call` — tailors resume patch + structured cover letter `{paragraph1, paragraph2, paragraph3, language}`; includes skill rename guards and profile guard
 13. `14. Parse AI Patch` — extracts patch + 3 cover letter paragraphs; runs structural validation (must contain non-empty `work` AND `skills`); computes quality flag (Good Fit / Bad Fit / Review / Error)
