@@ -6,6 +6,7 @@ import { applyPatch } from "./mergePatch.js";
 import { buildCoverLetterHtml } from "./mergeCoverLetter.js";
 import { buildResumeHtml } from "./buildResumeHtml.js";
 import { validatePatch } from "./validatePatch.js";
+import { validateCoverLetter } from "./validateCoverLetter.js";
 
 const OUTPUT_DIR = resolve("output");
 mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -173,7 +174,7 @@ app.post("/generate-resume", async (req, res) => {
 // POST /generate-coverletter
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
-  const { company, role, jobId } = req.body;
+  const { company, role, jobId, language } = req.body;
   const { paragraph1 = "", paragraph2 = "", paragraph3 = "" } = req.body;
   const bodyText = stripHtml(paragraph1 + paragraph2 + paragraph3);
   if (bodyText.length === 0) {
@@ -184,6 +185,18 @@ app.post("/generate-coverletter", async (req, res) => {
       reason_code: "EMPTY_BODY",
     });
   }
+
+  // Soft quality validation — does NOT block PDF generation.
+  // The pipeline always recovers what we have; quality issues surface in the response
+  // (and downstream in the Sheet's Quality column) so weak letters get human review.
+  const quality = validateCoverLetter({ paragraph1, paragraph2, paragraph3, language });
+  if (quality.severity !== "ok") {
+    console.warn(
+      `[/generate-coverletter] Quality ${quality.severity} for ${company} / ${role}:`,
+      { errors: quality.errors, warnings: quality.warnings, stats: quality.stats }
+    );
+  }
+
   const output = buildOutputPath({
     kind: "coverletter",
     company,
@@ -208,6 +221,14 @@ app.post("/generate-coverletter", async (req, res) => {
     }
     const result = { success: true, file: output.fullPath, fileName: output.fileName };
     if (jobId) result.jobId = jobId;
+    if (quality.severity !== "ok") {
+      result.quality = {
+        severity: quality.severity,
+        errors: quality.errors,
+        warnings: quality.warnings,
+        stats: quality.stats,
+      };
+    }
     res.json(result);
   } catch (err) {
     console.error("Cover letter generation error:", err.message);
