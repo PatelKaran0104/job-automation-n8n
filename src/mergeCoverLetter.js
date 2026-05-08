@@ -169,6 +169,8 @@ export function buildCoverLetterHtml(content) {
       justify-content: space-between;
     }
 
+    .footer span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     @media print {
       body { background: white; }
       .page { margin: 0; padding: 18mm 20mm 16mm 20mm; }
@@ -185,7 +187,7 @@ export function buildCoverLetterHtml(content) {
       </div>
       <div class="header-contact">
         khpatel0104@gmail.com<br/>
-        +49 15210894179<br/>
+        <span style="white-space: nowrap;">+49&nbsp;15210894179</span><br/>
         Hesse, Germany<br/>
         <a href="https://linkedin.com/in/patelkaran0104/">linkedin.com/in/patelkaran0104/</a><br/>
         <a href="https://karanpatel.live">karanpatel.live</a>

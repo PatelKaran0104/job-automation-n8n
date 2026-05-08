@@ -208,7 +208,7 @@ export function buildResumeHtml(resume, options = {}) {
 
   const contactLine1 = [
     p.displayEmail && link(`mailto:${p.displayEmail}`, ICON.envelope, p.displayEmail),
-    p.phone        && link(`tel:${p.phone.replace(/\s/g, "")}`, ICON.phone, p.phone),
+    p.phone        && link(`tel:${p.phone.replace(/\s/g, "")}`, ICON.phone, p.phone.replace(/ /g, " ")),
     p.address      && `<span>${ICON.location} ${escapeHtml(p.address)}</span>`,
     p.website      && link(`https://${p.website}`, ICON.globe, p.website),
   ].filter(Boolean);
@@ -258,8 +258,10 @@ export function buildResumeHtml(resume, options = {}) {
     .header { text-align: center; margin-bottom: 14px; }
     .name { font-size: 22pt; font-weight: 700; }
     .job-title { font-size: 12pt; font-style: italic; margin-top: 2px; }
-    .contact-row { margin-top: 8px; font-size: 9pt; }
-    .contact-link { color: #1a5276; text-decoration: none; }
+    .contact-row { margin-top: 8px; font-size: 9pt; white-space: normal; }
+    .contact-row > span,
+    .contact-row > a { white-space: nowrap; }
+    .contact-link { color: #1a5276; text-decoration: none; white-space: nowrap; }
     .header hr { border: none; border-top: 1px solid #000; margin-top: 10px; }
     .section { margin-bottom: 10px; }
     .section-heading {

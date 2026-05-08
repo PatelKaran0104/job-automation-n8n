@@ -44,6 +44,15 @@ export function validatePatch(patch) {
   if (patch.projects !== undefined && !Array.isArray(patch.projects)) {
     errors.push("patch.projects must be an array if present");
   }
+  if (patch.visibleWorkIds !== undefined && !Array.isArray(patch.visibleWorkIds)) {
+    errors.push("patch.visibleWorkIds must be an array if present");
+  }
+  if (patch.visibleSkillIds !== undefined && !Array.isArray(patch.visibleSkillIds)) {
+    errors.push("patch.visibleSkillIds must be an array if present");
+  }
+  if (patch.visibleProjectIds !== undefined && !Array.isArray(patch.visibleProjectIds)) {
+    errors.push("patch.visibleProjectIds must be an array if present");
+  }
   if (errors.length > 0) {
     return { valid: false, errors, warnings };
   }
@@ -119,6 +128,28 @@ export function validatePatch(patch) {
       }
       if (!VALID_PROJECT_IDS.has(item.id)) {
         warnings.push(`unknown project id "${item.id}" — will be ignored`);
+      }
+    }
+  }
+
+  if (Array.isArray(patch.visibleWorkIds)) {
+    for (const id of patch.visibleWorkIds) {
+      if (!VALID_WORK_IDS.has(id)) {
+        warnings.push(`unknown id in visibleWorkIds "${id}" — will be silently dropped at merge`);
+      }
+    }
+  }
+  if (Array.isArray(patch.visibleSkillIds)) {
+    for (const id of patch.visibleSkillIds) {
+      if (!VALID_SKILL_IDS.has(id)) {
+        warnings.push(`unknown id in visibleSkillIds "${id}" — will be silently dropped at merge`);
+      }
+    }
+  }
+  if (Array.isArray(patch.visibleProjectIds)) {
+    for (const id of patch.visibleProjectIds) {
+      if (!VALID_PROJECT_IDS.has(id)) {
+        warnings.push(`unknown id in visibleProjectIds "${id}" — will be silently dropped at merge`);
       }
     }
   }

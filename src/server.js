@@ -7,6 +7,7 @@ import { buildCoverLetterHtml } from "./mergeCoverLetter.js";
 import { buildResumeHtml } from "./buildResumeHtml.js";
 import { validatePatch } from "./validatePatch.js";
 import { validateCoverLetter } from "./validateCoverLetter.js";
+import { validateCompanyParam } from "./validateRequest.js";
 
 const OUTPUT_DIR = resolve("output");
 mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -126,6 +127,17 @@ app.post("/generate-resume", async (req, res) => {
   const { patch, company, role, language, jobId } = req.body;
   const rawPatch = patch || req.body;
 
+  const companyCheck = validateCompanyParam(company);
+  if (!companyCheck.valid) {
+    console.error("[/generate-resume] Invalid company:", companyCheck.error);
+    return res.status(422).json({
+      success: false,
+      error: "Invalid company parameter",
+      reason_code: "COMPANY_INVALID",
+      detail: companyCheck.error,
+    });
+  }
+
   const validation = validatePatch(rawPatch);
   if (validation.warnings.length > 0) {
     console.warn("[/generate-resume] Patch warnings:", validation.warnings);
@@ -175,6 +187,18 @@ app.post("/generate-resume", async (req, res) => {
 // Body: { role, company, companyAddress, paragraph1, paragraph2, paragraph3 }
 app.post("/generate-coverletter", async (req, res) => {
   const { company, role, jobId, language } = req.body;
+
+  const companyCheck = validateCompanyParam(company);
+  if (!companyCheck.valid) {
+    console.error("[/generate-coverletter] Invalid company:", companyCheck.error);
+    return res.status(422).json({
+      success: false,
+      error: "Invalid company parameter",
+      reason_code: "COMPANY_INVALID",
+      detail: companyCheck.error,
+    });
+  }
+
   const { paragraph1 = "", paragraph2 = "", paragraph3 = "" } = req.body;
   const bodyText = stripHtml(paragraph1 + paragraph2 + paragraph3);
   if (bodyText.length === 0) {

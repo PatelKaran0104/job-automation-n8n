@@ -12,7 +12,10 @@ const baseResume = JSON.parse(readFileSync(new URL("../data/resume.json", import
  *   showProjects?: false,       // omit projects section
  *   work?: [{ id, description }],
  *   skills?: [{ id, skill?, infoHtml }],  // skill renames the category label
- *   projects?: [{ id, description?, techStack?, name? }]
+ *   projects?: [{ id, description?, techStack?, name? }],
+ *   visibleWorkIds?: string[],     // explicit visibility filter; absent = keep all base entries
+ *   visibleSkillIds?: string[],
+ *   visibleProjectIds?: string[]
  * }
  */
 export function applyPatch(patch) {
@@ -90,6 +93,24 @@ export function applyPatch(patch) {
   if (patch.showProjects === false) {
     data.meta = data.meta || {};
     data.meta.showProjects = false;
+  }
+
+  // Visibility lists: when the patch explicitly enumerates which IDs are visible,
+  // drop unlisted entries from that section. Absent list = no filter (legacy behavior).
+  // Empty array = explicit "hide all".
+  if (Array.isArray(patch.visibleWorkIds) && data.content.work?.entries) {
+    const visible = new Set(patch.visibleWorkIds);
+    data.content.work.entries = data.content.work.entries.filter(e => visible.has(e.id));
+  }
+
+  if (Array.isArray(patch.visibleSkillIds) && data.content.skill?.entries) {
+    const visible = new Set(patch.visibleSkillIds);
+    data.content.skill.entries = data.content.skill.entries.filter(e => visible.has(e.id));
+  }
+
+  if (Array.isArray(patch.visibleProjectIds) && data.content.project?.entries) {
+    const visible = new Set(patch.visibleProjectIds);
+    data.content.project.entries = data.content.project.entries.filter(e => visible.has(e.id));
   }
 
   return data;
