@@ -1,5 +1,20 @@
 # CLAUDE.md — Resume Generator
 
+## Owner Context & Goals
+
+**Who:** Karan Patel — student at Hochschule Fulda (Germany), B.Sc. Global Software Development. Also holds ~2 years of Salesforce Developer experience (certified Agentforce Specialist) across multiple projects.
+
+**Primary goal of this project:** Maximize interview conversion rate — every resume and cover letter output should read as a tailored, high-signal application, not a generic one.
+
+**Job search scope:** Open to Werkstudent, internship, part-time, full-time, and remote roles. Germany is the primary market (German-language cover letters are the default), but international/English-language applications are also in scope.
+
+**Implications for this codebase:**
+- The German pipeline (`language: "de"`) is the critical path — keep it first-class.
+- Quality of the AI patch (relevance, keyword density, ATS pass-through) matters more than throughput.
+- When suggesting improvements, prioritize anything that makes output more role-specific or hirable.
+
+---
+
 Node.js/Express service that tailors resumes and cover letters for job applications. n8n drives it: fetches the base resume via `/context`, asks AI for a patch (Gemini match + OpenAI tailor), posts the patch back to merge, render HTML, and export a PDF via Playwright.
 
 ## Stack
