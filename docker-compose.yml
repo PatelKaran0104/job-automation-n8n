@@ -1,4 +1,14 @@
 services:
+  resume-server:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      SERVER_URL: ${SERVER_URL}
+    volumes:
+      - ./output:/app/output
+
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
@@ -7,16 +17,12 @@ services:
     environment:
       TZ: Europe/Berlin
       N8N_RUNNERS_ENABLED: "true"
-      N8N_RESTRICT_FILE_ACCESS_TO: "/home/node/output;/home/node/.n8n-files"
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./output:/home/node/output
 
 volumes:
   n8n_data:
-    external: true

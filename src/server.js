@@ -1,7 +1,7 @@
 import express from "express";
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync, existsSync } from "fs";
-import { resolve } from "path";
+import { resolve, relative } from "path";
 import { applyPatch } from "./mergePatch.js";
 import { buildCoverLetterHtml } from "./mergeCoverLetter.js";
 import { buildResumeHtml } from "./buildResumeHtml.js";
@@ -14,6 +14,14 @@ mkdirSync(OUTPUT_DIR, { recursive: true });
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
+
+const SERVER_URL = process.env.SERVER_URL || "http://localhost:3000";
+app.use("/files", express.static(OUTPUT_DIR));
+
+function buildFileUrl(fullPath) {
+  const rel = relative(OUTPUT_DIR, fullPath).replace(/\\/g, "/");
+  return `${SERVER_URL}/files/${rel}`;
+}
 
 // Shared browser instance — launched once at startup, reused across all requests
 const browser = await chromium.launch({ headless: true });
@@ -172,7 +180,7 @@ app.post("/generate-resume", async (req, res) => {
     if (!existsSync(output.fullPath)) {
       throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    const result = { success: true, file: output.fullPath, fileName: output.fileName };
+    const result = { success: true, file: output.fullPath, fileName: output.fileName, url: buildFileUrl(output.fullPath) };
     if (jobId) result.jobId = jobId;
     res.json(result);
   } catch (err) {
@@ -243,7 +251,7 @@ app.post("/generate-coverletter", async (req, res) => {
     if (!existsSync(output.fullPath)) {
       throw new Error(`PDF was not written to disk: ${output.fullPath}`);
     }
-    const result = { success: true, file: output.fullPath, fileName: output.fileName };
+    const result = { success: true, file: output.fullPath, fileName: output.fileName, url: buildFileUrl(output.fullPath) };
     if (jobId) result.jobId = jobId;
     if (quality.severity !== "ok") {
       result.quality = {

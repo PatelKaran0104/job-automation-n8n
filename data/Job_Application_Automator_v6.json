@@ -2,11 +2,20 @@
   "name": "Job Application Automator v6",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * *"
+            }
+          ]
+        }
+      },
       "id": "6de8ad47-9ed9-462f-b403-de9bc4cd9792",
       "name": "Run Workflow",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
       "position": [
         90960,
         27120
@@ -228,7 +237,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3000/context",
+        "url": "http://resume-server:3000/context",
         "options": {
           "timeout": 10000
         }
@@ -401,7 +410,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:3000/generate-resume",
+        "url": "http://resume-server:3000/generate-resume",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ patch: $json.patch, company: $json.job.company, role: $json.job.title, language: $json.language, jobId: $json.job.url }) }}",
@@ -421,7 +430,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const patchItems = $('14. Parse AI Patch').all();\nconst inputs = $input.all();\n\n// Capture error details from failed PDF calls\nconst errorItems = inputs.filter(i => i.json.error || (i.json.statusCode && i.json.statusCode >= 400));\nconst pdfErrorMsg = errorItems.map(e => e.json.error?.message || e.json.message || JSON.stringify(e.json.error || '')).filter(Boolean).join('; ');\n\n// Build lookup maps by jobId — immune to index shifts from failed PDF calls\nconst resumeByJobId = new Map();\nconst coverByJobId = new Map();\nfor (const item of inputs) {\n  const fn = item.json.fileName || '';\n  const jid = item.json.jobId || '';\n  if (!jid) continue;\n  if (fn.startsWith('resume')) resumeByJobId.set(jid, item);\n  else if (fn.startsWith('coverletter')) coverByJobId.set(jid, item);\n}\n\nconst now = new Date();\nconst dateStr = now.toISOString().slice(0, 10);\n\nreturn patchItems.map((item) => {\n  const patchData = item.json;\n  const jobUrl = patchData.job?.url || '';\n  const resumeItem = resumeByJobId.get(jobUrl) || { json: {} };\n  const coverItem = coverByJobId.get(jobUrl) || { json: {} };\n\n  return {\n    json: {\n      Date:                dateStr,\n      Company:             patchData.job?.company          || '',\n      Role:                patchData.job?.title            || '',\n      'Job Type':          patchData.job?.jobType          || '',\n      Location:            patchData.job?.location         || '',\n      Source:              patchData.job?.source           || '',\n      'Job URL':           patchData.job?.url ? '=HYPERLINK(\"' + patchData.job.url.replace(/\"/g, '\"\"') + '\",\"View Job\")' : '',\n      'Apply URL':         patchData.job?.applyUrl ? '=HYPERLINK(\"' + patchData.job.applyUrl.replace(/\"/g, '\"\"') + '\",\"Apply\")' : '',\n      'Raw URL':           patchData.job?.url || '',\n      'Match Confidence':  patchData.job?.matchConfidence  || 0,\n      'Match Reason':      patchData.job?.matchReason      || '',\n      'Resume File':       resumeItem.json.file            || '',\n      'Cover Letter File': coverItem.json.file             || '',\n      Status:              (resumeItem.json.success && coverItem.json.success) ? 'Generated' : 'PDF Failed',\n      Applied:             'No',\n      Response:            '',\n      Interview:           '',\n      Notes:               [patchData.patch?._error, pdfErrorMsg, patchData._coverLetterWarning, (patchData._qualityIssues || []).join(' | ')].filter(Boolean).join(' || ') || '',\n      Quality:             patchData._qualityFlag  || 'Unknown',\n      'Routing Tier':      patchData._routingTier  || 'unknown',\n      'Fallback Model Used': patchData._fallbackModelUsed === true ? 'Yes' : 'No',\n    },\n  };\n});"
+        "jsCode": "const patchItems = $('14. Parse AI Patch').all();\nconst inputs = $input.all();\n\n// Capture error details from failed PDF calls\nconst errorItems = inputs.filter(i => i.json.error || (i.json.statusCode && i.json.statusCode >= 400));\nconst pdfErrorMsg = errorItems.map(e => e.json.error?.message || e.json.message || JSON.stringify(e.json.error || '')).filter(Boolean).join('; ');\n\n// Build lookup maps by jobId — immune to index shifts from failed PDF calls\nconst resumeByJobId = new Map();\nconst coverByJobId = new Map();\nfor (const item of inputs) {\n  const fn = item.json.fileName || '';\n  const jid = item.json.jobId || '';\n  if (!jid) continue;\n  if (fn.startsWith('resume')) resumeByJobId.set(jid, item);\n  else if (fn.startsWith('coverletter')) coverByJobId.set(jid, item);\n}\n\nconst now = new Date();\nconst dateStr = now.toISOString().slice(0, 10);\n\nreturn patchItems.map((item) => {\n  const patchData = item.json;\n  const jobUrl = patchData.job?.url || '';\n  const resumeItem = resumeByJobId.get(jobUrl) || { json: {} };\n  const coverItem = coverByJobId.get(jobUrl) || { json: {} };\n\n  return {\n    json: {\n      Date:                dateStr,\n      Company:             patchData.job?.company          || '',\n      Role:                patchData.job?.title            || '',\n      'Job Type':          patchData.job?.jobType          || '',\n      Location:            patchData.job?.location         || '',\n      Source:              patchData.job?.source           || '',\n      'Job URL':           patchData.job?.url ? '=HYPERLINK(\"' + patchData.job.url.replace(/\"/g, '\"\"') + '\",\"View Job\")' : '',\n      'Apply URL':         patchData.job?.applyUrl ? '=HYPERLINK(\"' + patchData.job.applyUrl.replace(/\"/g, '\"\"') + '\",\"Apply\")' : '',\n      'Raw URL':           patchData.job?.url || '',\n      'Match Confidence':  patchData.job?.matchConfidence  || 0,\n      'Match Reason':      patchData.job?.matchReason      || '',\n      'Resume File':       resumeItem.json.url ? '=HYPERLINK(\"' + resumeItem.json.url + '\",\"Download Resume\")' : (resumeItem.json.file || ''),\n      'Cover Letter File': coverItem.json.url ? '=HYPERLINK(\"' + coverItem.json.url + '\",\"Download Cover Letter\")' : (coverItem.json.file || ''),\n      Status:              (resumeItem.json.success && coverItem.json.success) ? 'Generated' : 'PDF Failed',\n      Applied:             'No',\n      Response:            '',\n      Interview:           '',\n      Notes:               [patchData.patch?._error, pdfErrorMsg, patchData._coverLetterWarning, (patchData._qualityIssues || []).join(' | ')].filter(Boolean).join(' || ') || '',\n      Quality:             patchData._qualityFlag  || 'Unknown',\n      'Routing Tier':      patchData._routingTier  || 'unknown',\n      'Fallback Model Used': patchData._fallbackModelUsed === true ? 'Yes' : 'No',\n    },\n  };\n});"
       },
       "id": "bce0e3ac-790d-471a-9fee-d9cdf37bfcf8",
       "name": "16. Prepare Sheet Log",
@@ -972,7 +981,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:3000/generate-coverletter",
+        "url": "http://resume-server:3000/generate-coverletter",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ role: $(\"14. Parse AI Patch\").item.json.job.title, company: $(\"14. Parse AI Patch\").item.json.job.company, companyAddress: $(\"14. Parse AI Patch\").item.json.job.location, paragraph1: $(\"14. Parse AI Patch\").item.json.paragraph1, paragraph2: $(\"14. Parse AI Patch\").item.json.paragraph2, paragraph3: $(\"14. Parse AI Patch\").item.json.paragraph3, language: $(\"14. Parse AI Patch\").item.json.language, jobId: $(\"14. Parse AI Patch\").item.json.job.url }) }}",
