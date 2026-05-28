@@ -22,8 +22,27 @@ services:
       N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       N8N_SECURE_COOKIE: "false"
+      N8N_HOST: 165-245-211-204.sslip.io
+      N8N_PORT: "443"
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: https://165-245-211-204.sslip.io/
     volumes:
       - n8n_data:/home/node/.n8n
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - n8n
+
 volumes:
   n8n_data:
+  caddy_data:
+  caddy_config:
