@@ -26,6 +26,7 @@ services:
       N8N_PORT: "5678"
       N8N_PROTOCOL: https
       WEBHOOK_URL: https://165-245-211-204.sslip.io/
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
     volumes:
       - n8n_data:/home/node/.n8n
 
