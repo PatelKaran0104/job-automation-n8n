@@ -1,0 +1,198 @@
+{
+  "name": "Telegram Skip Callback",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["callback_query"]
+      },
+      "id": "t1-trigger-0001-0000-0000-000000000001",
+      "name": "1. Telegram Callback Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [90960, 27120],
+      "webhookId": "telegram-skip-callback-webhook-v1",
+      "credentials": {
+        "telegramApi": {
+          "id": "job-bot-telegram-id",
+          "name": "Job Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const callbackData = $json.callback_query?.data || '';\nconst callbackId = $json.callback_query?.id;\nconst chatId = $json.callback_query?.message?.chat?.id;\n\nif (!callbackData.startsWith('skip:')) {\n  return [];\n}\n\nconst jobId = callbackData.replace('skip:', '').trim();\n\nreturn [{\n  json: {\n    jobId,\n    callbackId,\n    chatId\n  }\n}];"
+      },
+      "id": "t2-parse-0002-0000-0000-000000000002",
+      "name": "2. Parse Skip Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [91184, 27120]
+    },
+    {
+      "parameters": {
+        "operation": "getRows",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Raw URL",
+              "lookupValue": "={{ $json.jobId }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "t3-sheets-0003-0000-0000-000000000003",
+      "name": "3. Find Job Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [91408, 27120],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nPzI2flvEGQXgKIg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18zaWmognkbpaZyVsdaSLLvlB_Mas7BWetOW0zZUuC58/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Portal Status": "skipped"
+          },
+          "matchingColumns": ["row_number"],
+          "schema": [
+            {
+              "id": "Portal Status",
+              "displayName": "Portal Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "t4-update-0004-0000-0000-000000000004",
+      "name": "4. Update Portal Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [91632, 27120],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nPzI2flvEGQXgKIg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bot-token-field",
+              "name": "botToken",
+              "value": "={{ $env.TELEGRAM_BOT_TOKEN }}",
+              "type": "string"
+            },
+            {
+              "id": "callback-id-field",
+              "name": "callbackId",
+              "value": "={{ $('2. Parse Skip Callback').item.json.callbackId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "t4b-token-0005-0000-0000-000000000005",
+      "name": "4b. Set Bot Token",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [91856, 27120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $json.botToken }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ callback_query_id: $json.callbackId, text: 'Marked as skipped ✓' }) }}",
+        "options": {}
+      },
+      "id": "t5-answer-0006-0000-0000-000000000006",
+      "name": "5. Answer Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [92080, 27120],
+      "continueOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Telegram Callback Trigger": {
+      "main": [[{ "node": "2. Parse Skip Callback", "type": "main", "index": 0 }]]
+    },
+    "2. Parse Skip Callback": {
+      "main": [[{ "node": "3. Find Job Row", "type": "main", "index": 0 }]]
+    },
+    "3. Find Job Row": {
+      "main": [[{ "node": "4. Update Portal Status", "type": "main", "index": 0 }]]
+    },
+    "4. Update Portal Status": {
+      "main": [[{ "node": "4b. Set Bot Token", "type": "main", "index": 0 }]]
+    },
+    "4b. Set Bot Token": {
+      "main": [[{ "node": "5. Answer Callback", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "skip-callback-v1-0000-0000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ab1d9b83a326652825b037e9a6d1c825d6bec27701f2a3cac612c5b257bccc08"
+  },
+  "id": "TelegramSkipCallbackV1",
+  "tags": [
+    {
+      "updatedAt": "2026-05-31T00:00:00.000Z",
+      "createdAt": "2026-05-31T00:00:00.000Z",
+      "id": "4r1Bw6tRFDeWnIeE",
+      "name": "resume-automation"
+    }
+  ]
+}

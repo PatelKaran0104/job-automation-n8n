@@ -1,6 +1,6 @@
 # Resume Generator — Pipeline Guide
 
-Automated job application pipeline: scrapes 5 job boards on manual trigger → AI match filter → AI resume/cover letter tailoring → PDF generation → Google Sheets logging.
+Automated job application pipeline: scrapes 5 job boards on manual trigger → AI match filter → AI resume/cover letter tailoring → PDF generation → auto-apply (email outreach + Telegram notification for confidence ≥ 75) → Google Sheets logging.
 
 ---
 
@@ -61,7 +61,34 @@ Run Workflow (manual trigger)
                            ↓
                    16. Prepare Sheet Log (jobId-based pairing)
                            ↓
-                   17. Log to Google Sheets
+             [NEW] Branch: confidence ≥ 75?
+          ↓ yes                              ↓ no
+  ┌── EMAIL PATH ──────────────────┐         │
+  │ 19a. Build Apollo Payload      │         │
+  │ 19b. Apollo People Search      │         │
+  │ 19c. Extract HR Email          │         │
+  │ 19c1. Has Email? ──no──→ 20e   │         │
+  │    ↓ yes                 ↓     │         │
+  │ 20a. Build PDF URLs     Merge  │         │
+  │ 20a1. Fetch Resume PDF  22 ←──-┘         │
+  │ 20a2. Fetch Cover Letter PDF   │         │
+  │ 20b. Draft Outreach Email      │         │
+  │ 20b1. Build Email Payload      │         │
+  │ 20c. Send Outreach Email       │         │
+  │ 20d. Mark Email Sent ──────────┘         │
+  └────────────────────────────────          │
+  ┌── TELEGRAM PATH ───────────────┐         │
+  │ 21a. Personal Details          │         │
+  │ 21b. Send Job Card             │→ Merge  │
+  │ 21c. Send Quick-Fill Card      │  22 ←──-┘
+  │ 21d. Mark Telegram Sent ───────┘         │
+  └────────────────────────────────          │
+          ↓ (both paths done)                │
+   22. Merge Auto-Apply Paths                │
+          ↓                                  │
+   22b. Collapse Result                      │
+          ↓                                  │
+   17. Log to Google Sheets ←────────────────┘
 ```
 
 ---
@@ -164,7 +191,9 @@ Renders a cover letter PDF (German or English) from 3 paragraphs.
 
 ## n8n Workflow
 
-**File:** `data/Job_Application_Automator_v6.json` — import into n8n to deploy (35 nodes).
+**File:** `data/Job_Application_Automator_v7.json` — import into n8n to deploy (~61 nodes).
+
+**Skip Callback workflow:** `data/Telegram_Skip_Callback_v1.json` — import as a separate, always-active workflow. Listens for Telegram Skip button callbacks and updates `Portal Status` to `skipped` in Google Sheets.
 
 **Trigger:** Manual (`Run Workflow` node). `workflow.active: false` — the workflow is executed on-demand, not on a schedule.
 
@@ -174,7 +203,13 @@ If running n8n natively (not Docker), change to `http://localhost:3000`.
 **Credentials required in n8n:**
 - `httpHeaderAuth` credential named **"Gemini API Key"** — sends `x-goog-api-key` header to Google's `generativelanguage.googleapis.com`
 - `openAiApi` — OpenAI API credential (predefined credential type)
-- Google Sheets OAuth credential (for `2f. Read Applied Jobs`, `17. Log to Google Sheets`, `18b. Log Skipped to Sheets`)
+- Google Sheets OAuth credential (for `2f. Read Applied Jobs`, `17. Log to Google Sheets`, `18b. Log Skipped to Sheets`, `3. Find Job Row`, `4. Update Portal Status`)
+- `httpHeaderAuth` credential named **"Apollo API Key"** — sends `x-api-key` header to `api.apollo.io` (free tier: 50 people exports/month)
+- `telegramApi` credential named **"Job Bot"** — Telegram bot token for job card and quick-fill notifications
+- `gmailOAuth2` credential named **"Karan Gmail"** — Gmail OAuth2 for outreach email send (scope: `gmail.send`)
+
+**Environment variable required:**
+- `TELEGRAM_BOT_TOKEN` — set in n8n's `.env` / Docker environment; used by the Skip Callback workflow to call `answerCallbackQuery`
 
 No standalone environment variables are read — all auth flows through n8n credentials.
 
@@ -194,7 +229,10 @@ All tunable values live in specific nodes. Edit them directly in the n8n workflo
 | Fallback match model | `1. Manual Configuration` → `fallbackFilteringModel` (default: `gemini-2.0-flash-lite`) |
 | Tailor model | `1. Manual Configuration` → `openaiModel` (default: `gpt-4o-mini`) |
 | Glassdoor URL | Hardcoded in `2d. Scrape Glassdoor` (not parametrized — city/country filter inside actor) |
-| Match confidence threshold | `12. Is Match?` → `confidence-check` condition value (default: `45`) |
+| Match confidence threshold | `12. Is Match?` → `confidence-check` condition value (default: `55`) |
+| Auto-apply threshold | `Branch: High Confidence?` → condition value (default: `75`) |
+| Apollo.io credential | n8n Credentials → `Apollo API Key` |
+| Telegram chat ID | `21b. Send Job Card` → Chat ID field (current: `923697082`) |
 | Pre-Gemini delay | `10b. Wait` → `amount` (default: `3` seconds) |
 | Pre-OpenAI delay | `13a1. Wait` → `amount` (default: `2` seconds) |
 | Batch size (items per loop) | `9. Loop Over Items` → `batchSize` (default: `1`) |
@@ -277,6 +315,12 @@ Each logged job (match or skip) writes these columns:
 | Interview | manual column |
 | Notes | AI parse warning, PDF error, or cover letter warning |
 | Quality | `Good Fit` / `Bad Fit` / `Review` / `Error` / `Unknown` / `N/A` |
+| Email Recipient | HR/recruiter email found via Apollo.io, or `—` if none found |
+| Email Sent | `yes` / `no` |
+| Telegram Notified | `yes` / `no` |
+| Portal Status | `pending` (auto-apply sent) / `skipped` (Skip button tapped) / `—` (confidence < 75) / `applied` (set manually after portal form submitted) |
+
+**Note:** The last 4 columns are only populated for confidence ≥ 75 jobs. Add them to your Google Sheet header row before the first run of v7.
 
 ---
 
@@ -295,7 +339,9 @@ d:\KARAN\
 │   └── loadFonts.js            ← Embeds Source Serif Pro WOFF2 as base64
 ├── data/
 │   ├── resume.json             ← Base resume, source of truth — never modified at runtime
-│   └── Job_Application_Automator_v6.json  ← n8n workflow (35 nodes; import into n8n)
+│   ├── Job_Application_Automator_v7.json  ← n8n main workflow (~61 nodes; import into n8n)
+│   ├── Job_Application_Automator_v6.json  ← previous version (kept for reference)
+│   └── Telegram_Skip_Callback_v1.json    ← separate always-active workflow (Skip button handler)
 ├── scripts/
 │   ├── test.js                 ← Manual test: hits /generate-resume with hardcoded patch
 │   └── test-coverletter.js     ← Manual test: hits /generate-coverletter with sample data
@@ -324,3 +370,8 @@ d:\KARAN\
 | No jobs after normalize | Check Apify actor outputs match `BOARD_CONFIG` field names |
 | Scraper failure hangs pipeline | Check `onError` setting on scraper nodes — should emit to merge node on error |
 | Resume/cover letter language mismatch | `language` field in tailor result flows through — check `14. Parse AI Patch` output |
+| Apollo returns no people | Expected — `19c1` routes to `20e` (passthrough), email is skipped, Telegram still fires |
+| Gmail auth error | Re-authorize `Karan Gmail` credential in n8n → Credentials |
+| Telegram message not delivered | Check `Job Bot` credential token is valid; re-enter if expired |
+| Skip button logs wrong row | `Raw URL` column must be populated — check node 16 output |
+| Merge 22 hangs forever | One of email/telegram paths is failing silently — check `continueOnFail` is enabled on nodes 20c, 21b, 21c |
