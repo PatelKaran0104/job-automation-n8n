@@ -244,8 +244,8 @@ export function buildResumeHtml(resume, options = {}) {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
-      font-size: 10pt;
-      line-height: 1.5;
+      font-size: 9pt;
+      line-height: 1.3;
       color: #000;
       background: #fff;
     }
@@ -255,7 +255,7 @@ export function buildResumeHtml(resume, options = {}) {
       fill: currentColor;
       display: inline-block;
     }
-    .header { text-align: center; margin-bottom: 14px; }
+    .header { text-align: center; margin-bottom: 10px; }
     .name { font-size: 22pt; font-weight: 700; }
     .job-title { font-size: 12pt; font-style: italic; margin-top: 2px; }
     .contact-row { margin-top: 8px; font-size: 9pt; white-space: normal; }
@@ -263,7 +263,7 @@ export function buildResumeHtml(resume, options = {}) {
     .contact-row > a { white-space: nowrap; }
     .contact-link { color: #1a5276; text-decoration: none; white-space: nowrap; }
     .header hr { border: none; border-top: 1px solid #000; margin-top: 10px; }
-    .section { margin-bottom: 10px; }
+    .section { margin-bottom: 6px; }
     .section-heading {
       font-size: 10.5pt;
       font-weight: 700;
@@ -275,10 +275,10 @@ export function buildResumeHtml(resume, options = {}) {
     .entry-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .entry-left { flex: 1; min-width: 0; }
     .entry-right { white-space: nowrap; font-size: 9.5pt; flex-shrink: 0; }
-    .work-entry { margin-bottom: 10px; page-break-inside: avoid; }
-    .edu-entry  { margin-bottom: 10px; page-break-inside: avoid; }
-    .edu-desc { font-size: 9.5pt; }
-    .project-entry { margin-bottom: 10px; page-break-inside: avoid; }
+    .work-entry { margin-bottom: 6px; page-break-inside: avoid; }
+    .edu-entry  { margin-bottom: 6px; page-break-inside: avoid; }
+    .edu-desc { font-size: 9pt; }
+    .project-entry { margin-bottom: 6px; page-break-inside: avoid; }
     .cert-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -288,9 +288,9 @@ export function buildResumeHtml(resume, options = {}) {
     }
     .skill-entry { margin-bottom: 3px; }
     .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 0; }
-    ul { margin: 4px 0; padding-left: 16px; }
+    ul { margin: 2px 0; padding-left: 16px; }
     li { margin: 0; }
-    p  { margin: 2px 0; }
+    p  { margin: 1px 0; }
   </style>
 </head>
 <body>

@@ -176,7 +176,7 @@ app.post("/generate-resume", async (req, res) => {
       path: output.fullPath,
       format: "A4",
       printBackground: true,
-      margin: { top: "15mm", right: "18mm", bottom: "15mm", left: "18mm" },
+      margin: { top: "10mm", right: "12mm", bottom: "10mm", left: "12mm" },
     });
     if (!existsSync(output.fullPath)) {
       throw new Error(`PDF was not written to disk: ${output.fullPath}`);

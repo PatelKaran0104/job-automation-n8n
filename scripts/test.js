@@ -8,7 +8,7 @@
 const patch = {
   jobTitle: "Salesforce Solution Architect",
   profile:
-    "<p>Salesforce Developer and certified Agentforce Specialist with 2+ years of experience. Specialized in designing scalable Salesforce architectures, REST API integrations, and AI-assisted engineering. Proven track record delivering end-to-end solutions for SME clients.</p>",
+    "<p>Salesforce Developer with 2+ years delivering production systems — published AppExchange package, triple-certified, currently pursuing M.Sc. Software Development at Hochschule Fulda.</p>",
   work: [
     {
       id: "286ca64e-9ab1-4d32-9905-0996d5d6a5c1",
@@ -36,6 +36,21 @@ console.log("Response:", result);
 
 if (result.success) {
   console.log("PDF saved at:", result.file);
+
+  const { readFileSync } = await import("fs");
+  const enc = (await import("util")).TextDecoder ? null : null;
+  const pdfBytes = readFileSync(result.file);
+  const pdfText = Buffer.from(pdfBytes).toString("latin1");
+  const countMatch = pdfText.match(/\/Count\s+(\d+)/);
+  const pageCount = countMatch ? parseInt(countMatch[1], 10) : null;
+
+  if (pageCount === 1) {
+    console.log("✓ Page count: 1 (PASS)");
+  } else {
+    console.error(`✗ Page count: ${pageCount ?? "unknown"} (FAIL — expected 1)`);
+    process.exit(1);
+  }
 } else {
   console.error("Failed:", result);
+  process.exit(1);
 }

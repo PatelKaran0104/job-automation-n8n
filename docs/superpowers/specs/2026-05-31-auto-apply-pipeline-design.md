@@ -80,7 +80,7 @@ Subject: Application for [role] – Karan Patel
 Dear Hiring Manager,
 
 I'm applying for the [role] position at [company]. As a Salesforce Developer with
-2 years of experience and a B.Sc. in Global Software Development at Hochschule
+2 years of experience and a M.Sc. in Global Software Development at Hochschule
 Fulda, I bring [one tailored sentence from AI]. Please find my documents attached.
 
 Kind regards,
@@ -143,7 +143,7 @@ Email: khpatel0104@gmail.com
 Phone: {resume.personalDetails.phone}
 LinkedIn: {resume.personalDetails.linkedIn}
 University: Hochschule Fulda
-Degree: B.Sc. Global Software Development
+Degree: M.Sc. Global Software Development
 Availability: sofort / immediately
 ```
 

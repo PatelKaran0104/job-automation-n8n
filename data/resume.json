@@ -23,7 +23,7 @@
       "displayName": "PROFILE",
       "entries": [
         {
-          "text": "<p>Salesforce Developer with 2+ years delivering production systems for B2B clients in construction, aerospace, and services. Published a managed AppExchange package through Salesforce's full security review; built REST integrations with HomeAdvisor and QuickBooks, operational dashboards, and Jenkins CI/CD pipelines across the engineering team. Certified Platform Developer I, Agentforce Specialist, and Data Cloud Consultant — currently pursuing M.Sc. Global Software Development at Hochschule Fulda.</p>"
+          "text": "<p>Salesforce Developer with 2+ years delivering production systems for B2B clients — published AppExchange package, triple-certified (PDI, Agentforce Specialist, Data Cloud Consultant), currently pursuing M.Sc. Software Development at Hochschule Fulda.</p>"
         }
       ]
     },
@@ -37,7 +37,7 @@
           "location": "Ahmedabad, India",
           "startDateNew": "02/2023",
           "endDateNew": "04/2025",
-          "description": "<ul><li><p>Built and published a production AppExchange managed package through Salesforce's full security review cycle, enforcing 85%+ Apex test coverage via automated test suites.</p></li><li><p>Designed Salesforce REST integrations with HomeAdvisor and QuickBooks, automating lead ingestion and financial synchronization workflows — reducing manual administrative overhead and improving data visibility across sales and finance teams.</p></li><li><p>Developed operational dashboards consolidating sales, lead, and financial data from external systems, enabling near real-time reporting and centralized visibility across sales, finance, and operational workflows.</p></li><li><p>Engineered a zero-code form builder (LWC + Apex) with configurable 3-level parent-child object relationships, reducing form setup from several hours to under 10 minutes for internal business users.</p></li><li><p>Reduced deployment turnaround by ~40% by owning the team's Jenkins-based CI/CD pipeline integrated with GitHub, enforcing automated Apex test validation and code review standards across all releases.</p></li></ul>"
+          "description": "<ul><li><p>Built and published a production AppExchange managed package through Salesforce's full security review cycle, enforcing 85%+ Apex test coverage via automated test suites.</p></li><li><p>Designed Salesforce REST integrations with HomeAdvisor and QuickBooks, automating lead ingestion and financial synchronization workflows — reducing manual administrative overhead and improving data visibility across sales and finance teams.</p></li><li><p>Engineered a zero-code form builder (LWC + Apex) with configurable 3-level parent-child object relationships, reducing form setup from several hours to under 10 minutes for internal business users.</p></li><li><p>Reduced deployment turnaround by ~40% by owning the team's Jenkins-based CI/CD pipeline integrated with GitHub, enforcing automated Apex test validation and code review standards across all releases.</p></li></ul>"
         },
         {
           "id": "4ea57bcd-62e6-4928-9c40-bd11d0afc5ff",
@@ -64,13 +64,6 @@
           "name": "Cloud Infrastructure Stack",
           "techStack": "Terraform, AWS (VPC, EC2, ALB, ASG, RDS, EFS, WAF)",
           "description": "<ul><li><p>Architected a production-grade 3-tier AWS infrastructure using Terraform: load-balanced web tier, auto-scaling compute, RDS MySQL, EFS shared storage, and WAF protection across multiple availability zones.</p></li><li><p>Managed ~41 cloud resources with reproducible, version-controlled infrastructure definitions ensuring consistent environment provisioning.</p></li></ul>"
-        },
-        {
-          "id": "cc6d5648-a1f0-4eca-9216-adda27e62c36",
-          "name": "University Marketplace",
-          "techStack": "JavaScript (Full-Stack), Git/GitHub",
-          "url": "Hochschule Fulda — GDSD 2025",
-          "description": "<ul><li><p>Led development of a marketplace platform for university members as part of a 7-person cross-university team; served as GitHub Lead, managing branching strategy, code reviews, and coordinating frontend, backend, and deployment workflows.</p></li></ul>"
         }
       ]
     },
@@ -114,7 +107,7 @@
         {
           "id": "4e5c9b0d-2b32-48a6-9b61-0c320df13632",
           "skill": "Frontend",
-          "infoHtml": "<p>React, Tailwind CSS, Phaser.js, Lightning Web Components (LWC), Aura, Vite, HTML/CSS</p>"
+          "infoHtml": "<p>React, Tailwind CSS, Lightning Web Components (LWC), Aura, Vite, HTML/CSS</p>"
         },
         {
           "id": "b38fcbc7-ae5a-41f8-87c3-8e1fd55a8445",
@@ -130,11 +123,6 @@
           "id": "9a905d12-825c-4090-a90c-3ff010a9d8b4",
           "skill": "Salesforce Platform",
           "infoHtml": "<p>Sales Cloud, Service Cloud, Experience Cloud, Data Cloud, Agentforce, Flows, AppExchange Package Development, Salesforce DX</p>"
-        },
-        {
-          "id": "07d4ce0e-0dcf-4193-8425-06a3e01fe20c",
-          "skill": "Automation & AI",
-          "infoHtml": "<p>n8n, Zapier, Agentforce Agent Builder, Prompt Templates, AI-Assisted Engineering, Playwright</p>"
         }
       ]
     },
