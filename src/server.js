@@ -8,6 +8,7 @@ import { buildResumeHtml } from "./buildResumeHtml.js";
 import { validatePatch } from "./validatePatch.js";
 import { validateCoverLetter } from "./validateCoverLetter.js";
 import { validateCompanyParam } from "./validateRequest.js";
+import { prepareTailorJd } from "./buildTailorPrompt.js";
 
 const OUTPUT_DIR = resolve("output");
 mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -268,6 +269,15 @@ app.post("/generate-coverletter", async (req, res) => {
   } finally {
     if (context) await context.close();
   }
+});
+
+// POST /prepare-jd
+// Body: { description }. Returns { jd } — the full, uncapped, entity-decoded job
+// description for the tailoring prompt. n8n node "13a. Build Tailor Prompt" calls
+// this so JD-prep logic lives in one tested place instead of inline workflow JS.
+app.post("/prepare-jd", (req, res) => {
+  const { description } = req.body;
+  res.json({ jd: prepareTailorJd(description) });
 });
 
 app.listen(3000, "0.0.0.0", () => console.log("Server running on port 3000"));
